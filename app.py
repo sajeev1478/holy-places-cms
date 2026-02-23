@@ -298,7 +298,7 @@ def _save_place(place_id):
     vis={}
     for bf in BUILTIN_FIELDS: vis[bf['key']]=1 if f.get(f"vis_{bf['key']}") else 0
     lat=f.get('latitude',type=float); lng=f.get('longitude',type=float)
-    if pid:
+    if place_id:
         db.execute("UPDATE places SET title=?,short_description=?,full_content=?,state=?,city=?,country=?,latitude=?,longitude=?,featured_image=?,status=?,is_featured=?,field_visibility=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
             (title,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),place_id))
     else:
@@ -348,7 +348,7 @@ def _save_place(place_id):
         else:
             db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?)",
                 (place_id,kt,ks,ksd,kfc,kimg,klat,klng,kpi,kv))
-            kplace_id=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted_kpids.append(kpid)
+            kpid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted_kpids.append(kpid)
         for cf in cfs:
             kcv=''; kcfk=f"kp_{kpi}_cf_file_{cf['id']}"
             if kcfk in request.files:
