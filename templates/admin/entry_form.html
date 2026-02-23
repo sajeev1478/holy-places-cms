@@ -1,0 +1,60 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Edit' if editing else 'New' }} Entry{% endblock %}
+{% block page_title %}{{ 'Edit' if editing else 'New' }} Module Entry{% endblock %}
+
+{% block admin_content %}
+<form method="POST" class="admin-card">
+<div class="admin-card-body">
+<div class="form-row">
+<div class="form-group">
+<label>Module *</label>
+<select name="module_id" class="form-control" required>
+<option value="">Select module...</option>
+{% for mod in modules %}
+<option value="{{ mod.id }}" {{ 'selected' if editing and entry.module_id == mod.id }}>{{ mod.icon }} {{ mod.name }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="form-group">
+<label>Linked Place (optional)</label>
+<select name="place_id" class="form-control">
+<option value="">None</option>
+{% for p in places %}
+<option value="{{ p.id }}" {{ 'selected' if editing and entry.place_id == p.id }}>{{ p.title }}</option>
+{% endfor %}
+</select>
+</div>
+</div>
+<div class="form-group">
+<label>Title *</label>
+<input name="title" class="form-control" value="{{ entry.title if editing else '' }}" required>
+</div>
+<div class="form-group">
+<label>Content (Rich Editor)</label>
+<input type="hidden" name="content" id="entry_content" value="{{ entry.content if editing else '' }}">
+<div class="rich-editor" data-target="entry_content" style="background:white;min-height:250px"></div>
+</div>
+<div class="form-group">
+<label>Custom Fields (JSON)</label>
+<textarea name="custom_fields" class="form-control" rows="3">{{ entry.custom_fields if editing else '{}' }}</textarea>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Status</label>
+<select name="status" class="form-control">
+<option value="draft" {{ 'selected' if editing and entry.status=='draft' }}>Draft</option>
+<option value="published" {{ 'selected' if editing and entry.status=='published' }}>Published</option>
+</select>
+</div>
+<div class="form-group">
+<label>Sort Order</label>
+<input name="sort_order" class="form-control" type="number" value="{{ entry.sort_order if editing else 0 }}">
+</div>
+</div>
+</div>
+<div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end">
+<a href="{{ url_for('admin_entries') }}" class="btn btn-secondary">Cancel</a>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} Entry</button>
+</div>
+</form>
+{% endblock %}

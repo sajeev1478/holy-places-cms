@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Holy Places{% endblock %} – Sacred India</title>
+<meta name="description" content="{% block meta_desc %}Discover India's most sacred temples, holy places, spiritual stories, and devotional content.{% endblock %}">
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#C76B8F">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--rose:#E8A0BF;--rose-deep:#C76B8F;--rose-pale:#F8E5EE;--rose-dark:#A04870;
+--cream:#FDF8F3;--cream-dark:#F5ECE2;--cream-deep:#EAD9C6;
+--saffron:#E89B4F;--sage:#8BAB8A;--sage-light:#D4E5D4;
+--text-dark:#2D1F2E;--text-mid:#5A4A5B;--text-light:#8A7A8B;
+--temple-gold:#C8A44E;--border:#E8DDD0;
+--white:#FFFFFF;--shadow:rgba(45,31,46,.06);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Lora',serif;background:var(--cream);color:var(--text-dark);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--rose);color:white}
+a{color:var(--rose-deep);text-decoration:none;transition:color .3s}
+a:hover{color:var(--rose-dark)}
+img{max-width:100%;height:auto}
+
+/* ─── Header ─── */
+header{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .4s}
+header.scrolled{background:rgba(253,248,243,.96);backdrop-filter:blur(20px);box-shadow:0 2px 40px var(--shadow)}
+.header-inner{max-width:1300px;margin:0 auto;padding:16px 40px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-flower{font-size:28px}
+.logo-text{font-family:'Playfair Display',serif;font-size:24px;color:var(--text-dark);font-weight:700}
+.logo-text span{color:var(--rose-deep)}
+nav{display:flex;align-items:center;gap:6px}
+nav a{color:var(--text-mid);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;transition:all .2s}
+nav a:hover,nav a.active{color:var(--rose-deep);background:var(--rose-pale)}
+.nav-search{width:40px;height:40px;border:1px solid var(--border);border-radius:10px;background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-light);transition:all .2s;margin-left:4px}
+.nav-search:hover{border-color:var(--rose);color:var(--rose-deep)}
+.nav-btn{background:var(--rose-deep);color:white;border:none;padding:10px 24px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .3s;margin-left:4px}
+.nav-btn:hover{background:var(--rose-dark);transform:translateY(-1px)}
+.mobile-toggle{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-dark)}
+
+/* ─── Mobile Nav ─── */
+.mobile-nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(253,248,243,.98);z-index:200;padding:80px 32px 32px;flex-direction:column;gap:8px}
+.mobile-nav.open{display:flex}
+.mobile-nav-close{position:absolute;top:20px;right:24px;background:none;border:none;font-size:28px;cursor:pointer;color:var(--text-dark)}
+.mobile-nav a{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:500;color:var(--text-dark);padding:14px 0;border-bottom:1px solid var(--border);display:block}
+
+/* ─── Common ─── */
+.container{max-width:1300px;margin:0 auto;padding:0 40px}
+.section{padding:80px 0}
+.section-header{margin-bottom:48px}
+.section-tag{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--rose-deep);margin-bottom:8px}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(28px,3.5vw,42px);color:var(--text-dark)}
+.section-desc{color:var(--text-mid);margin-top:8px;font-size:16px;max-width:540px}
+.section-header-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+.section-link{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--rose-deep);font-weight:500;display:flex;align-items:center;gap:6px}
+.section-link:hover{gap:10px}
+
+/* ─── Buttons ─── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;border:none;cursor:pointer;transition:all .3s;text-decoration:none}
+.btn-primary{background:var(--rose-deep);color:white;box-shadow:0 8px 30px rgba(199,107,143,.25)}
+.btn-primary:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 12px 40px rgba(199,107,143,.35);color:white}
+.btn-secondary{background:white;color:var(--text-dark);border:2px solid var(--border)}
+.btn-secondary:hover{border-color:var(--rose);color:var(--rose-deep)}
+.btn-sm{padding:8px 20px;font-size:13px}
+
+/* ─── Cards ─── */
+.card{background:white;border-radius:20px;overflow:hidden;transition:all .4s;border:1px solid transparent}
+.card:hover{transform:translateY(-6px);box-shadow:0 20px 60px var(--shadow);border-color:var(--rose-pale)}
+.card-img{width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;background:var(--cream-dark)}
+.card-img img,.card-img-bg{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.card:hover .card-img img,.card:hover .card-img-bg{transform:scale(1.05)}
+.card-tag{position:absolute;top:16px;left:16px;background:white;border-radius:50px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--rose-deep)}
+.card-body{padding:20px 24px}
+.card-title{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:6px}
+.card-title a{color:var(--text-dark)}
+.card-title a:hover{color:var(--rose-deep)}
+.card-loc{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-light);display:flex;align-items:center;gap:4px;margin-bottom:12px}
+.card-meta{display:flex;gap:14px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-light)}
+.card-meta span{display:flex;align-items:center;gap:4px}
+
+/* ─── Breadcrumb ─── */
+.breadcrumb{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-light);padding:16px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.breadcrumb a{color:var(--text-light)}
+.breadcrumb a:hover{color:var(--rose-deep)}
+
+/* ─── Category Pills ─── */
+.pills{display:flex;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:white;border-radius:50px;white-space:nowrap;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--text-mid);cursor:pointer;transition:all .3s;text-decoration:none}
+.pill:hover{border-color:var(--rose);color:var(--rose-deep);box-shadow:0 4px 20px rgba(199,107,143,.1)}
+.pill.active{background:var(--rose-deep);color:white;border-color:var(--rose-deep)}
+.pill .icon{font-size:16px}
+
+/* ─── Audio Player ─── */
+.audio-player{background:linear-gradient(135deg,var(--text-dark),#3D2D3E);border-radius:20px;padding:32px;color:white}
+.audio-player h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px}
+.audio-player .artist{font-family:'DM Sans',sans-serif;font-size:13px;opacity:.5;margin-bottom:16px}
+.audio-progress{height:4px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.audio-progress-fill{height:100%;background:linear-gradient(90deg,var(--rose),var(--saffron));border-radius:4px}
+.audio-times{display:flex;justify-content:space-between;font-family:'DM Sans',sans-serif;font-size:11px;opacity:.4;margin-bottom:16px}
+.audio-controls{display:flex;gap:12px;align-items:center}
+.audio-ctrl{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.06);border:none;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:14px}
+.audio-ctrl:hover{background:rgba(255,255,255,.15)}
+.audio-ctrl.play{width:48px;height:48px;background:var(--rose-deep);border-radius:12px;font-size:18px}
+
+/* ─── Rich Content ─── */
+.rich-content{font-size:17px;line-height:1.9;color:var(--text-mid)}
+.rich-content h2{font-family:'Playfair Display',serif;font-size:28px;color:var(--text-dark);margin:32px 0 16px}
+.rich-content h3{font-family:'Playfair Display',serif;font-size:22px;color:var(--text-dark);margin:28px 0 12px}
+.rich-content p{margin-bottom:16px}
+.rich-content img{border-radius:12px;margin:20px 0}
+.rich-content blockquote{border-left:4px solid var(--rose);padding:16px 24px;background:var(--rose-pale);border-radius:0 12px 12px 0;margin:20px 0;font-style:italic;color:var(--text-dark)}
+.rich-content ul,.rich-content ol{margin:12px 0 16px 24px}
+.rich-content li{margin-bottom:6px}
+
+/* ─── Share Buttons ─── */
+.share-btns{display:flex;gap:8px;margin-top:24px}
+.share-btn{width:40px;height:40px;border-radius:10px;background:var(--cream-dark);display:flex;align-items:center;justify-content:center;color:var(--text-mid);font-size:16px;transition:all .2s;border:none;cursor:pointer}
+.share-btn:hover{background:var(--rose-pale);color:var(--rose-deep)}
+
+/* ─── Footer ─── */
+footer{padding:60px 0;background:var(--text-dark);color:rgba(255,255,255,.6)}
+.footer-inner{max-width:1300px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px}
+.footer-brand .flogo{font-family:'Playfair Display',serif;font-size:22px;color:white;margin-bottom:12px}
+.footer-brand p{font-size:14px;line-height:1.7;max-width:280px}
+.footer-col h4{font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--rose);margin-bottom:16px}
+.footer-col a{display:block;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:14px;margin-bottom:10px;transition:color .3s}
+.footer-col a:hover{color:var(--rose)}
+.footer-bottom{max-width:1300px;margin:24px auto 0;padding:24px 40px 0;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;font-family:'DM Sans',sans-serif;font-size:12px}
+
+/* ─── Pagination ─── */
+.pagination{display:flex;gap:6px;justify-content:center;margin-top:40px}
+.pagination a,.pagination span{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;border:1px solid var(--border);color:var(--text-mid);transition:all .2s}
+.pagination a:hover{border-color:var(--rose);color:var(--rose-deep)}
+.pagination .active{background:var(--rose-deep);color:white;border-color:var(--rose-deep)}
+
+/* ─── Empty State ─── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-light)}
+.empty-state .icon{font-size:48px;margin-bottom:16px;display:block}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:24px;color:var(--text-dark);margin-bottom:8px}
+
+/* ─── Responsive ─── */
+@media(max-width:1024px){
+.footer-inner{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+.header-inner{padding:14px 20px}
+nav{display:none}
+.mobile-toggle{display:block}
+.container{padding:0 20px}
+.section{padding:60px 0}
+.footer-inner{grid-template-columns:1fr;gap:32px;padding:0 20px}
+.footer-bottom{flex-direction:column;gap:8px;text-align:center;padding:20px 20px 0}
+}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Header -->
+<header id="header">
+<div class="header-inner">
+<a class="logo" href="{{ url_for('home') }}"><span class="logo-flower">🪷</span><span class="logo-text">Holy<span>Places</span></span></a>
+<nav>
+<a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' }}">Home</a>
+<a href="{{ url_for('explore') }}" class="{{ 'active' if request.endpoint == 'explore' }}">Explore</a>
+{% for mod in active_modules[:5] %}
+<a href="{{ url_for('module_page', slug=mod.slug) }}" class="{{ 'active' if request.endpoint == 'module_page' and request.view_args.get('slug') == mod.slug }}">{{ mod.name }}</a>
+{% endfor %}
+<button class="nav-search" onclick="document.getElementById('searchModal').style.display='flex'"><i class="fas fa-search"></i></button>
+<a class="nav-btn" href="{{ url_for('explore') }}">Explore All</a>
+</nav>
+<button class="mobile-toggle" onclick="document.getElementById('mobileNav').classList.add('open')">☰</button>
+</div>
+</header>
+
+<!-- Mobile Nav -->
+<div class="mobile-nav" id="mobileNav">
+<button class="mobile-nav-close" onclick="this.parentElement.classList.remove('open')">✕</button>
+<a href="{{ url_for('home') }}">🏠 Home</a>
+<a href="{{ url_for('explore') }}">🔍 Explore</a>
+{% for mod in active_modules %}
+<a href="{{ url_for('module_page', slug=mod.slug) }}">{{ mod.icon }} {{ mod.name }}</a>
+{% endfor %}
+</div>
+
+<!-- Search Modal -->
+<div id="searchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-start;justify-content:center;padding-top:120px" onclick="if(event.target===this)this.style.display='none'">
+<div style="background:white;border-radius:20px;padding:32px;width:90%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+<form action="{{ url_for('search') }}" method="GET" style="display:flex;gap:12px">
+<input name="q" type="text" placeholder="Search holy places, temples, stories..." autofocus
+ style="flex:1;padding:14px 20px;border:2px solid var(--border);border-radius:50px;font-family:'Lora',serif;font-size:16px;outline:none">
+<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
+</form>
+</div>
+</div>
+
+<!-- Main Content -->
+<main style="min-height:60vh">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div style="position:fixed;top:80px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px">
+{% for cat, msg in messages %}
+<div style="background:white;border-radius:12px;padding:14px 20px;box-shadow:0 8px 30px rgba(0,0,0,.1);font-family:'DM Sans',sans-serif;font-size:14px;border-left:4px solid {{ 'var(--sage)' if cat=='success' else 'var(--rose-deep)' if cat=='error' else 'var(--saffron)' }};animation:fadeIn .3s ease">
+{{ msg }}
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+</main>
+
+<!-- Footer -->
+<footer>
+<div class="footer-inner">
+<div class="footer-brand">
+<div class="flogo">🪷 HolyPlaces</div>
+<p>A spiritual knowledge hub curating India's holiest destinations with love and devotion.</p>
+</div>
+<div class="footer-col">
+<h4>Explore</h4>
+{% for mod in active_modules[:5] %}
+<a href="{{ url_for('module_page', slug=mod.slug) }}">{{ mod.name }}</a>
+{% endfor %}
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="{{ url_for('explore') }}">All Places</a>
+<a href="#">Photo Gallery</a>
+<a href="#">Audio Library</a>
+<a href="#">Video Tours</a>
+</div>
+<div class="footer-col">
+<h4>Connect</h4>
+<a href="#">About Us</a>
+<a href="#">Contact</a>
+<a href="{{ url_for('admin_login') }}">Admin Panel</a>
+<a href="#">Mobile App</a>
+</div>
+</div>
+<div class="footer-bottom">
+<span>© {{ current_year }} Holy Places. Made with 🙏</span>
+<span>Privacy · Terms · Sitemap</span>
+</div>
+</footer>
+
+<script>
+window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50)});
+// Auto-hide flash messages
+setTimeout(()=>{document.querySelectorAll('[style*="fadeIn"]').forEach(el=>el.style.opacity='0')},4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

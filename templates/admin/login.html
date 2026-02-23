@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login – Holy Places CMS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F0EB;color:#2D1F2E}
+.login-container{width:100%;max-width:420px;padding:20px}
+.login-card{background:white;border-radius:20px;padding:48px 40px;box-shadow:0 8px 40px rgba(45,31,46,.06);border:1px solid #E8DDD0}
+.login-brand{text-align:center;margin-bottom:36px}
+.login-brand .icon{font-size:40px;margin-bottom:12px;display:block}
+.login-brand h1{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:4px}
+.login-brand p{color:#8A7A8B;font-size:14px}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.form-group input{width:100%;padding:14px 16px;border:1px solid #E8DDD0;border-radius:12px;font-family:'DM Sans';font-size:15px;outline:none;transition:border .2s}
+.form-group input:focus{border-color:#C76B8F}
+.login-btn{width:100%;padding:16px;background:#C76B8F;color:white;border:none;border-radius:12px;font-family:'DM Sans';font-size:15px;font-weight:600;cursor:pointer;transition:all .3s;margin-top:8px}
+.login-btn:hover{background:#A04870}
+.flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;background:#FDE8E8;color:#8B2020}
+.login-footer{text-align:center;margin-top:24px;font-size:13px;color:#8A7A8B}
+.login-footer a{color:#C76B8F}
+.demo-info{margin-top:20px;padding:16px;background:#F8E5EE;border-radius:10px;font-size:12px;color:#5A4A5B}
+.demo-info strong{display:block;margin-bottom:4px;color:#C76B8F}
+</style>
+</head>
+<body>
+<div class="login-container">
+<div class="login-card">
+<div class="login-brand">
+<span class="icon">🪷</span>
+<h1>Holy Places CMS</h1>
+<p>Admin Panel Login</p>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}{% for cat, msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+{% endwith %}
+<form method="POST">
+<div class="form-group">
+<label>Username</label>
+<input name="username" type="text" placeholder="Enter username" required autofocus>
+</div>
+<div class="form-group">
+<label>Password</label>
+<input name="password" type="password" placeholder="Enter password" required>
+</div>
+<button class="login-btn" type="submit">Sign In</button>
+</form>
+<div class="demo-info">
+<strong>Demo Credentials:</strong>
+Super Admin: admin / admin123<br>
+Editor: editor / editor123
+</div>
+</div>
+<div class="login-footer">
+<a href="{{ url_for('home') }}">← Back to Website</a>
+</div>
+</div>
+</body>
+</html>

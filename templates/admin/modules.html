@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block title %}Modules{% endblock %}
+{% block page_title %}Module Builder{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_module_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Module</a>{% endblock %}
+
+{% block admin_content %}
+<p style="color:var(--text-light);margin-bottom:24px;font-size:14px">Create and manage content modules. Each module represents a content type like Temples, Stories, Festivals, etc.</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+{% for mod in modules %}
+<div class="admin-card" style="transition:all .3s;{% if not mod.is_active %}opacity:.5{% endif %}">
+<div class="admin-card-body">
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+<span style="font-size:36px">{{ mod.icon }}</span>
+<div style="flex:1">
+<h3 style="font-size:18px;margin-bottom:2px">{{ mod.name }}</h3>
+<div style="font-size:12px;color:var(--text-light)">{{ mod.entry_count }} entries · Order: {{ mod.sort_order }}</div>
+</div>
+{% if not mod.is_active %}<span class="badge badge-draft">Inactive</span>{% endif %}
+</div>
+<p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;min-height:36px">{{ mod.description or 'No description' }}</p>
+<div style="display:flex;gap:8px">
+<a href="{{ url_for('admin_entries', mod_id=mod.id) }}" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center"><i class="fas fa-list"></i> Entries</a>
+<a href="{{ url_for('admin_module_edit', mod_id=mod.id) }}" class="btn btn-secondary btn-sm"><i class="fas fa-edit"></i></a>
+<form method="POST" action="{{ url_for('admin_module_delete', mod_id=mod.id) }}" onsubmit="return confirm('Delete this module and all its entries?')">
+<button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+</form>
+</div>
+</div>
+</div>
+{% endfor %}
+
+<!-- Add New Module Card -->
+<a href="{{ url_for('admin_module_new') }}" class="admin-card" style="display:flex;align-items:center;justify-content:center;min-height:200px;border:2px dashed var(--border);text-decoration:none;color:var(--text-light);transition:all .3s">
+<div style="text-align:center">
+<i class="fas fa-plus-circle" style="font-size:32px;margin-bottom:8px;display:block"></i>
+<div style="font-weight:600">Create New Module</div>
+</div>
+</a>
+</div>
+{% endblock %}

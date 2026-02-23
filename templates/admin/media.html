@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}
+{% block title %}Media Library{% endblock %}
+{% block page_title %}Media Library{% endblock %}
+
+{% block admin_content %}
+<!-- Upload Form -->
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-body">
+<form method="POST" action="{{ url_for('admin_media_upload') }}" enctype="multipart/form-data" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+<div class="form-group" style="margin:0;flex:1;min-width:200px">
+<label>Upload File (Images, Audio, Video)</label>
+<input type="file" name="file" class="form-control" required accept="image/*,audio/*,video/*">
+</div>
+<div class="form-group" style="margin:0;width:180px">
+<label>Folder</label>
+<input name="folder" class="form-control" value="general" placeholder="general">
+</div>
+<div class="form-group" style="margin:0;width:200px">
+<label>Alt Text</label>
+<input name="alt_text" class="form-control" placeholder="Describe the media">
+</div>
+<button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload</button>
+</form>
+</div>
+</div>
+
+<!-- Filters -->
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+<a class="btn btn-sm {{ 'btn-primary' if not current_type else 'btn-secondary' }}" href="{{ url_for('admin_media') }}">All</a>
+<a class="btn btn-sm {{ 'btn-primary' if current_type=='image' else 'btn-secondary' }}" href="{{ url_for('admin_media', type='image') }}"><i class="fas fa-image"></i> Images</a>
+<a class="btn btn-sm {{ 'btn-primary' if current_type=='audio' else 'btn-secondary' }}" href="{{ url_for('admin_media', type='audio') }}"><i class="fas fa-music"></i> Audio</a>
+<a class="btn btn-sm {{ 'btn-primary' if current_type=='video' else 'btn-secondary' }}" href="{{ url_for('admin_media', type='video') }}"><i class="fas fa-video"></i> Video</a>
+{% if folders %}
+<span style="color:var(--text-light);align-self:center;margin-left:8px">Folder:</span>
+{% for f in folders %}
+<a class="btn btn-sm {{ 'btn-primary' if current_folder==f.folder else 'btn-secondary' }}" href="{{ url_for('admin_media', folder=f.folder) }}">{{ f.folder }}</a>
+{% endfor %}
+{% endif %}
+</div>
+
+<!-- Media Grid -->
+{% if media %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
+{% for m in media %}
+<div class="admin-card" style="overflow:hidden">
+<div style="aspect-ratio:1;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden">
+{% if m.file_type == 'image' %}
+<img src="/static/uploads/{{ m.filename }}" alt="{{ m.alt_text }}" style="width:100%;height:100%;object-fit:cover">
+{% elif m.file_type == 'audio' %}
+<div style="text-align:center;color:var(--text-light)"><i class="fas fa-music" style="font-size:40px;margin-bottom:8px;display:block"></i><span style="font-size:12px">{{ m.original_name|truncate(20) }}</span></div>
+{% elif m.file_type == 'video' %}
+<div style="text-align:center;color:var(--text-light)"><i class="fas fa-film" style="font-size:40px;margin-bottom:8px;display:block"></i><span style="font-size:12px">{{ m.original_name|truncate(20) }}</span></div>
+{% endif %}
+</div>
+<div style="padding:12px">
+<div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ m.original_name }}">{{ m.original_name }}</div>
+<div style="font-size:11px;color:var(--text-light);margin-top:2px">{{ m.file_type }} · {{ m.folder }} · {{ (m.file_size / 1024)|int }}KB</div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<button class="btn btn-secondary btn-sm" style="flex:1;justify-content:center;font-size:11px" onclick="navigator.clipboard.writeText('{{ m.filename }}');this.textContent='Copied!'"><i class="fas fa-copy"></i> Path</button>
+<form method="POST" action="{{ url_for('admin_media_delete', media_id=m.id) }}" onsubmit="return confirm('Delete?')">
+<button class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button>
+</form>
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="admin-card"><div class="empty"><span class="icon">📂</span><h3>No media files</h3><p>Upload images, audio, or video files to get started.</p></div></div>
+{% endif %}
+{% endblock %}

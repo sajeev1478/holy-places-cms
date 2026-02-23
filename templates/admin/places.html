@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% block title %}Holy Places{% endblock %}
+{% block page_title %}Holy Places{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_place_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Place</a>{% endblock %}
+
+{% block admin_content %}
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+<a class="btn btn-sm {{ 'btn-primary' if not current_status else 'btn-secondary' }}" href="{{ url_for('admin_places') }}">All</a>
+<a class="btn btn-sm {{ 'btn-primary' if current_status=='published' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='published') }}">Published</a>
+<a class="btn btn-sm {{ 'btn-primary' if current_status=='draft' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='draft') }}">Drafts</a>
+<form action="{{ url_for('admin_places') }}" method="GET" style="margin-left:auto;display:flex;gap:8px">
+<input name="q" value="{{ query }}" placeholder="Search places..." class="form-control" style="width:240px;padding:8px 14px">
+<button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i></button>
+</form>
+</div>
+
+<div class="admin-card">
+{% if places %}
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th>Title</th><th>Location</th><th>Status</th><th>Featured</th><th>Views</th><th>Updated</th><th>Actions</th></tr></thead>
+<tbody>
+{% for place in places %}
+<tr>
+<td><a href="{{ url_for('admin_place_edit', place_id=place.id) }}" style="font-weight:600;color:var(--text)">{{ place.title }}</a></td>
+<td style="font-size:13px;color:var(--text-light)">{{ place.city }}, {{ place.state }}</td>
+<td><span class="badge badge-{{ place.status }}">{{ place.status }}</span></td>
+<td>{% if place.is_featured %}<i class="fas fa-star" style="color:var(--warning)"></i>{% endif %}</td>
+<td>{{ place.view_count }}</td>
+<td style="font-size:12px;color:var(--text-light)">{{ place.updated_at[:10] if place.updated_at else '' }}</td>
+<td class="actions">
+<a href="{{ url_for('admin_place_edit', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary btn-icon btn-sm" title="View"><i class="fas fa-eye"></i></a>
+<form method="POST" action="{{ url_for('admin_place_delete', place_id=place.id) }}" style="display:inline" onsubmit="return confirm('Delete this place?')">
+<button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete"><i class="fas fa-trash"></i></button>
+</form>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty"><span class="icon">🛕</span><h3>No places found</h3><p>Create your first holy place to get started.</p></div>
+{% endif %}
+</div>
+{% endblock %}

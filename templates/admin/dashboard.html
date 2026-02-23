@@ -1,0 +1,77 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_place_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Place</a>{% endblock %}
+
+{% block admin_content %}
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-icon rose"><i class="fas fa-map-marked-alt"></i></div><div><div class="stat-num">{{ stats.places }}</div><div class="stat-label">Total Places</div></div></div>
+<div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-num">{{ stats.published }}</div><div class="stat-label">Published</div></div></div>
+<div class="stat-card"><div class="stat-icon amber"><i class="fas fa-file-alt"></i></div><div><div class="stat-num">{{ stats.entries }}</div><div class="stat-label">Module Entries</div></div></div>
+<div class="stat-card"><div class="stat-icon blue"><i class="fas fa-photo-video"></i></div><div><div class="stat-num">{{ stats.media }}</div><div class="stat-label">Media Files</div></div></div>
+<div class="stat-card"><div class="stat-icon rose"><i class="fas fa-cubes"></i></div><div><div class="stat-num">{{ stats.modules }}</div><div class="stat-label">Active Modules</div></div></div>
+<div class="stat-card"><div class="stat-icon green"><i class="fas fa-users"></i></div><div><div class="stat-num">{{ stats.users }}</div><div class="stat-label">Users</div></div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px">
+<!-- Recent Places -->
+<div class="admin-card">
+<div class="admin-card-header"><h3>Recent Places</h3><a href="{{ url_for('admin_places') }}" class="btn btn-secondary btn-sm">View All</a></div>
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th>Title</th><th>Status</th><th>Views</th><th>Updated</th></tr></thead>
+<tbody>
+{% for place in recent_places %}
+<tr>
+<td><a href="{{ url_for('admin_place_edit', place_id=place.id) }}" style="font-weight:500;color:var(--text)">{{ place.title }}</a></td>
+<td><span class="badge badge-{{ place.status }}">{{ place.status }}</span></td>
+<td>{{ place.view_count }}</td>
+<td style="font-size:12px;color:var(--text-light)">{{ place.updated_at[:10] if place.updated_at else '' }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Active Modules -->
+<div class="admin-card">
+<div class="admin-card-header"><h3>Modules</h3><a href="{{ url_for('admin_module_new') }}" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i> New</a></div>
+<div class="admin-card-body" style="padding:12px">
+{% for mod in modules %}
+<a href="{{ url_for('admin_entries', mod_id=mod.id) }}" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;color:var(--text);text-decoration:none;transition:background .2s;{% if not mod.is_active %}opacity:.5{% endif %}">
+<span style="font-size:24px">{{ mod.icon }}</span>
+<div style="flex:1">
+<div style="font-weight:600;font-size:14px">{{ mod.name }}</div>
+<div style="font-size:12px;color:var(--text-light)">{{ mod.entry_count }} entries</div>
+</div>
+<span style="font-size:12px;color:var(--text-light)"><i class="fas fa-chevron-right"></i></span>
+</a>
+{% endfor %}
+</div>
+</div>
+</div>
+
+<!-- Recent Activity -->
+<div class="admin-card" style="margin-top:20px">
+<div class="admin-card-header"><h3>Recent Activity</h3></div>
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th>User</th><th>Action</th><th>Details</th><th>Time</th></tr></thead>
+<tbody>
+{% for log in recent_log %}
+<tr>
+<td style="font-weight:500">{{ log.display_name or 'System' }}</td>
+<td><span class="badge" style="background:var(--primary-light);color:var(--primary)">{{ log.action|replace('_',' ') }}</span></td>
+<td style="font-size:13px;color:var(--text-light)">{{ log.details or '' }}</td>
+<td style="font-size:12px;color:var(--text-light)">{{ log.created_at[:16] if log.created_at else '' }}</td>
+</tr>
+{% endfor %}
+{% if not recent_log %}
+<tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:24px">No activity yet</td></tr>
+{% endif %}
+</tbody>
+</table>
+</div>
+</div>
+{% endblock %}

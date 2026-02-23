@@ -1,0 +1,63 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Edit' if editing else 'New' }} User{% endblock %}
+{% block page_title %}{{ 'Edit' if editing else 'Create' }} User{% endblock %}
+
+{% block admin_content %}
+<form method="POST" class="admin-card" style="max-width:700px">
+<div class="admin-card-body">
+<div class="form-row">
+<div class="form-group">
+<label>Username *</label>
+<input name="username" class="form-control" value="{{ user.username if editing else '' }}" {{ 'readonly' if editing }} required>
+</div>
+<div class="form-group">
+<label>Display Name</label>
+<input name="display_name" class="form-control" value="{{ user.display_name if editing else '' }}" required>
+</div>
+</div>
+<div class="form-group">
+<label>Email *</label>
+<input name="email" class="form-control" type="email" value="{{ user.email if editing else '' }}" required>
+</div>
+<div class="form-group">
+<label>Password {{ '(leave blank to keep current)' if editing else '*' }}</label>
+<input name="password" class="form-control" type="password" {{ '' if editing else 'required' }} placeholder="{{ '••••••••' if editing else 'Enter password' }}">
+</div>
+<div class="form-group">
+<label>Role</label>
+<select name="role" class="form-control">
+<option value="editor" {{ 'selected' if editing and user.role=='editor' }}>Editor</option>
+<option value="content_admin" {{ 'selected' if editing and user.role=='content_admin' }}>Content Admin</option>
+<option value="super_admin" {{ 'selected' if editing and user.role=='super_admin' }}>Super Admin</option>
+</select>
+<div class="hint">Super Admin has all permissions. Content Admin and Editor permissions are set below.</div>
+</div>
+
+<div class="form-group">
+<label>Permissions</label>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+{% for perm in perm_defs %}
+<label class="form-check" style="padding:10px 14px;background:var(--bg);border-radius:8px">
+<input type="checkbox" name="permissions" value="{{ perm.permission_key }}"
+    {{ 'checked' if editing and user_perms.get(perm.permission_key) }}>
+<div>
+<div style="font-weight:600;font-size:13px">{{ perm.label }}</div>
+<div style="font-size:11px;color:var(--text-light)">{{ perm.description }}</div>
+</div>
+</label>
+{% endfor %}
+</div>
+</div>
+
+{% if editing %}
+<div class="form-group">
+<label class="form-check"><input type="checkbox" name="is_active" {{ 'checked' if user.is_active }}> Account is Active</label>
+</div>
+{% endif %}
+</div>
+<div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end">
+<a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Cancel</a>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} User</button>
+</div>
+</form>
+{% endblock %}

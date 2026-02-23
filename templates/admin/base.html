@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Admin{% endblock %} – Holy Places CMS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- Quill Editor -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--primary:#C76B8F;--primary-light:#F8E5EE;--primary-dark:#A04870;
+--bg:#F5F0EB;--white:#FFFFFF;--card:#FFFFFF;
+--text:#2D1F2E;--text-mid:#5A4A5B;--text-light:#8A7A8B;
+--border:#E8DDD0;--success:#5B9A5B;--warning:#D49B3F;--danger:#C45050;
+--sidebar-bg:#2D1F2E;--sidebar-text:rgba(255,255,255,.6);--sidebar-active:rgba(255,255,255,.1);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* ─── Sidebar ─── */
+.sidebar{width:260px;background:var(--sidebar-bg);color:var(--sidebar-text);padding:24px 0;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:100;overflow-y:auto}
+.sidebar-brand{padding:0 24px 24px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:16px}
+.sidebar-brand a{color:white;text-decoration:none;font-family:'Playfair Display',serif;font-size:20px;display:flex;align-items:center;gap:10px}
+.sidebar-brand span{font-size:22px}
+.sidebar-section{padding:0 12px;margin-bottom:8px}
+.sidebar-section-title{padding:8px 12px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);font-weight:600}
+.sidebar-link{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;color:var(--sidebar-text);text-decoration:none;font-size:14px;font-weight:500;transition:all .2s;margin-bottom:2px}
+.sidebar-link:hover{background:var(--sidebar-active);color:white}
+.sidebar-link.active{background:var(--primary);color:white}
+.sidebar-link i{width:20px;text-align:center;font-size:15px}
+.sidebar-link .badge{margin-left:auto;background:rgba(255,255,255,.15);color:white;font-size:11px;padding:2px 8px;border-radius:50px}
+
+.sidebar-footer{margin-top:auto;padding:16px 24px;border-top:1px solid rgba(255,255,255,.06)}
+.sidebar-user{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sidebar-avatar{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px}
+.sidebar-user-info{font-size:13px}.sidebar-user-info strong{color:white;display:block}
+.sidebar-user-info span{font-size:11px;color:rgba(255,255,255,.4)}
+
+/* ─── Main Content ─── */
+.main{margin-left:260px;flex:1;padding:0;min-height:100vh}
+.topbar{padding:16px 32px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar h1{font-family:'Playfair Display',serif;font-size:22px}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.content{padding:32px}
+
+/* ─── Cards ─── */
+.admin-card{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden}
+.admin-card-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.admin-card-header h3{font-size:16px;font-weight:600}
+.admin-card-body{padding:24px}
+
+/* ─── Stats ─── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:white;border-radius:14px;padding:24px;border:1px solid var(--border);display:flex;align-items:center;gap:16px}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.stat-icon.rose{background:var(--primary-light);color:var(--primary)}
+.stat-icon.green{background:#D4E5D4;color:#5B9A5B}
+.stat-icon.amber{background:#F5ECD4;color:#D49B3F}
+.stat-icon.blue{background:#D4E0F5;color:#5070C4}
+.stat-num{font-size:28px;font-weight:700}
+.stat-label{font-size:12px;color:var(--text-light);margin-top:2px}
+
+/* ─── Tables ─── */
+.admin-table{width:100%;border-collapse:collapse}
+.admin-table th{text-align:left;padding:12px 16px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);background:var(--bg);border-bottom:1px solid var(--border);font-weight:600}
+.admin-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:14px;vertical-align:middle}
+.admin-table tr:hover td{background:rgba(200,100,143,.02)}
+.admin-table .actions{display:flex;gap:6px}
+
+/* ─── Badges ─── */
+.badge{display:inline-block;padding:4px 12px;border-radius:50px;font-size:11px;font-weight:600}
+.badge-published{background:#D4E5D4;color:#3A6B3A}
+.badge-draft{background:#F5ECD4;color:#8B6B20}
+.badge-super_admin{background:var(--primary-light);color:var(--primary)}
+.badge-content_admin{background:#D4E0F5;color:#4060A4}
+.badge-editor{background:#E8E5D4;color:#6B6540}
+
+/* ─── Buttons ─── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-family:'DM Sans';font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .2s;text-decoration:none}
+.btn-primary{background:var(--primary);color:white}
+.btn-primary:hover{background:var(--primary-dark);color:white}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:#FDE8E8;color:var(--danger)}
+.btn-danger:hover{background:var(--danger);color:white}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-icon{width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px}
+
+/* ─── Forms ─── */
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.form-group .hint{font-size:12px;color:var(--text-light);margin-top:4px}
+.form-control{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans';font-size:14px;background:white;outline:none;transition:border-color .2s}
+.form-control:focus{border-color:var(--primary)}
+textarea.form-control{min-height:120px;resize:vertical}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A7A8B' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.form-check input[type="checkbox"]{width:18px;height:18px;accent-color:var(--primary)}
+.tag-select{display:flex;flex-wrap:wrap;gap:8px}
+.tag-select label{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;border:1px solid var(--border);font-size:13px;cursor:pointer;transition:all .2s}
+.tag-select label:has(input:checked){background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
+.tag-select input{display:none}
+
+/* ─── Quill Editor Override ─── */
+.ql-container{font-family:'DM Sans',sans-serif;font-size:15px;border-radius:0 0 10px 10px;border-color:var(--border)!important;min-height:200px}
+.ql-toolbar{border-radius:10px 10px 0 0;border-color:var(--border)!important;background:var(--bg)}
+.ql-editor{min-height:200px}
+
+/* ─── Flash Messages ─── */
+.flash{padding:14px 20px;border-radius:12px;margin-bottom:16px;font-size:14px;display:flex;align-items:center;gap:10px}
+.flash-success{background:#D4E5D4;color:#2A5A2A}
+.flash-error{background:#FDE8E8;color:#8B2020}
+.flash-warning{background:#F5ECD4;color:#6B5020}
+.flash-info{background:#D4E0F5;color:#2A4080}
+
+/* ─── Empty State ─── */
+.empty{text-align:center;padding:48px 20px;color:var(--text-light)}
+.empty .icon{font-size:40px;margin-bottom:12px;display:block}
+.empty h3{font-size:18px;color:var(--text);margin-bottom:6px}
+
+/* ─── Mobile ─── */
+.sidebar-toggle{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text)}
+@media(max-width:1024px){
+.sidebar{transform:translateX(-100%);transition:transform .3s}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0}
+.sidebar-toggle{display:block}
+.content{padding:20px}
+.form-row{grid-template-columns:1fr}
+}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-brand">
+<a href="{{ url_for('admin_dashboard') }}"><span>🪷</span> Holy Places CMS</a>
+</div>
+
+<div class="sidebar-section">
+<div class="sidebar-section-title">Main</div>
+<a class="sidebar-link {{ 'active' if request.endpoint == 'admin_dashboard' }}" href="{{ url_for('admin_dashboard') }}">
+<i class="fas fa-th-large"></i> Dashboard
+</a>
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_places','admin_place_new','admin_place_edit') }}" href="{{ url_for('admin_places') }}">
+<i class="fas fa-map-marked-alt"></i> Holy Places
+</a>
+</div>
+
+<div class="sidebar-section">
+<div class="sidebar-section-title">Content</div>
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_modules','admin_module_new','admin_module_edit') }}" href="{{ url_for('admin_modules') }}">
+<i class="fas fa-cubes"></i> Module Builder
+</a>
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_entries','admin_entry_new','admin_entry_edit') }}" href="{{ url_for('admin_entries') }}">
+<i class="fas fa-file-alt"></i> Module Entries
+</a>
+<a class="sidebar-link {{ 'active' if request.endpoint == 'admin_tags' }}" href="{{ url_for('admin_tags') }}">
+<i class="fas fa-tags"></i> Tags & Categories
+</a>
+</div>
+
+<div class="sidebar-section">
+<div class="sidebar-section-title">Media</div>
+<a class="sidebar-link {{ 'active' if request.endpoint == 'admin_media' }}" href="{{ url_for('admin_media') }}">
+<i class="fas fa-photo-video"></i> Media Library
+</a>
+</div>
+
+{% if current_user and current_user.role == 'super_admin' %}
+<div class="sidebar-section">
+<div class="sidebar-section-title">System</div>
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_users','admin_user_new','admin_user_edit') }}" href="{{ url_for('admin_users') }}">
+<i class="fas fa-users-cog"></i> Users & Roles
+</a>
+</div>
+{% endif %}
+
+<div class="sidebar-section">
+<a class="sidebar-link" href="{{ url_for('home') }}" target="_blank">
+<i class="fas fa-external-link-alt"></i> View Website
+</a>
+</div>
+
+<div class="sidebar-footer">
+<div class="sidebar-user">
+<div class="sidebar-avatar">{{ current_user.display_name[0] if current_user else '?' }}</div>
+<div class="sidebar-user-info">
+<strong>{{ current_user.display_name if current_user else 'Guest' }}</strong>
+<span>{{ current_user.role|replace('_',' ')|title if current_user else '' }}</span>
+</div>
+</div>
+<a href="{{ url_for('admin_logout') }}" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center">
+<i class="fas fa-sign-out-alt"></i> Logout
+</a>
+</div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+<div class="topbar">
+<div style="display:flex;align-items:center;gap:12px">
+<button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+<h1>{% block page_title %}Dashboard{% endblock %}</h1>
+</div>
+<div class="topbar-actions">
+{% block topbar_actions %}{% endblock %}
+</div>
+</div>
+<div class="content">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for cat, msg in messages %}
+<div class="flash flash-{{ cat }}">
+<i class="fas {{ 'fa-check-circle' if cat=='success' else 'fa-exclamation-circle' if cat=='error' else 'fa-info-circle' }}"></i>
+{{ msg }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+{% block admin_content %}{% endblock %}
+</div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+// Initialize all Quill editors
+document.querySelectorAll('.rich-editor').forEach(el => {
+    const hidden = document.getElementById(el.dataset.target);
+    const quill = new Quill(el, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['blockquote', 'link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+    if (hidden.value) quill.root.innerHTML = hidden.value;
+    quill.on('text-change', () => { hidden.value = quill.root.innerHTML; });
+    // Update before form submit
+    el.closest('form')?.addEventListener('submit', () => { hidden.value = quill.root.innerHTML; });
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

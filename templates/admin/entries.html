@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block title %}Module Entries{% endblock %}
+{% block page_title %}Module Entries{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_entry_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Entry</a>{% endblock %}
+
+{% block admin_content %}
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+<a class="btn btn-sm {{ 'btn-primary' if not current_mod else 'btn-secondary' }}" href="{{ url_for('admin_entries') }}">All</a>
+{% for mod in modules %}
+<a class="btn btn-sm {{ 'btn-primary' if current_mod == mod.id else 'btn-secondary' }}" href="{{ url_for('admin_entries', mod_id=mod.id) }}">{{ mod.icon }} {{ mod.name }}</a>
+{% endfor %}
+</div>
+
+<div class="admin-card">
+{% if entries %}
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th>Title</th><th>Module</th><th>Linked Place</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
+<tbody>
+{% for entry in entries %}
+<tr>
+<td><a href="{{ url_for('admin_entry_edit', entry_id=entry.id) }}" style="font-weight:600;color:var(--text)">{{ entry.title }}</a></td>
+<td><span style="font-size:14px">{{ entry.module_icon }} {{ entry.module_name }}</span></td>
+<td style="font-size:13px;color:var(--text-light)">{{ entry.place_title or '—' }}</td>
+<td><span class="badge badge-{{ entry.status }}">{{ entry.status }}</span></td>
+<td style="font-size:12px;color:var(--text-light)">{{ entry.updated_at[:10] if entry.updated_at else '' }}</td>
+<td class="actions">
+<a href="{{ url_for('admin_entry_edit', entry_id=entry.id) }}" class="btn btn-secondary btn-icon btn-sm"><i class="fas fa-edit"></i></a>
+<form method="POST" action="{{ url_for('admin_entry_delete', entry_id=entry.id) }}" style="display:inline" onsubmit="return confirm('Delete?')">
+<button class="btn btn-danger btn-icon btn-sm"><i class="fas fa-trash"></i></button>
+</form>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty"><span class="icon">📝</span><h3>No entries yet</h3><p>Create entries to populate your modules.</p></div>
+{% endif %}
+</div>
+{% endblock %}

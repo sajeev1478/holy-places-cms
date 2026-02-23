@@ -1,0 +1,251 @@
+{% extends "frontend/base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ─── Hero ─── */
+.hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:100px 0 60px}
+.hero-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;z-index:0}
+.hero-blob-1{width:600px;height:600px;background:var(--rose-pale);top:-100px;right:-100px}
+.hero-blob-2{width:400px;height:400px;background:var(--sage-light);bottom:-50px;left:-50px}
+.hero-blob-3{width:300px;height:300px;background:var(--cream-deep);top:50%;left:40%}
+.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:white;border-radius:50px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--rose-deep);font-weight:500;margin-bottom:28px;box-shadow:0 4px 20px rgba(200,100,143,.1)}
+.hero-badge .pulse{width:8px;height:8px;background:var(--rose);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,64px);line-height:1.15;margin-bottom:20px}
+.hero-title em{color:var(--rose-deep);font-style:italic}
+.hero-desc{font-size:18px;color:var(--text-mid);line-height:1.8;margin-bottom:36px;max-width:480px}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+.hero-image-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:480px;margin:0 auto}
+.hero-img{border-radius:20px;overflow:hidden}
+.hero-img-bg{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:48px}
+.hero-img:nth-child(2){margin-top:40px}
+.hero-img:nth-child(3){margin-top:-40px}
+.hero-float{position:absolute;background:white;border-radius:16px;padding:16px 20px;box-shadow:0 8px 30px rgba(0,0,0,.08);display:flex;align-items:center;gap:12px;bottom:30px;left:-10px;z-index:2;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.float-icon{width:44px;height:44px;background:var(--sage-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.float-num{font-family:'DM Sans',sans-serif;font-weight:600;font-size:18px}
+.float-label{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-light)}
+
+/* ─── Category Ribbon ─── */
+.cat-ribbon{padding:40px 0;overflow:hidden}
+.cat-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;-ms-overflow-style:none}
+.cat-scroll::-webkit-scrollbar{display:none}
+
+/* ─── Places Grid ─── */
+.places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+
+/* ─── Stories ─── */
+.stories-bg{background:white}
+.stories-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:24px}
+.story-main{background:var(--cream);border-radius:20px;overflow:hidden}
+.story-main-img{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:64px}
+.story-main-body{padding:28px}
+.story-tag{display:inline-block;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--saffron);margin-bottom:10px}
+.story-title{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:10px;line-height:1.3}
+.story-excerpt{font-size:15px;color:var(--text-mid);line-height:1.7;margin-bottom:16px}
+.story-side{display:flex;flex-direction:column;gap:14px}
+.story-sm{background:var(--cream);border-radius:14px;padding:20px;display:flex;gap:14px;cursor:pointer;transition:all .3s}
+.story-sm:hover{background:var(--rose-pale)}
+.story-sm-icon{width:50px;height:50px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.story-sm-title{font-family:'Playfair Display',serif;font-size:15px;margin-bottom:4px}
+.story-sm-meta{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-light)}
+
+/* ─── Audio Featured ─── */
+.audio-featured{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:center}
+.audio-cover{width:160px;height:160px;border-radius:20px;background:linear-gradient(135deg,var(--rose-deep),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:60px;flex-shrink:0}
+
+/* ─── Newsletter ─── */
+.newsletter{background:var(--rose-pale);border-radius:24px;padding:56px;text-align:center;position:relative;overflow:hidden}
+.newsletter::before{content:'🪷';position:absolute;font-size:200px;opacity:.06;top:-40px;right:-40px}
+.newsletter h2{font-family:'Playfair Display',serif;font-size:32px;margin-bottom:12px}
+.newsletter p{color:var(--text-mid);margin-bottom:24px;font-size:16px}
+.newsletter-form{display:flex;gap:12px;max-width:440px;margin:0 auto}
+.newsletter-input{flex:1;padding:14px 20px;border:2px solid var(--cream-deep);border-radius:50px;background:white;font-family:'Lora',serif;font-size:15px;outline:none}
+.newsletter-input:focus{border-color:var(--rose)}
+
+/* ─── Responsive ─── */
+@media(max-width:1024px){
+.hero-inner{grid-template-columns:1fr;text-align:center}
+.hero-desc{margin:0 auto 36px}
+.hero-btns{justify-content:center}
+.hero-image-grid{max-width:360px;margin-top:32px}
+.places-grid{grid-template-columns:repeat(2,1fr)}
+.stories-grid{grid-template-columns:1fr}
+.audio-featured{grid-template-columns:1fr;text-align:center;justify-items:center}
+}
+@media(max-width:768px){
+.hero{padding:100px 0 40px}
+.places-grid{grid-template-columns:1fr}
+.newsletter{padding:36px 20px}
+.newsletter-form{flex-direction:column}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+<div class="hero-blob hero-blob-1"></div>
+<div class="hero-blob hero-blob-2"></div>
+<div class="hero-blob hero-blob-3"></div>
+<div class="container">
+<div class="hero-inner">
+<div class="hero-content">
+<div class="hero-badge"><span class="pulse"></span> Explore {{ stats.places }}+ Sacred Sites</div>
+<h1 class="hero-title">Your Journey to<br><em>Sacred India</em><br>Starts Here</h1>
+<p class="hero-desc">Discover temples, sacred stories, festivals, and spiritual practices through a beautifully curated devotional experience.</p>
+<div class="hero-btns">
+<a href="{{ url_for('explore') }}" class="btn btn-primary">Explore Holy Places</a>
+<a href="#featured" class="btn btn-secondary">▶ Watch & Listen</a>
+</div>
+</div>
+<div style="position:relative">
+<div class="hero-image-grid">
+<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#E8D5C4,#D4B896)">🛕</div></div>
+<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#D4E5D4,#A8C5A8)">🏔️</div></div>
+<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#F8E5EE,#E8C5D4)">🪔</div></div>
+<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#E5D4E8,#C5A8D4)">📿</div></div>
+</div>
+<div class="hero-float">
+<div class="float-icon">🙏</div>
+<div><div class="float-num">{{ stats.places }}+</div><div class="float-label">Sacred Sites</div></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Category Ribbon -->
+<section class="cat-ribbon">
+<div class="container">
+<div class="cat-scroll">
+<a class="pill active" href="{{ url_for('explore') }}"><span class="icon">✨</span> All Places</a>
+{% for mod in modules %}
+<a class="pill" href="{{ url_for('module_page', slug=mod.slug) }}"><span class="icon">{{ mod.icon }}</span> {{ mod.name }}</a>
+{% endfor %}
+</div>
+</div>
+</section>
+
+<!-- Featured Places -->
+<section class="section" id="featured">
+<div class="container">
+<div class="section-header">
+<div class="section-header-row">
+<div>
+<div class="section-tag">Featured Destinations</div>
+<h2 class="section-title">Most Visited Sacred Places</h2>
+</div>
+<a href="{{ url_for('explore') }}" class="section-link">View all places →</a>
+</div>
+</div>
+<div class="places-grid">
+{% for place in featured[:6] %}
+<div class="card">
+<a href="{{ url_for('place_detail', slug=place.slug) }}" class="card-img">
+<div class="card-img-bg" style="background:linear-gradient(135deg,
+{{ ['#E8D5C4,#D4B896','#D4E5D4,#A8C5A8','#F8E5EE,#D4A8B8','#E5D4E8,#C5A8D4','#D4D8E5,#A8B0C5','#E8E5D4,#C5C0A8'][loop.index0 % 6] }});
+display:flex;align-items:center;justify-content:center;font-size:48px;height:100%">🛕</div>
+{% if place.tag_names %}
+<span class="card-tag">{{ place.tag_names.split(',')[0] }}</span>
+{% endif %}
+</a>
+<div class="card-body">
+<h3 class="card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></h3>
+<div class="card-loc"><i class="fas fa-map-marker-alt"></i> {{ place.city }}, {{ place.state }}</div>
+<div class="card-meta">
+<span><i class="fas fa-eye"></i> {{ place.view_count }} views</span>
+<span><i class="fas fa-images"></i> Gallery</span>
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+</section>
+
+<!-- Sacred Stories -->
+{% if stories %}
+<section class="section stories-bg">
+<div class="container">
+<div class="section-header">
+<div class="section-header-row">
+<div>
+<div class="section-tag">Sacred Stories</div>
+<h2 class="section-title">Tales of Devotion & Faith</h2>
+</div>
+<a href="{{ url_for('module_page', slug='sacred-stories') }}" class="section-link">All stories →</a>
+</div>
+</div>
+<div class="stories-grid">
+{% if stories[0] %}
+<div class="story-main">
+<div class="story-main-img" style="background:linear-gradient(135deg,var(--sage-light),var(--cream-deep))">🏔️</div>
+<div class="story-main-body">
+<div class="story-tag">Featured Story</div>
+<h3 class="story-title">{{ stories[0].title }}</h3>
+<p class="story-excerpt">{{ stories[0].content|striptags|truncate(180) }}</p>
+<a class="section-link" href="{{ url_for('entry_detail', mod_slug='sacred-stories', entry_slug=stories[0].slug) }}">Read Full Story →</a>
+</div>
+</div>
+{% endif %}
+<div class="story-side">
+{% for story in stories[1:] %}
+<a class="story-sm" href="{{ url_for('entry_detail', mod_slug='sacred-stories', entry_slug=story.slug) }}">
+<div class="story-sm-icon">{{ ['🪔','🌊','🐒','🦚'][loop.index0 % 4] }}</div>
+<div>
+<h4 class="story-sm-title">{{ story.title }}</h4>
+<div class="story-sm-meta">Sacred Stories · {{ story.content|striptags|wordcount // 200 + 1 }} min read</div>
+</div>
+</a>
+{% endfor %}
+</div>
+</div>
+</div>
+</section>
+{% endif %}
+
+<!-- Audio Section -->
+<section class="section">
+<div class="container">
+<div class="section-header">
+<div class="section-tag">Listen & Meditate</div>
+<h2 class="section-title">Divine Melodies</h2>
+</div>
+<div class="audio-player">
+<div class="audio-featured">
+<div class="audio-cover">🎵</div>
+<div>
+<h3>Om Namah Shivaya – Temple Rendition</h3>
+<div class="artist">Evening Aarti Collection · Kedarnath Temple</div>
+<div class="audio-progress"><div class="audio-progress-fill" style="width:40%"></div></div>
+<div class="audio-times"><span>3:24</span><span>8:47</span></div>
+<div class="audio-controls">
+<button class="audio-ctrl"><i class="fas fa-backward"></i></button>
+<button class="audio-ctrl play"><i class="fas fa-play"></i></button>
+<button class="audio-ctrl"><i class="fas fa-forward"></i></button>
+<button class="audio-ctrl"><i class="fas fa-random"></i></button>
+<button class="audio-ctrl"><i class="fas fa-redo"></i></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Newsletter -->
+<section class="section">
+<div class="container">
+<div class="newsletter">
+<h2>Stay Connected to the Divine</h2>
+<p>Receive weekly stories, festival reminders, and new holy place discoveries.</p>
+<div class="newsletter-form">
+<input class="newsletter-input" placeholder="Enter your email..." type="email">
+<button class="btn btn-primary">Subscribe</button>
+</div>
+</div>
+</div>
+</section>
+{% endblock %}

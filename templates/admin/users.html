@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% block title %}Users & Roles{% endblock %}
+{% block page_title %}Users & Roles{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_user_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New User</a>{% endblock %}
+
+{% block admin_content %}
+<div class="admin-card">
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+<tbody>
+{% for user in users %}
+<tr>
+<td style="display:flex;align-items:center;gap:10px">
+<div style="width:36px;height:36px;background:var(--primary-light);color:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">{{ user.display_name[0] }}</div>
+<div><strong>{{ user.display_name }}</strong><div style="font-size:12px;color:var(--text-light)">@{{ user.username }}</div></div>
+</td>
+<td style="font-size:13px">{{ user.email }}</td>
+<td><span class="badge badge-{{ user.role }}">{{ user.role|replace('_',' ')|title }}</span></td>
+<td>{% if user.is_active %}<span style="color:var(--success)">● Active</span>{% else %}<span style="color:var(--danger)">● Inactive</span>{% endif %}</td>
+<td style="font-size:12px;color:var(--text-light)">{{ user.last_login[:16] if user.last_login else 'Never' }}</td>
+<td class="actions">
+<a href="{{ url_for('admin_user_edit', user_id=user.id) }}" class="btn btn-secondary btn-icon btn-sm"><i class="fas fa-edit"></i></a>
+{% if user.id != current_user.id %}
+<form method="POST" action="{{ url_for('admin_user_delete', user_id=user.id) }}" style="display:inline" onsubmit="return confirm('Deactivate this user?')">
+<button class="btn btn-danger btn-icon btn-sm"><i class="fas fa-user-slash"></i></button>
+</form>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+{% endblock %}

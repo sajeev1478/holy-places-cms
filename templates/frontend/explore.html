@@ -1,0 +1,91 @@
+{% extends "frontend/base.html" %}
+{% block title %}Explore Holy Places{% endblock %}
+{% block extra_css %}
+<style>
+.explore-hero{padding:120px 0 40px;background:linear-gradient(135deg,var(--rose-pale),var(--cream),var(--sage-light));position:relative}
+.explore-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,var(--cream))}
+.explore-title{font-family:'Playfair Display',serif;font-size:clamp(32px,4vw,48px);text-align:center;margin-bottom:24px}
+.search-bar{max-width:600px;margin:0 auto;display:flex;gap:10px}
+.search-bar input{flex:1;padding:16px 24px;border:2px solid white;border-radius:50px;background:white;font-family:'Lora',serif;font-size:16px;outline:none;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.search-bar input:focus{border-color:var(--rose)}
+.search-bar button{padding:16px 28px}
+.filters{padding:24px 0;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.filter-label{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text-dark);margin-right:4px}
+.places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:1024px){.places-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.places-grid{grid-template-columns:1fr}.search-bar{flex-direction:column}.explore-hero{padding:100px 20px 40px}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="explore-hero">
+<div class="container">
+<h1 class="explore-title">{% if query %}Results for "{{ query }}"{% else %}Explore Sacred Places{% endif %}</h1>
+<form class="search-bar" action="{{ url_for('search') }}" method="GET">
+<input name="q" value="{{ query }}" placeholder="Search temples, cities, stories..." type="text">
+<button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Search</button>
+</form>
+</div>
+</section>
+
+<div class="container">
+<div class="filters">
+<span class="filter-label">Filter:</span>
+<a class="pill {{ 'active' if not current_tag and not current_state }}" href="{{ url_for('explore') }}">All</a>
+{% for tag in tags %}
+<a class="pill {{ 'active' if current_tag == tag.slug }}" href="{{ url_for('explore', tag=tag.slug) }}">{{ tag.name }}</a>
+{% endfor %}
+{% if states %}
+<span class="filter-label" style="margin-left:12px">State:</span>
+{% for s in states %}
+<a class="pill {{ 'active' if current_state == s.state }}" href="{{ url_for('explore', state=s.state) }}">{{ s.state }}</a>
+{% endfor %}
+{% endif %}
+</div>
+
+{% if places %}
+<div class="places-grid" style="margin-top:16px">
+{% for place in places %}
+<div class="card">
+<a href="{{ url_for('place_detail', slug=place.slug) }}" class="card-img">
+<div class="card-img-bg" style="background:linear-gradient(135deg,{{ ['#E8D5C4,#D4B896','#D4E5D4,#A8C5A8','#F8E5EE,#D4A8B8','#E5D4E8,#C5A8D4','#D4D8E5,#A8B0C5','#E8E5D4,#C5C0A8'][loop.index0 % 6] }});display:flex;align-items:center;justify-content:center;font-size:40px;height:100%">🛕</div>
+{% if place.tag_names %}
+<span class="card-tag">{{ place.tag_names.split(',')[0] }}</span>
+{% endif %}
+</a>
+<div class="card-body">
+<h3 class="card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></h3>
+<div class="card-loc"><i class="fas fa-map-marker-alt"></i> {{ place.city }}, {{ place.state }}</div>
+<p style="font-size:14px;color:var(--text-light);margin-bottom:12px">{{ place.short_description|truncate(100) }}</p>
+<div class="card-meta">
+<span><i class="fas fa-eye"></i> {{ place.view_count }}</span>
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+
+{% if total > per_page %}
+<div class="pagination">
+{% if page > 1 %}<a href="{{ url_for('explore', page=page-1, tag=current_tag, state=current_state, q=query) }}">‹</a>{% endif %}
+{% for p in range(1, (total // per_page) + 2) %}
+{% if p == page %}
+<span class="active">{{ p }}</span>
+{% else %}
+<a href="{{ url_for('explore', page=p, tag=current_tag, state=current_state, q=query) }}">{{ p }}</a>
+{% endif %}
+{% endfor %}
+{% if page * per_page < total %}<a href="{{ url_for('explore', page=page+1, tag=current_tag, state=current_state, q=query) }}">›</a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+<span class="icon">🔍</span>
+<h3>No places found</h3>
+<p>Try different search terms or filters.</p>
+<a href="{{ url_for('explore') }}" class="btn btn-primary" style="margin-top:16px">View All Places</a>
+</div>
+{% endif %}
+</div>
+{% endblock %}
