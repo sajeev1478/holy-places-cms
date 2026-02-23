@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <style>
+.red-star{color:#E74C3C;font-weight:700}
 .toggle-switch{position:relative;width:48px;height:26px;display:inline-block;flex-shrink:0}
 .toggle-switch input{opacity:0;width:0;height:0}
 .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#E74C3C;border-radius:26px;transition:.3s}
@@ -12,66 +13,74 @@
 .toggle-switch input:checked + .toggle-slider{background:#27AE60}
 .toggle-switch input:checked + .toggle-slider:before{transform:translateX(22px)}
 .toggle-label{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;user-select:none}
-.toggle-label .status-text{min-width:52px}
-.toggle-label .status-text.on{color:#27AE60}
-.toggle-label .status-text.off{color:#E74C3C}
+.status-text.on{color:#27AE60}.status-text.off{color:#E74C3C}
 .field-row{display:flex;gap:12px;align-items:start;margin-bottom:16px}
 .field-row .field-main{flex:1}
 .field-row .field-toggle{padding-top:28px;display:flex;align-items:center}
-.kp-card{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;position:relative}
-.kp-card.collapsed .kp-body{display:none}
-.kp-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:12px}
-.kp-header h4{font-size:16px;display:flex;align-items:center;gap:8px}
-.kp-header .kp-actions{display:flex;gap:8px;align-items:center}
+
+/* Key Places Accordion */
+.kp-accordion{border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;background:#F8F4F0}
+.kp-accordion-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;user-select:none;transition:background .2s}
+.kp-accordion-header:hover{background:#F0EAE3}
+.kp-accordion-header h4{font-size:15px;display:flex;align-items:center;gap:10px;margin:0}
+.kp-accordion-header .kp-actions{display:flex;gap:8px;align-items:center}
+.kp-accordion-body{display:none;padding:20px;border-top:1px solid var(--border);background:white}
+.kp-accordion.open .kp-accordion-body{display:block}
+.kp-accordion-header .chevron{transition:transform .2s;font-size:12px;color:var(--text-light)}
+.kp-accordion.open .kp-accordion-header .chevron{transform:rotate(180deg)}
 .kp-num{width:28px;height:28px;background:var(--primary);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.kp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
 .add-kp-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed var(--border);border-radius:14px;cursor:pointer;color:var(--text-light);font-weight:600;transition:all .2s;background:none;width:100%;font-size:14px;font-family:'DM Sans'}
 .add-kp-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
 .section-divider{border:none;border-top:2px solid var(--border);margin:28px 0;position:relative}
 .section-divider::after{content:attr(data-label);position:absolute;top:-10px;left:20px;background:white;padding:0 12px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--primary)}
-.cf-section{background:#FAFAF5;border-radius:12px;padding:20px;margin-top:4px}
+.cf-section{background:#FAFAF5;border-radius:12px;padding:20px;margin-top:12px}
 .img-preview{width:60px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
 .section-save{display:flex;justify-content:flex-end;padding:16px 0 0;border-top:1px solid var(--border);margin-top:16px}
 .section-save .btn{min-width:160px}
-.mandatory-badge{font-size:10px;background:#FDE8E8;color:#C45050;padding:2px 8px;border-radius:4px;font-weight:600}
+@media(max-width:768px){.kp-grid{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
 {% block admin_content %}
 {% set vis = json.loads(place.field_visibility) if editing and place.field_visibility else {} %}
 
-<!-- ═══ SECTION 1: MAIN PLACE INFO ═══ -->
+{% set indian_states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'] %}
+
 <form method="POST" enctype="multipart/form-data" id="mainPlaceForm">
 
+<!-- ═══ HOLY PLACE INFORMATION ═══ -->
 <div class="admin-card" style="margin-bottom:20px">
-<div class="admin-card-header"><h3>📍 Place Information</h3></div>
+<div class="admin-card-header"><h3>🛕 Holy Place Information</h3></div>
 <div class="admin-card-body">
 
-<p style="font-size:13px;color:var(--text-light);margin-bottom:20px">
-  Fields marked <span class="mandatory-badge">Mandatory</span> always show on the frontend.
-  Optional fields have an <strong style="color:#27AE60">Enable</strong> / <strong style="color:#E74C3C">Disable</strong> toggle.
-</p>
-
-<!-- Title (MANDATORY) -->
-<div class="form-group"><label>Title * <span class="mandatory-badge">Mandatory</span></label>
+<!-- Title -->
+<div class="form-group"><label>Title <span class="red-star">*</span></label>
 <input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Mayapur">
 <input type="hidden" name="vis_title" value="on">
 </div>
 
-<!-- City / State / Country (MANDATORY) -->
+<!-- City / State / Country -->
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-<div class="form-group"><label>City * <span class="mandatory-badge">Mandatory</span></label><input name="city" class="form-control" value="{{ place.city if editing else '' }}"><input type="hidden" name="vis_city" value="on"></div>
-<div class="form-group"><label>State * <span class="mandatory-badge">Mandatory</span></label><input name="state" class="form-control" value="{{ place.state if editing else '' }}"><input type="hidden" name="vis_state" value="on"></div>
-<div class="form-group"><label>Country * <span class="mandatory-badge">Mandatory</span></label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"><input type="hidden" name="vis_country" value="on"></div>
+<div class="form-group"><label>City <span class="red-star">*</span></label><input name="city" class="form-control" value="{{ place.city if editing else '' }}" placeholder="e.g. Nadia"><input type="hidden" name="vis_city" value="on"></div>
+<div class="form-group"><label>State <span class="red-star">*</span></label>
+<select name="state" class="form-control">
+<option value="">Select State</option>
+{% for st in indian_states %}<option value="{{ st }}" {{ 'selected' if editing and place.state == st }}>{{ st }}</option>{% endfor %}
+</select>
+<input type="hidden" name="vis_state" value="on"></div>
+<div class="form-group"><label>Country <span class="red-star">*</span></label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"><input type="hidden" name="vis_country" value="on"></div>
 </div>
 
-<!-- Short Description (MANDATORY) -->
-<div class="form-group"><label>Short Description * <span class="mandatory-badge">Mandatory</span></label>
+<!-- Short Description -->
+<div class="form-group"><label>Short Description <span class="red-star">*</span></label>
 <textarea name="short_description" class="form-control" rows="3">{{ place.short_description if editing else '' }}</textarea>
 <input type="hidden" name="vis_short_description" value="on">
 </div>
 
-<!-- Full Content (MANDATORY) -->
-<div class="form-group"><label>Full Content (Rich Editor) * <span class="mandatory-badge">Mandatory</span></label>
+<!-- Full Content -->
+<div class="form-group"><label>Full Content (Rich Editor) <span class="red-star">*</span></label>
 <input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
 <div class="rich-editor" data-target="full_content" style="background:white;min-height:250px"></div>
 <input type="hidden" name="vis_full_content" value="on">
@@ -79,7 +88,7 @@
 
 <hr class="section-divider" data-label="Optional Fields">
 
-<!-- Featured Image (TOGGLE) -->
+<!-- Featured Image -->
 <div class="field-row">
 <div class="field-main"><div class="form-group"><label>Featured Image</label>
 {% if editing and place.featured_image %}<div style="margin-bottom:8px"><img src="/static/uploads/{{ place.featured_image }}" class="img-preview" onerror="this.style.display='none'"> <span style="font-size:12px;color:var(--text-light)">{{ place.featured_image }}</span><input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}"></div>{% endif %}
@@ -104,28 +113,11 @@
 <div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="vis_tags" {{ 'checked' if not editing or vis.get('tags',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if not editing or vis.get('tags',1) else 'off' }}">{{ 'Enabled' if not editing or vis.get('tags',1) else 'Disabled' }}</span></label></div>
 </div>
 
-<!-- Status / Featured -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-<div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if editing and place.status=='draft' }}>Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>Published</option></select>
-<input type="hidden" name="vis_status" value="on"></div>
-<div class="form-group" style="display:flex;align-items:end;padding-bottom:12px"><label class="form-check"><input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }}> Featured on Homepage</label>
-<input type="hidden" name="vis_is_featured" value="on"></div>
-</div>
-
-<!-- SAVE BUTTON for Main Place -->
-<div class="section-save">
-<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} Place</button>
-</div>
-
-</div>
-</div>
-
-<!-- ═══ SECTION 2: CUSTOM FIELDS ═══ -->
+<!-- ═══ CUSTOM FIELDS (inside the main card) ═══ -->
 {% if custom_fields %}
-<div class="admin-card" style="margin-bottom:20px">
-<div class="admin-card-header"><h3>⚙️ Custom Fields</h3><span style="font-size:12px;color:var(--text-light)">Manage fields in <a href="{{ url_for('admin_fields') }}">Settings</a></span></div>
-<div class="admin-card-body">
-
+<hr class="section-divider" data-label="Custom Fields">
+<div class="cf-section">
+<p style="font-size:12px;color:var(--text-light);margin-bottom:16px">Manage fields in <a href="{{ url_for('admin_fields') }}">Custom Fields Settings</a></p>
 {% for cf in custom_fields %}
 <div class="field-row">
 <div class="field-main"><div class="form-group">
@@ -151,40 +143,48 @@
 <div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}">{{ 'Enabled' if cv.get('is_visible',1) else 'Disabled' }}</span></label></div>
 </div>
 {% endfor %}
-
-<!-- SAVE BUTTON for Custom Fields -->
-<div class="section-save">
-<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Save' }} Custom Fields</button>
-</div>
-
-</div>
 </div>
 {% endif %}
 
-<!-- ═══ SECTION 3: KEY PLACES TO VISIT ═══ -->
+<!-- Status & Featured (at bottom) -->
+<hr class="section-divider" data-label="Publishing">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if editing and place.status=='draft' }}>Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>Published</option></select>
+<input type="hidden" name="vis_status" value="on"></div>
+<div class="form-group" style="display:flex;align-items:end;padding-bottom:12px"><label class="form-check"><input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }}> Featured on Homepage</label>
+<input type="hidden" name="vis_is_featured" value="on"></div>
+</div>
+
+<!-- SAVE BUTTON for Main Place -->
+<div class="section-save">
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} Holy Place</button>
+</div>
+
+</div>
+</div>
+
+<!-- ═══ KEY PLACES TO VISIT ═══ -->
 <div class="admin-card" style="margin-bottom:20px">
 <div class="admin-card-header"><h3>🗺️ Key Places to Visit</h3><span style="font-size:12px;color:var(--text-light)">Sub-places within this holy place</span></div>
 <div class="admin-card-body">
 
-<div id="keyPlacesContainer">
+<div id="keyPlacesContainer" class="kp-grid">
 {% for kp in key_places %}
 {% set ki = loop.index0 %}
-<div class="kp-card" data-index="{{ ki }}">
-<div class="kp-header" onclick="this.parentElement.classList.toggle('collapsed')">
+<div class="kp-accordion" data-index="{{ ki }}">
+<div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
 <h4><span class="kp-num">{{ ki + 1 }}</span> <span class="kp-title-display">{{ kp.title }}</span></h4>
 <div class="kp-actions">
 <label class="toggle-label" onclick="event.stopPropagation()" style="font-size:11px">
-<label class="toggle-switch" style="width:40px;height:22px">
-<input type="checkbox" name="kp_{{ ki }}_is_visible" {{ 'checked' if kp.is_visible }} onchange="updateToggleText(this)">
-<span class="toggle-slider" style="border-radius:22px"><span style="height:16px;width:16px;left:3px;bottom:3px;position:absolute;background:white;border-radius:50%;transition:.3s"></span></span>
+<label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_is_visible" {{ 'checked' if kp.is_visible }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label>
 </label>
-</label>
-<button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-card').remove()" title="Remove"><i class="fas fa-trash"></i></button>
+<span class="chevron"><i class="fas fa-chevron-down"></i></span>
+<button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()" title="Remove"><i class="fas fa-trash"></i></button>
 </div>
 </div>
-<div class="kp-body">
+<div class="kp-accordion-body">
 <input type="hidden" name="kp_{{ ki }}_id" value="{{ kp.id }}">
-<div class="form-group"><label>Title *</label><input name="kp_{{ ki }}_title" class="form-control" value="{{ kp.title }}" required onchange="this.closest('.kp-card').querySelector('.kp-title-display').textContent=this.value"></div>
+<div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_{{ ki }}_title" class="form-control" value="{{ kp.title }}" required onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value"></div>
 <div class="form-group"><label>Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
 <div class="form-group"><label>Full Content</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
@@ -215,7 +215,6 @@
 </div></details>
 {% endif %}
 
-<!-- SAVE BUTTON per Key Place -->
 <div class="section-save">
 <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Update {{ kp.title }}</button>
 </div>
@@ -224,9 +223,10 @@
 {% endfor %}
 </div>
 
+<div style="margin-top:16px">
 <button type="button" class="add-kp-btn" onclick="addKeyPlace()"><i class="fas fa-plus-circle"></i> Add Key Place to Visit</button>
+</div>
 
-<!-- Overall save for new key places -->
 <div class="section-save" style="margin-top:16px">
 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update All & Save' if editing else 'Create Place' }}</button>
 </div>
@@ -239,44 +239,45 @@
 
 {% block extra_js %}
 <script>
-function updateToggleText(checkbox) {
-    const label = checkbox.closest('.toggle-label');
-    const statusText = label.querySelector('.status-text');
-    if (checkbox.checked) {
-        statusText.textContent = statusText.textContent.includes('On') ? 'On' : 'Enabled';
-        statusText.className = 'status-text on';
-    } else {
-        statusText.textContent = statusText.textContent.includes('On') ? 'Off' : 'Disabled';
-        statusText.className = 'status-text off';
-    }
+function updateToggleText(cb) {
+    const lbl = cb.closest('.toggle-label');
+    if (!lbl) return;
+    const st = lbl.querySelector('.status-text');
+    if (!st) return;
+    const short = st.textContent.trim().length <= 3;
+    st.textContent = cb.checked ? (short ? 'On' : 'Enabled') : (short ? 'Off' : 'Disabled');
+    st.className = 'status-text ' + (cb.checked ? 'on' : 'off');
 }
 
 let kpIndex = {{ key_places|length }};
 function addKeyPlace() {
-    const html = `
-    <div class="kp-card" data-index="${kpIndex}">
-        <div class="kp-header" onclick="this.parentElement.classList.toggle('collapsed')">
+    const container = document.getElementById('keyPlacesContainer');
+    const div = document.createElement('div');
+    div.className = 'kp-accordion open';
+    div.dataset.index = kpIndex;
+    div.innerHTML = `
+        <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
             <h4><span class="kp-num">${kpIndex+1}</span> <span class="kp-title-display">New Key Place</span></h4>
             <div class="kp-actions">
                 <label class="toggle-label" onclick="event.stopPropagation()" style="font-size:11px">
                     <label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_${kpIndex}_is_visible" checked onchange="updateToggleText(this)"><span class="toggle-slider"></span></label>
                 </label>
-                <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-card').remove()" title="Remove"><i class="fas fa-trash"></i></button>
+                <span class="chevron"><i class="fas fa-chevron-down"></i></span>
+                <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()" title="Remove"><i class="fas fa-trash"></i></button>
             </div>
         </div>
-        <div class="kp-body">
-            <div class="form-group"><label>Title *</label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Navadvipa" onchange="this.closest('.kp-card').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
+        <div class="kp-accordion-body">
+            <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Navadvipa" onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
             <div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2"></textarea></div>
-            <div class="form-group"><label>Full Content</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Content for this key place..."></textarea></div>
+            <div class="form-group"><label>Full Content</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Content..."></textarea></div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
                 <div class="form-group"><label>Featured Image</label><input type="file" name="kp_${kpIndex}_featured_image_file" class="form-control" accept="image/*"></div>
                 <div class="form-group"><label>Latitude</label><input name="kp_${kpIndex}_latitude" class="form-control" type="number" step="any"></div>
                 <div class="form-group"><label>Longitude</label><input name="kp_${kpIndex}_longitude" class="form-control" type="number" step="any"></div>
             </div>
             <div class="section-save"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save Key Place</button></div>
-        </div>
-    </div>`;
-    document.getElementById('keyPlacesContainer').insertAdjacentHTML('beforeend', html);
+        </div>`;
+    container.appendChild(div);
     kpIndex++;
 }
 </script>
