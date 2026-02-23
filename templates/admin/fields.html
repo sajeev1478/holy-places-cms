@@ -1,0 +1,72 @@
+{% extends "admin/base.html" %}
+{% block title %}Custom Fields{% endblock %}
+{% block page_title %}Custom Fields{% endblock %}
+
+{% block admin_content %}
+<p style="color:var(--text-light);margin-bottom:20px;font-size:14px">Define extra fields that can be added to Holy Places and Key Places. Fields like audio, video, images, text, URLs, etc.</p>
+
+<!-- Add Field -->
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-header"><h3>Add New Field</h3></div>
+<div class="admin-card-body">
+<form method="POST" action="{{ url_for('admin_field_new') }}" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+<div class="form-group" style="margin:0;flex:1;min-width:180px"><label>Label</label><input name="label" class="form-control" required placeholder="e.g. Audio Narration"></div>
+<div class="form-group" style="margin:0;width:160px"><label>Field Type</label><select name="field_type" class="form-control">
+<option value="text">Text (single line)</option>
+<option value="textarea">Textarea (multi-line)</option>
+<option value="richtext">Rich Text Editor</option>
+<option value="number">Number</option>
+<option value="url">URL / Link</option>
+<option value="image">Image Upload</option>
+<option value="audio">Audio Upload</option>
+<option value="video">Video Upload</option>
+<option value="images">Multiple Images</option>
+</select></div>
+<div class="form-group" style="margin:0;width:180px"><label>Placeholder</label><input name="placeholder" class="form-control" placeholder="Hint text"></div>
+<div class="form-group" style="margin:0;width:100px"><label>Order</label><input name="sort_order" class="form-control" type="number" value="0"></div>
+<div class="form-group" style="margin:0;width:130px"><label>Applies To</label><select name="applies_to" class="form-control">
+<option value="both">Both</option>
+<option value="place">Places Only</option>
+<option value="key_place">Key Places Only</option>
+</select></div>
+<button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+</form>
+</div>
+</div>
+
+<!-- Fields List -->
+<div class="admin-card">
+{% if fields %}
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th>Order</th><th>Label</th><th>Field Name</th><th>Type</th><th>Applies To</th><th>Status</th><th>Actions</th></tr></thead>
+<tbody>
+{% for f in fields %}
+<tr style="{{ 'opacity:.5' if not f.is_active }}">
+<td>{{ f.sort_order }}</td>
+<td style="font-weight:600">{{ f.label }}</td>
+<td style="font-size:12px;color:var(--text-light);font-family:monospace">{{ f.name }}</td>
+<td><span class="badge" style="background:{{ {'text':'#D4E0F5','textarea':'#D4E5D4','richtext':'#F5ECD4','number':'#E5D4E8','url':'#D4E0F5','image':'#F8E5EE','audio':'#E8F5E8','video':'#F5E8E8','images':'#F8E5EE'}.get(f.field_type,'#EEE') }};color:var(--text-dark)">{{ f.field_type }}</span></td>
+<td style="font-size:12px">{{ f.applies_to }}</td>
+<td>
+<form method="POST" action="{{ url_for('admin_field_toggle', field_id=f.id) }}" style="display:inline">
+<button class="btn btn-sm {{ 'btn-primary' if f.is_active else 'btn-danger' }}" style="font-size:11px">
+{{ '● Active' if f.is_active else '○ Inactive' }}
+</button>
+</form>
+</td>
+<td>
+<form method="POST" action="{{ url_for('admin_field_delete', field_id=f.id) }}" style="display:inline" onsubmit="return confirm('Delete this field and all its values?')">
+<button class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button>
+</form>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty"><span class="icon">⚙️</span><h3>No custom fields yet</h3><p>Create fields above to extend place data.</p></div>
+{% endif %}
+</div>
+{% endblock %}

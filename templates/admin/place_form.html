@@ -1,96 +1,217 @@
 {% extends "admin/base.html" %}
 {% block title %}{{ 'Edit' if editing else 'New' }} Place{% endblock %}
 {% block page_title %}{{ 'Edit' if editing else 'New' }} Holy Place{% endblock %}
-{% block topbar_actions %}
-{% if editing %}
-<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary"><i class="fas fa-eye"></i> View</a>
-{% endif %}
+{% block topbar_actions %}{% if editing %}<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary"><i class="fas fa-eye"></i> View Live</a>{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+.vis-toggle{display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);transition:all .2s;user-select:none}
+.vis-toggle:has(input:checked){background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
+.vis-toggle:has(input:not(:checked)){background:#FDE8E8;border-color:#E8A0A0;color:#C45050}
+.vis-toggle input{display:none}
+.field-row{display:flex;gap:12px;align-items:start;margin-bottom:16px}
+.field-row .field-main{flex:1}
+.field-row .field-vis{padding-top:28px}
+.kp-card{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;position:relative}
+.kp-card.collapsed .kp-body{display:none}
+.kp-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:12px}
+.kp-header h4{font-size:16px;display:flex;align-items:center;gap:8px}
+.kp-header .kp-actions{display:flex;gap:6px}
+.kp-num{width:28px;height:28px;background:var(--primary);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.add-kp-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed var(--border);border-radius:14px;cursor:pointer;color:var(--text-light);font-weight:600;transition:all .2s;background:none;width:100%;font-size:14px;font-family:'DM Sans'}
+.add-kp-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.section-divider{border:none;border-top:2px solid var(--border);margin:28px 0;position:relative}
+.section-divider::after{content:attr(data-label);position:absolute;top:-10px;left:20px;background:white;padding:0 12px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--primary)}
+.cf-section{background:#FAFAF5;border-radius:12px;padding:20px;margin-top:4px}
+.img-preview{width:60px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
+</style>
 {% endblock %}
 
 {% block admin_content %}
-<form method="POST" class="admin-card">
+<form method="POST" enctype="multipart/form-data" class="admin-card">
 <div class="admin-card-body">
-<div class="form-group">
-<label>Title *</label>
-<input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Kedarnath Temple">
+
+<!-- ═══ BUILT-IN FIELDS ═══ -->
+<p style="font-size:13px;color:var(--text-light);margin-bottom:20px">
+  <i class="fas fa-eye"></i> Toggle the <strong>Show/Hide</strong> button next to each field to control visibility on the frontend page.
+</p>
+
+{% set vis = json.loads(place.field_visibility) if editing and place.field_visibility else {} %}
+
+<!-- Title -->
+<div class="field-row">
+<div class="field-main"><div class="form-group"><label>Title *</label><input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Mayapur"></div></div>
+<div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_title" {{ 'checked' if not editing or vis.get('title',1) }}><i class="fas fa-eye"></i> Show</label></div>
 </div>
 
-<div class="form-row">
-<div class="form-group">
-<label>City</label>
-<input name="city" class="form-control" value="{{ place.city if editing else '' }}" placeholder="e.g. Rudraprayag">
-</div>
-<div class="form-group">
-<label>State</label>
-<input name="state" class="form-control" value="{{ place.state if editing else '' }}" placeholder="e.g. Uttarakhand">
-</div>
+<!-- City / State -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div class="field-row"><div class="field-main"><div class="form-group"><label>City</label><input name="city" class="form-control" value="{{ place.city if editing else '' }}"></div></div><div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_city" {{ 'checked' if not editing or vis.get('city',1) }}><i class="fas fa-eye"></i></label></div></div>
+<div class="field-row"><div class="field-main"><div class="form-group"><label>State</label><input name="state" class="form-control" value="{{ place.state if editing else '' }}"></div></div><div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_state" {{ 'checked' if not editing or vis.get('state',1) }}><i class="fas fa-eye"></i></label></div></div>
+<div class="field-row"><div class="field-main"><div class="form-group"><label>Country</label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"></div></div><div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_country" {{ 'checked' if not editing or vis.get('country',1) }}><i class="fas fa-eye"></i></label></div></div>
 </div>
 
-<div class="form-row">
-<div class="form-group">
-<label>Country</label>
-<input name="country" class="form-control" value="{{ place.country if editing else 'India' }}" placeholder="India">
-</div>
-<div class="form-group">
-<label>Featured Image URL</label>
-<input name="featured_image" class="form-control" value="{{ place.featured_image if editing else '' }}" placeholder="filename or URL">
-</div>
+<!-- Short Description -->
+<div class="field-row">
+<div class="field-main"><div class="form-group"><label>Short Description</label><textarea name="short_description" class="form-control" rows="3">{{ place.short_description if editing else '' }}</textarea></div></div>
+<div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_short_description" {{ 'checked' if not editing or vis.get('short_description',1) }}><i class="fas fa-eye"></i> Show</label></div>
 </div>
 
-<div class="form-group">
-<label>Short Description</label>
-<textarea name="short_description" class="form-control" rows="3" placeholder="Brief description for cards and previews...">{{ place.short_description if editing else '' }}</textarea>
+<!-- Full Content -->
+<div class="field-row">
+<div class="field-main"><div class="form-group"><label>Full Content (Rich Editor)</label><input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}"><div class="rich-editor" data-target="full_content" style="background:white;min-height:250px"></div></div></div>
+<div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_full_content" {{ 'checked' if not editing or vis.get('full_content',1) }}><i class="fas fa-eye"></i> Show</label></div>
 </div>
 
-<div class="form-group">
-<label>Full Content (Rich Editor)</label>
-<input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
-<div class="rich-editor" data-target="full_content" style="background:white;min-height:300px"></div>
+<!-- Featured Image -->
+<div class="field-row">
+<div class="field-main"><div class="form-group"><label>Featured Image</label>
+{% if editing and place.featured_image %}<div style="margin-bottom:8px"><img src="/static/uploads/{{ place.featured_image }}" class="img-preview" onerror="this.style.display='none'"> <span style="font-size:12px;color:var(--text-light)">{{ place.featured_image }}</span><input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}"></div>{% endif %}
+<input type="file" name="featured_image_file" class="form-control" accept="image/*">
+<div class="hint">Upload an image or keep existing</div></div></div>
+<div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_featured_image" {{ 'checked' if not editing or vis.get('featured_image',1) }}><i class="fas fa-eye"></i> Show</label></div>
 </div>
 
-<div class="form-row">
-<div class="form-group">
-<label>Latitude</label>
-<input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}" placeholder="e.g. 30.7352">
-</div>
-<div class="form-group">
-<label>Longitude</label>
-<input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}" placeholder="e.g. 79.0669">
-</div>
+<!-- Lat / Lng -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="field-row"><div class="field-main"><div class="form-group"><label>Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}"></div></div><div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_latitude" {{ 'checked' if not editing or vis.get('latitude',1) }}><i class="fas fa-eye"></i></label></div></div>
+<div class="field-row"><div class="field-main"><div class="form-group"><label>Longitude</label><input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}"></div></div><div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_longitude" {{ 'checked' if not editing or vis.get('longitude',1) }}><i class="fas fa-eye"></i></label></div></div>
 </div>
 
-<div class="form-group">
-<label>Tags</label>
-<div class="tag-select">
-{% for tag in tags %}
-<label>
-<input type="checkbox" name="tags" value="{{ tag.id }}" {{ 'checked' if editing and tag.id in place_tags else '' }}>
-<span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span> {{ tag.name }}
-</label>
+<!-- Tags -->
+<div class="field-row">
+<div class="field-main"><div class="form-group"><label>Tags</label><div class="tag-select">
+{% for tag in tags %}<label><input type="checkbox" name="tags" value="{{ tag.id }}" {{ 'checked' if editing and tag.id in place_tags }}><span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span> {{ tag.name }}</label>{% endfor %}
+</div></div></div>
+<div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="vis_tags" {{ 'checked' if not editing or vis.get('tags',1) }}><i class="fas fa-eye"></i> Show</label></div>
+</div>
+
+<!-- Status / Featured -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if editing and place.status=='draft' }}>Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>Published</option></select></div>
+<div class="form-group" style="display:flex;align-items:end;padding-bottom:12px"><label class="form-check"><input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }}> Featured on Homepage</label></div>
+</div>
+
+<!-- ═══ CUSTOM FIELDS ═══ -->
+{% if custom_fields %}
+<hr class="section-divider" data-label="Custom Fields">
+<div class="cf-section">
+<p style="font-size:13px;color:var(--text-light);margin-bottom:16px">These are dynamic fields you can configure in <a href="{{ url_for('admin_fields') }}">Custom Fields</a> settings.</p>
+{% for cf in custom_fields %}
+<div class="field-row">
+<div class="field-main"><div class="form-group">
+<label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light);background:var(--bg);padding:2px 8px;border-radius:4px">{{ cf.field_type }}</span></label>
+{% set cv = custom_values.get(cf.id, {}) %}
+{% if cf.field_type == 'text' or cf.field_type == 'url' %}
+<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
+{% elif cf.field_type == 'textarea' %}
+<textarea name="cf_{{ cf.id }}" class="form-control" rows="3" placeholder="{{ cf.placeholder }}">{{ cv.get('value','') }}</textarea>
+{% elif cf.field_type == 'richtext' %}
+<input type="hidden" name="cf_{{ cf.id }}" id="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
+<div class="rich-editor" data-target="cf_{{ cf.id }}" style="background:white;min-height:150px"></div>
+{% elif cf.field_type == 'number' %}
+<input name="cf_{{ cf.id }}" class="form-control" type="number" step="any" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
+{% elif cf.field_type in ('image','audio','video') %}
+{% if cv.get('value') %}<div style="margin-bottom:6px;font-size:12px;color:var(--text-light)">Current: {{ cv.get('value','') }}</div><input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">{% endif %}
+<input type="file" name="cf_file_{{ cf.id }}" class="form-control" accept="{{ 'image/*' if cf.field_type=='image' else 'audio/*' if cf.field_type=='audio' else 'video/*' }}">
+{% elif cf.field_type == 'images' %}
+{% if cv.get('value') %}<div style="margin-bottom:6px;font-size:12px;color:var(--text-light)">Current: {{ cv.get('value','').split(',')|length }} files</div><input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">{% endif %}
+<input type="file" name="cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple>
+{% endif %}
+</div></div>
+<div class="field-vis"><label class="vis-toggle"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }}><i class="fas fa-eye"></i> Show</label></div>
+</div>
 {% endfor %}
 </div>
+{% endif %}
+
+<!-- ═══ KEY PLACES TO VISIT ═══ -->
+<hr class="section-divider" data-label="Key Places to Visit">
+<p style="font-size:13px;color:var(--text-light);margin-bottom:16px">Add sub-places that visitors can explore. Each key place can have its own details and custom fields.</p>
+
+<div id="keyPlacesContainer">
+{% for kp in key_places %}
+{% set ki = loop.index0 %}
+<div class="kp-card" data-index="{{ ki }}">
+<div class="kp-header" onclick="this.parentElement.classList.toggle('collapsed')">
+<h4><span class="kp-num">{{ ki + 1 }}</span> {{ kp.title }}</h4>
+<div class="kp-actions">
+<label class="vis-toggle" onclick="event.stopPropagation()"><input type="checkbox" name="kp_{{ ki }}_is_visible" {{ 'checked' if kp.is_visible }}><i class="fas fa-eye"></i></label>
+<button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-card').remove()"><i class="fas fa-trash"></i></button>
+</div>
+</div>
+<div class="kp-body">
+<input type="hidden" name="kp_{{ ki }}_id" value="{{ kp.id }}">
+<div class="form-group"><label>Title *</label><input name="kp_{{ ki }}_title" class="form-control" value="{{ kp.title }}" required></div>
+<div class="form-group"><label>Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
+<div class="form-group"><label>Full Content</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div class="form-group"><label>Featured Image</label>{% if kp.featured_image %}<input type="hidden" name="kp_{{ ki }}_featured_image_existing" value="{{ kp.featured_image }}">{% endif %}<input type="file" name="kp_{{ ki }}_featured_image_file" class="form-control" accept="image/*"></div>
+<div class="form-group"><label>Latitude</label><input name="kp_{{ ki }}_latitude" class="form-control" type="number" step="any" value="{{ kp.latitude or '' }}"></div>
+<div class="form-group"><label>Longitude</label><input name="kp_{{ ki }}_longitude" class="form-control" type="number" step="any" value="{{ kp.longitude or '' }}"></div>
+</div>
+{% if custom_fields %}
+<details style="margin-top:8px"><summary style="font-size:13px;font-weight:600;cursor:pointer;color:var(--primary)">Custom Fields for this Key Place</summary>
+<div style="padding:12px 0">
+{% set kpc = key_place_customs.get(kp.id, {}) %}
+{% for cf in custom_fields %}
+{% if cf.applies_to in ('both','key_place') %}
+<div class="field-row">
+<div class="field-main"><div class="form-group"><label style="font-size:12px">{{ cf.label }}</label>
+{% set kcv = kpc.get(cf.id, {}) %}
+{% if cf.field_type in ('text','url') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px">
+{% elif cf.field_type == 'textarea' %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="2" style="font-size:13px">{{ kcv.get('value','') }}</textarea>
+{% elif cf.field_type in ('image','audio','video') %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}">{% endif %}<input type="file" name="kp_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" accept="{{ 'image/*' if cf.field_type=='image' else 'audio/*' if cf.field_type=='audio' else 'video/*' }}" style="font-size:13px">
+{% else %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">
+{% endif %}
+</div></div>
+<div class="field-vis"><label class="vis-toggle" style="font-size:10px;margin-top:24px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }}><i class="fas fa-eye"></i></label></div>
+</div>
+{% endif %}
+{% endfor %}
+</div></details>
+{% endif %}
+</div>
+</div>
+{% endfor %}
 </div>
 
-<div class="form-row">
-<div class="form-group">
-<label>Status</label>
-<select name="status" class="form-control">
-<option value="draft" {{ 'selected' if editing and place.status=='draft' }}>Draft</option>
-<option value="published" {{ 'selected' if editing and place.status=='published' }}>Published</option>
-</select>
-</div>
-<div class="form-group" style="display:flex;align-items:end;padding-bottom:12px">
-<label class="form-check">
-<input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }}>
-Featured on Homepage
-</label>
-</div>
-</div>
-</div>
+<button type="button" class="add-kp-btn" onclick="addKeyPlace()"><i class="fas fa-plus-circle"></i> Add Key Place to Visit</button>
 
+</div>
 <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end">
 <a href="{{ url_for('admin_places') }}" class="btn btn-secondary">Cancel</a>
 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} Place</button>
 </div>
 </form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let kpIndex = {{ key_places|length }};
+function addKeyPlace() {
+    const html = `
+    <div class="kp-card" data-index="${kpIndex}">
+        <div class="kp-header" onclick="this.parentElement.classList.toggle('collapsed')">
+            <h4><span class="kp-num">${kpIndex+1}</span> <span class="kp-title-display">New Key Place</span></h4>
+            <div class="kp-actions">
+                <label class="vis-toggle" onclick="event.stopPropagation()"><input type="checkbox" name="kp_${kpIndex}_is_visible" checked><i class="fas fa-eye"></i></label>
+                <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-card').remove()"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="kp-body">
+            <div class="form-group"><label>Title *</label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Navadvipa" onchange="this.closest('.kp-card').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
+            <div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2"></textarea></div>
+            <div class="form-group"><label>Full Content</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Rich content for this key place..."></textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div class="form-group"><label>Featured Image</label><input type="file" name="kp_${kpIndex}_featured_image_file" class="form-control" accept="image/*"></div>
+                <div class="form-group"><label>Latitude</label><input name="kp_${kpIndex}_latitude" class="form-control" type="number" step="any"></div>
+                <div class="form-group"><label>Longitude</label><input name="kp_${kpIndex}_longitude" class="form-control" type="number" step="any"></div>
+            </div>
+        </div>
+    </div>`;
+    document.getElementById('keyPlacesContainer').insertAdjacentHTML('beforeend', html);
+    kpIndex++;
+}
+</script>
 {% endblock %}

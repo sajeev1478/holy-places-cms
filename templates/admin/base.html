@@ -175,6 +175,9 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 {% if current_user and current_user.role == 'super_admin' %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">System</div>
+<a class="sidebar-link {{ 'active' if request.endpoint == 'admin_fields' }}" href="{{ url_for('admin_fields') }}">
+<i class="fas fa-cogs"></i> Custom Fields
+</a>
 <a class="sidebar-link {{ 'active' if request.endpoint in ('admin_users','admin_user_new','admin_user_edit') }}" href="{{ url_for('admin_users') }}">
 <i class="fas fa-users-cog"></i> Users & Roles
 </a>
