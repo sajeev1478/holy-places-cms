@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+holyplaces.db
+static/uploads/images/*
+static/uploads/audio/*
+static/uploads/video/*
+!static/uploads/images/.gitkeep
+!static/uploads/audio/.gitkeep
+!static/uploads/video/.gitkeep
+.DS_Store
+*.swp
+venv/
