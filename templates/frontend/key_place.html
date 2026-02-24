@@ -48,7 +48,7 @@
 {% if kp_gallery %}
 <div style="margin-bottom:28px">
 <h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">📸 Photo Gallery <span style="font-size:12px;font-weight:500;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">{{ kp_gallery|length }} images</span></h3>
-{% with gallery_images=kp_gallery, slider_id='kp' %}{% include 'frontend/_gallery_slider.html' %}{% endwith %}
+{% with gallery_images=kp_gallery, slider_id='kp', gallery_captions=kp_captions %}{% include 'frontend/_gallery_slider.html' %}{% endwith %}
 </div>
 {% endif %}
 

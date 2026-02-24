@@ -180,6 +180,34 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 .dbl-confirm-box p{color:var(--text-light);font-size:14px;margin-bottom:20px;line-height:1.6}
 .dbl-confirm-box .warn{color:#E53935;font-weight:600;font-size:13px;margin-bottom:16px}
 .dbl-confirm-btns{display:flex;gap:10px;justify-content:center}
+/* Help Guide Accordion */
+.help-accordion{margin-bottom:20px;background:white;border-radius:12px;border:1px solid var(--border);border-left:4px solid var(--primary);overflow:hidden}
+.help-accordion-toggle{padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none;transition:background .2s}
+.help-accordion-toggle:hover{background:var(--bg-cream)}
+.help-accordion-toggle h4{flex:1;font-size:14px;font-weight:700;margin:0;color:var(--text-dark)}
+.help-accordion-toggle .ha-chevron{width:18px;height:18px;transition:transform .3s;color:var(--text-light);flex-shrink:0}
+.help-accordion.ha-open .ha-chevron{transform:rotate(180deg)}
+.help-accordion-body{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.23,1,.32,1)}
+.help-accordion.ha-open .help-accordion-body{max-height:5000px}
+.help-accordion-inner{padding:0 18px 18px;font-size:13px;color:var(--text-mid);line-height:1.75}
+.help-accordion-inner p{margin-bottom:10px}
+.help-accordion-inner h5{font-size:13px;font-weight:700;color:var(--text-dark);margin:14px 0 6px}
+.help-accordion-inner ul{margin:6px 0 12px;padding-left:18px}
+.help-accordion-inner li{margin-bottom:4px}
+.help-accordion-inner li strong{color:var(--text-dark)}
+.help-accordion-inner .ha-example{background:var(--bg-cream);border:1px solid var(--border);border-radius:8px;padding:12px;margin:8px 0;font-size:12px}
+.help-accordion-inner .ha-tip{background:#E8F5E9;border:1px solid #C8E6C9;border-radius:8px;padding:10px 14px;margin:10px 0;font-size:12px;color:#2E7D32}
+.help-accordion-inner .ha-warn{background:#FFF3E0;border:1px solid #FFE0B2;border-radius:8px;padding:10px 14px;margin:10px 0;font-size:12px;color:#E65100}
+.help-accordion-inner .ha-tier-flow{display:flex;align-items:center;gap:0;margin:12px 0;flex-wrap:wrap}
+.help-accordion-inner .ha-tier-box{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;color:white}
+.help-accordion-inner .ha-tier-arrow{font-size:16px;color:var(--text-light);margin:0 4px}
+.help-accordion-inner table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+.help-accordion-inner th{background:var(--bg-cream);padding:8px 10px;text-align:left;font-weight:700;border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.help-accordion-inner td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.help-accordion-inner .code-block{background:#1e1e2e;color:#cdd6f4;padding:12px;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;overflow-x:auto;margin:8px 0;line-height:1.5}
+.help-accordion-inner .code-block .key{color:#89b4fa}
+.help-accordion-inner .code-block .val{color:#a6e3a1}
+.help-accordion-inner .code-block .str{color:#f9e2af}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -513,6 +541,96 @@ document.addEventListener('DOMContentLoaded', function(){
             const f = this;
             dblConfirmDelete('Are you sure you want to delete this item?', function(){ f.submit(); });
         });
+    });
+});
+</script>
+<script>
+/* Help Accordion Toggle */
+function toggleHelpAccordion(el){el.closest('.help-accordion').classList.toggle('ha-open')}
+
+/* Gallery: Add individual image upload item */
+var galNewCounters = {};
+function addGalleryItem(prefix) {
+    if (!galNewCounters[prefix]) galNewCounters[prefix] = 0;
+    var idx = galNewCounters[prefix]++;
+    var container = document.getElementById(prefix + '_new_gals');
+    if (!container) return;
+    var div = document.createElement('div');
+    div.className = 'gal-new-item';
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;border:2px dashed #6C5CE740;background:#6C5CE706;border-radius:10px;margin-bottom:8px';
+    div.innerHTML = '<div style="flex:1;display:grid;gap:6px">'
+        + '<input type="file" class="form-control" name="' + prefix + '_new_gallery_' + idx + '" accept="image/*" style="font-size:12px">'
+        + '<input type="text" class="form-control" name="' + prefix + '_new_caption_' + idx + '" placeholder="Caption (optional)" style="font-size:12px">'
+        + '</div>'
+        + '<button type="button" class="btn btn-sm" style="background:#e74c3c15;color:#e74c3c;border:1px solid #e74c3c30;flex-shrink:0" onclick="this.closest(\'.gal-new-item\').remove()"><i class="fas fa-times"></i></button>';
+    container.appendChild(div);
+}
+
+/* Gallery: Double-confirm delete for existing images */
+function galDeleteConfirm(btn, tier, parentId, imagePath, prefix) {
+    if (btn.dataset.confirmed) {
+        // Second click: do the delete
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        fetch('/admin/api/delete-gallery-image', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({tier: tier, parent_id: parentId, image: imagePath})
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) {
+                var item = btn.closest('.gal-item');
+                if (item) {
+                    item.style.transition = 'all .3s';
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.95)';
+                    setTimeout(function() { item.remove(); }, 300);
+                }
+                // Update hidden gallery_existing field
+                var form = btn.closest('form') || document;
+                var hidden = form.querySelector('input[name="' + prefix + '_gallery_existing"]');
+                if (hidden) {
+                    var imgs = hidden.value.split(',').filter(function(x) { return x.trim() !== imagePath && x.trim() !== ''; });
+                    hidden.value = imgs.join(',');
+                }
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i>';
+                alert('Error: ' + (data.error || 'Failed'));
+            }
+        }).catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i>';
+        });
+        return;
+    }
+    // First click: show confirmation
+    btn.dataset.confirmed = '1';
+    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+    btn.style.background = '#e74c3c';
+    btn.style.color = 'white';
+    btn.title = 'Click again to confirm deletion';
+    setTimeout(function() {
+        if (btn.dataset.confirmed) {
+            btn.innerHTML = '<i class="fas fa-trash"></i>';
+            btn.style.background = '';
+            btn.style.color = '';
+            btn.title = '';
+            delete btn.dataset.confirmed;
+        }
+    }, 3000);
+}
+
+/* Gallery: Populate caption fields from JSON data attributes on page load */
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.gal-captions-data').forEach(function(el) {
+        try {
+            var captions = JSON.parse(el.value || '{}');
+            var prefix = el.dataset.prefix;
+            for (var img in captions) {
+                var input = document.querySelector('input[name="' + prefix + '_caption_' + img + '"]');
+                if (input) input.value = captions[img];
+            }
+        } catch(e) {}
     });
 });
 </script>

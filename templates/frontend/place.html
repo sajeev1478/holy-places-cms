@@ -39,6 +39,20 @@
 <img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'">
 </div>{% endif %}
 
+<!-- T1 Gallery Slider -->
+{% set t1_gallery = [] %}
+{% set t1_captions = {} %}
+{% for m in media if m.file_type == 'image' and m.filename != place.featured_image %}
+  {% if t1_gallery.append(m.filename) %}{% endif %}
+  {% if m.caption %}{% if t1_captions.update({m.filename: m.caption}) %}{% endif %}{% endif %}
+{% endfor %}
+{% if t1_gallery|length > 0 %}
+<div style="margin-bottom:32px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">📸 Photo Gallery <span style="font-size:12px;font-weight:500;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">{{ t1_gallery|length }} images</span></h3>
+{% with gallery_images=t1_gallery, slider_id='t1', gallery_captions=t1_captions %}{% include 'frontend/_gallery_slider.html' %}{% endwith %}
+</div>
+{% endif %}
+
 {% if vis.get('full_content',1) and place.full_content %}
 <div class="rich-content" style="margin-bottom:40px;line-height:1.85;font-size:15.5px;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ place.full_content|safe }}</div>{% endif %}
 

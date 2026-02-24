@@ -4,6 +4,33 @@
 {% block topbar_actions %}<a href="{{ url_for('admin_place_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Holy Dham</a>{% endblock %}
 
 {% block admin_content %}
+<!-- Help Accordion: Tier Structure -->
+<div class="help-accordion">
+<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
+<span style="font-size:18px">🏛️</span>
+<h4>Understanding the 4-Tier Dham Hierarchy</h4>
+<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+</div>
+<div class="help-accordion-body"><div class="help-accordion-inner">
+<p>The HolyDham CMS uses a <strong>4-tier hierarchy</strong> to organize spiritual destinations — from an entire holy region down to the exact spot where a divine pastime took place.</p>
+<div class="ha-tier-flow">
+<div class="ha-tier-box" style="background:#C76B8F">🏛️ T1 Holy Dham</div><span class="ha-tier-arrow">→</span>
+<div class="ha-tier-box" style="background:#2E86AB">📍 T2 Key Places</div><span class="ha-tier-arrow">→</span>
+<div class="ha-tier-box" style="background:#E74845">🎯 T3 Key Spots</div><span class="ha-tier-arrow">→</span>
+<div class="ha-tier-box" style="background:#9C27B0">✦ T4 Key Points</div>
+</div>
+<h5>Tier 1 — Holy Dham</h5>
+<p>The broadest level — an entire holy region or city (e.g., <strong>Vrindavan Dham</strong>, <strong>Mayapur Dham</strong>).</p>
+<h5>Tier 2 — Key Places</h5>
+<p>Major zones or important locations within a Holy Dham (e.g., <strong>Vrindavan Town</strong>, <strong>Govardhan</strong>, <strong>Barsana</strong> within Vrindavan Dham).</p>
+<h5>Tier 3 — Key Spots</h5>
+<p>Specific temples, ghats, or sacred areas within a Key Place (e.g., <strong>Banke Bihari Temple</strong>, <strong>Kesi Ghat</strong>).</p>
+<h5>Tier 4 — Key Points</h5>
+<p>Exact micro-locations or meditation points within a Key Spot (e.g., <strong>Jhulan Sthal</strong>, <strong>Swami Haridas Samadhi</strong>).</p>
+<div class="ha-tip">💡 <strong>Tip:</strong> Always create content top-down — first T1, then add T2 Key Places within it, then T3, then T4. This builds a complete spiritual map!</div>
+</div></div>
+</div>
+
 <!-- 4-Tier Hierarchy Stats -->
 <div style="background:linear-gradient(135deg,#2D1F2E,#4A2D4E);border-radius:16px;padding:24px 28px;margin-bottom:24px;color:white;position:relative;overflow:hidden">
 <div style="position:absolute;right:-30px;top:-20px;font-size:120px;opacity:.04;pointer-events:none">🛕</div>

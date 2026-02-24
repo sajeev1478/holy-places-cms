@@ -4,6 +4,30 @@
 {% block topbar_actions %}<a href="{{ url_for('admin_module_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Module</a>{% endblock %}
 
 {% block admin_content %}
+<!-- Help Accordion: Modules -->
+<div class="help-accordion">
+<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
+<span style="font-size:18px">📦</span>
+<h4>ℹ️ What are Modules & How to Use Them</h4>
+<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+</div>
+<div class="help-accordion-body"><div class="help-accordion-inner">
+<h5>What is a Module?</h5>
+<p>A <strong>module</strong> is a content category or section of the website — like different "departments" dedicated to a particular kind of information. Each module gets its own page on the frontend.</p>
+<h5>How Modules Work</h5>
+<p>Every module has a <strong>Name</strong> (display name), <strong>Slug</strong> (URL-friendly name, auto-generated), <strong>Icon</strong> (emoji), and <strong>Entries</strong> (individual pieces of content).</p>
+<h5>Example Modules</h5>
+<table>
+<tr><th>Module</th><th>Purpose</th><th>Example Entries</th></tr>
+<tr><td>🛕 Holy Dhams</td><td>Information about sacred destinations</td><td>Vrindavan overview, Puri history</td></tr>
+<tr><td>📖 Sacred Stories</td><td>Devotional stories and pastimes</td><td>Krishna Leela, Ramayana episodes</td></tr>
+<tr><td>🎉 Festivals</td><td>Festival guides and calendars</td><td>Holi in Barsana, Ratha Yatra</td></tr>
+<tr><td>🎵 Bhajans & Kirtans</td><td>Devotional music collection</td><td>Hare Krishna Maha Mantra</td></tr>
+</table>
+<div class="ha-tip">💡 <strong>Tip:</strong> Each module appears as a navigation link on the frontend. Set the <code>sort_order</code> to control which modules appear first.</div>
+</div></div>
+</div>
+
 <p style="color:var(--text-light);margin-bottom:24px;font-size:14px">Create and manage content modules. Each module represents a content type like Temples, Stories, Festivals, etc.</p>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">

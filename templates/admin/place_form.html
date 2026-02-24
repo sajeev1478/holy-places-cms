@@ -201,10 +201,21 @@
 <div class="field-row"><div class="field-main"><div class="form-group gal-section"><label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
 {% if editing and gallery_media is defined and gallery_media %}<span class="gal-count">{{ gallery_media|length }} image{{ 's' if gallery_media|length != 1 }}</span>{% endif %}</label>
 {% if editing and gallery_media is defined and gallery_media %}
-<div class="gal-thumbs">{% for gm in gallery_media %}<div class="gal-thumb"><img src="/static/uploads/{{ gm.filename }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t1',{{ place.id }},'{{ gm.filename }}',this)" title="Delete image">✕</span></div>{% endfor %}</div>
+<div class="gal-individual-list" id="t1_gal_list">
+{% for gm in gallery_media %}
+<div class="gal-item" style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-cream);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+<div class="gal-thumb" style="flex-shrink:0"><img src="/static/uploads/{{ gm.filename }}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"></div>
+<div style="flex:1;min-width:0">
+<input type="text" class="form-control" name="t1_media_caption_{{ gm.id }}" placeholder="Caption for this image..." style="font-size:12px" value="{{ gm.caption or '' }}">
+<div style="font-size:10px;color:var(--text-light);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ gm.filename.split('/')[-1] }}</div>
+</div>
+<button type="button" class="btn btn-danger btn-sm btn-icon" style="flex-shrink:0" onclick="galDeleteConfirm(this,'t1',{{ place.id }},'{{ gm.filename }}','t1')"><i class="fas fa-trash"></i></button>
+</div>
+{% endfor %}
+</div>
 {% endif %}
-<input type="file" name="gallery_files" class="form-control" accept="image/*" multiple>
-<div style="font-size:10px;color:var(--text-light);margin-top:4px">Select multiple images to upload. These appear in the image slider on the frontend.</div>
+<div id="t1_new_gals"></div>
+<button type="button" class="btn btn-sm btn-secondary" style="margin-top:6px;font-size:11px" onclick="addGalleryItem('t1')"><i class="fas fa-plus"></i> Add More Images</button>
 </div></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
 <div class="form-group"><label>Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}"><input type="hidden" name="vis_latitude" value="on"></div>
@@ -299,17 +310,24 @@
 <div class="gal-section" style="background:#f4f7fa;border-radius:12px;padding:14px;margin:10px 0;border:1px solid #2E86AB15">
 <label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
 {% if kp.gallery_images %}<span class="gal-count">{{ kp.gallery_images.split(',')|length }} image{{ 's' if kp.gallery_images.split(',')|length != 1 }}</span>{% endif %}</label>
+<input type="hidden" name="kp_{{ ki }}_gallery_existing" value="{{ kp.gallery_images or '' }}" class="gal-existing-input">
+<input type="hidden" class="gal-captions-data" data-prefix="kp_{{ ki }}" value="{{ kp.gallery_captions|default('{}') }}">
 {% if kp.gallery_images %}
-<input type="hidden" name="kp_{{ ki }}_gallery_existing" value="{{ kp.gallery_images }}">
-<div class="gal-thumbs">
+<div class="gal-individual-list" id="kp_{{ ki }}_gal_list">
 {% for gi in kp.gallery_images.split(',') %}{% if gi.strip() %}
-<div class="gal-thumb">
-<img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'">
-<span class="gal-del" onclick="deleteGalleryImage('t2',{{ kp.id }},'{{ gi.strip() }}',this)" title="Delete image">✕</span>
+<div class="gal-item" style="display:flex;align-items:center;gap:10px;padding:10px;background:white;border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+<div class="gal-thumb" style="flex-shrink:0"><img src="/static/uploads/{{ gi.strip() }}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"></div>
+<div style="flex:1;min-width:0">
+<input type="text" class="form-control gal-caption-input" name="kp_{{ ki }}_caption_{{ gi.strip() }}" data-img="{{ gi.strip() }}" placeholder="Caption for this image..." style="font-size:12px">
+<div style="font-size:10px;color:var(--text-light);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ gi.strip().split('/')[-1] }}</div>
+</div>
+<button type="button" class="btn btn-danger btn-sm btn-icon" style="flex-shrink:0" onclick="galDeleteConfirm(this,'t2',{{ kp.id }},'{{ gi.strip() }}','kp_{{ ki }}')"><i class="fas fa-trash"></i></button>
 </div>
 {% endif %}{% endfor %}
-</div>{% endif %}
-<input type="file" class="form-control" name="kp_{{ ki }}_gallery_files" accept="image/*" multiple style="font-size:12px">
+</div>
+{% endif %}
+<div id="kp_{{ ki }}_new_gals"></div>
+<button type="button" class="btn btn-sm btn-secondary" style="margin-top:6px;font-size:11px" onclick="addGalleryItem('kp_{{ ki }}')"><i class="fas fa-plus"></i> Add More Images</button>
 </div>
 
 {% if custom_fields %}

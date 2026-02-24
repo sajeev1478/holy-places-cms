@@ -4,6 +4,27 @@
 {% block topbar_actions %}<a href="{{ url_for('admin_entry_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Entry</a>{% endblock %}
 
 {% block admin_content %}
+<!-- Help Accordion: Module Entries -->
+<div class="help-accordion">
+<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
+<span style="font-size:18px">📝</span>
+<h4>ℹ️ How Module Entries Work</h4>
+<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+</div>
+<div class="help-accordion-body"><div class="help-accordion-inner">
+<h5>What are Module Entries?</h5>
+<p><strong>Entries</strong> are individual pieces of content within a module. For example, a "Sacred Stories" module might have entries like "Krishna lifting Govardhan Hill" or "Ratha Yatra Festival".</p>
+<h5>Linking Entries to Dhams</h5>
+<p>Each entry can be <strong>linked to a T1 Holy Dham</strong>. When linked, the entry appears in the "Related Content" section on that Dham's frontend page — connecting stories, guides, and resources directly to the places they're about.</p>
+<h5>Entry Statuses</h5>
+<ul>
+<li><strong>Draft:</strong> Saved but not visible to visitors — use this to prepare content</li>
+<li><strong>Published:</strong> Live and visible on the frontend</li>
+</ul>
+<div class="ha-tip">💡 <strong>Tip:</strong> Use the module filter buttons above the table to quickly see entries for a specific module. Custom Fields you create will also appear in entry forms based on their "Applies To" setting.</div>
+</div></div>
+</div>
+
 <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
 <a class="btn btn-sm {{ 'btn-primary' if not current_mod else 'btn-secondary' }}" href="{{ url_for('admin_entries') }}">All</a>
 {% for mod in modules %}

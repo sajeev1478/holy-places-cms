@@ -1,10 +1,13 @@
-{# Beautiful Gallery Slider - pass gallery_images (list), slider_id (string) #}
+{# Beautiful Gallery Slider - pass gallery_images (list), slider_id (string), gallery_captions (dict, optional) #}
 {% if gallery_images and gallery_images|length > 0 %}
 <div class="gallery-slider" id="slider-{{ slider_id }}" data-auto="true">
 <div class="gs-track">
 {% for img in gallery_images %}
 <div class="gs-slide {{ 'active' if loop.first }}">
-<img src="/static/uploads/{{ img }}" alt="Gallery image {{ loop.index }}" loading="lazy">
+<img src="/static/uploads/{{ img }}" alt="{{ gallery_captions.get(img, 'Gallery image ' ~ loop.index) if gallery_captions is defined and gallery_captions else 'Gallery image ' ~ loop.index }}" loading="lazy">
+{% if gallery_captions is defined and gallery_captions and gallery_captions.get(img) %}
+<div class="gs-caption" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:white;padding:24px 16px 12px;font-size:13px;font-weight:500;text-align:center">{{ gallery_captions.get(img) }}</div>
+{% endif %}
 </div>
 {% endfor %}
 </div>

@@ -3,27 +3,44 @@
 {% block page_title %}Tags & Categories{% endblock %}
 
 {% block admin_content %}
-<!-- Add Tag Form -->
-<div class="admin-card" style="margin-bottom:20px">
+<!-- Help Accordion: Tags & Categories -->
+<div class="help-accordion">
+<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
+<span style="font-size:18px">🏷️</span>
+<h4>ℹ️ Understanding Tags & Categories</h4>
+<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+</div>
+<div class="help-accordion-body"><div class="help-accordion-inner">
+<h5>What are Tags?</h5>
+<p><strong>Tags</strong> are labels applied to T1 Holy Dhams. A Dham can have <strong>multiple tags</strong>. Tags help visitors filter and discover Dhams.</p>
+<h5>What are Categories?</h5>
+<p><strong>Categories</strong> classify T3 Key Spots and T4 Key Points into types. Each spot/point belongs to <strong>ONE category</strong>.</p>
+<h5>Tags vs Categories</h5>
+<table>
+<tr><th>Feature</th><th>Tags</th><th>Categories</th></tr>
+<tr><td>Applied to</td><td>T1 (Holy Dhams)</td><td>T3 (Key Spots) & T4 (Key Points)</td></tr>
+<tr><td>How many?</td><td>MULTIPLE per item</td><td>ONE per item</td></tr>
+<tr><td>Purpose</td><td>Label with attributes</td><td>Classify the TYPE of place</td></tr>
+</table>
+</div></div>
+</div>
+
+<!-- ═══ SECTION 1: TAGS (T1) ═══ -->
+<div style="margin-bottom:32px">
+<h2 style="font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+<span style="background:#C76B8F15;border:1px solid #C76B8F30;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;color:#C76B8F;letter-spacing:1px">T1</span>
+🏷️ Tags <span style="font-size:13px;font-weight:400;color:var(--text-light)">— applied to Holy Dhams</span>
+</h2>
+<div class="admin-card" style="margin-bottom:16px">
 <div class="admin-card-body">
 <form method="POST" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
-<div class="form-group" style="margin:0;flex:1;min-width:200px">
-<label>Tag Name</label>
-<input name="name" class="form-control" required placeholder="e.g. Char Dham, Jyotirlinga...">
-</div>
-<div class="form-group" style="margin:0;width:200px">
-<label>Description</label>
-<input name="description" class="form-control" placeholder="Optional description">
-</div>
-<div class="form-group" style="margin:0;width:100px">
-<label>Color</label>
-<input name="color" class="form-control" type="color" value="#C76B8F" style="padding:6px;height:44px">
-</div>
+<div class="form-group" style="margin:0;flex:1;min-width:200px"><label>Tag Name</label><input name="name" class="form-control" required placeholder="e.g. Char Dham, Jyotirlinga..."></div>
+<div class="form-group" style="margin:0;width:200px"><label>Description</label><input name="description" class="form-control" placeholder="Optional description"></div>
+<div class="form-group" style="margin:0;width:100px"><label>Color</label><input name="color" class="form-control" type="color" value="#C76B8F" style="padding:6px;height:44px"></div>
 <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Tag</button>
 </form>
 </div>
 </div>
-
 <div class="admin-card">
 {% if tags %}
 <div style="overflow-x:auto">
@@ -37,11 +54,7 @@
 <td style="font-size:12px;color:var(--text-light)">{{ tag.slug }}</td>
 <td style="font-size:13px;color:var(--text-mid)">{{ tag.description or '—' }}</td>
 <td><span class="badge" style="background:var(--bg)">{{ tag.place_count }}</span></td>
-<td>
-<form method="POST" action="{{ url_for('admin_tag_delete', tag_id=tag.id) }}" onsubmit="return confirm('Delete tag?')">
-<button class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button>
-</form>
-</td>
+<td><form method="POST" action="{{ url_for('admin_tag_delete', tag_id=tag.id) }}" onsubmit="return confirm('Delete tag?')"><button class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button></form></td>
 </tr>
 {% endfor %}
 </tbody>
@@ -51,4 +64,143 @@
 <div class="empty"><span class="icon">🏷️</span><h3>No tags yet</h3><p>Create tags to categorize your holy dhams.</p></div>
 {% endif %}
 </div>
+</div>
+
+<!-- ═══ SECTION 2: T3 SPOT CATEGORIES ═══ -->
+<div style="margin-bottom:32px">
+<h2 style="font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+<span style="background:#E7484515;border:1px solid #E7484530;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;color:#E74845;letter-spacing:1px">T3</span>
+🔸 Key Spot Categories <span style="font-size:13px;font-weight:400;color:var(--text-light)">— classify Key Spots (temples, ghats, forests…)</span>
+</h2>
+<div class="admin-card" style="margin-bottom:16px">
+<div class="admin-card-body">
+<form method="POST" action="{{ url_for('admin_spot_category_new') }}" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+<div class="form-group" style="margin:0;width:60px"><label>Icon</label><input name="icon" class="form-control" value="📍" style="font-size:20px;text-align:center;padding:6px" maxlength="4"></div>
+<div class="form-group" style="margin:0;flex:1;min-width:160px"><label>Category Name</label><input name="name" class="form-control" required placeholder="e.g. Temple, Ghat, Forest, Hill..."></div>
+<div class="form-group" style="margin:0;width:200px"><label>Description</label><input name="description" class="form-control" placeholder="Optional description"></div>
+<div class="form-group" style="margin:0;width:90px"><label>Color</label><input name="color" class="form-control" type="color" value="#E74845" style="padding:6px;height:44px"></div>
+<button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+</form>
+</div>
+</div>
+<div class="admin-card">
+{% if spot_categories %}
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th style="width:50px">Icon</th><th>Name</th><th>Slug</th><th>Description</th><th>Color</th><th>Spots</th><th style="width:140px">Actions</th></tr></thead>
+<tbody>
+{% for cat in spot_categories %}
+<tr>
+<td style="font-size:22px;text-align:center">{{ cat.icon }}</td>
+<td style="font-weight:600">{{ cat.name }}</td>
+<td style="font-size:12px;color:var(--text-light)">{{ cat.slug }}</td>
+<td style="font-size:13px;color:var(--text-mid)">{{ cat.description or '—' }}</td>
+<td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:20px;height:20px;border-radius:5px;background:{{ cat.color }};display:inline-block"></span><span style="font-size:11px;color:var(--text-light)">{{ cat.color }}</span></span></td>
+<td><span class="badge" style="background:{{ cat.color }}15;color:{{ cat.color }};border:1px solid {{ cat.color }}30">{{ cat.spot_count }}</span></td>
+<td style="display:flex;gap:6px">
+<button type="button" class="btn btn-secondary btn-sm" style="font-size:11px" onclick="openCatEdit('spot',{{ cat.id }},'{{ cat.name|e }}','{{ cat.description|e }}','{{ cat.icon }}','{{ cat.color }}')"><i class="fas fa-edit"></i></button>
+<button type="button" class="btn btn-danger btn-sm btn-icon cat-del-btn" onclick="catDeleteConfirm(this,'spot',{{ cat.id }})"><i class="fas fa-trash"></i></button>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty"><span class="icon">🔸</span><h3>No T3 categories yet</h3><p>Add categories like Temple, Ghat, Forest to classify Key Spots.</p></div>
+{% endif %}
+</div>
+</div>
+
+<!-- ═══ SECTION 3: T4 SUB-SPOT CATEGORIES ═══ -->
+<div style="margin-bottom:32px">
+<h2 style="font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+<span style="background:#9C27B015;border:1px solid #9C27B030;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;color:#9C27B0;letter-spacing:1px">T4</span>
+✦ Key Point Categories <span style="font-size:13px;font-weight:400;color:var(--text-light)">— classify Key Points (altars, shrines, samadhis…)</span>
+</h2>
+<div class="admin-card" style="margin-bottom:16px">
+<div class="admin-card-body">
+<form method="POST" action="{{ url_for('admin_sub_category_new') }}" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+<div class="form-group" style="margin:0;width:60px"><label>Icon</label><input name="icon" class="form-control" value="✦" style="font-size:20px;text-align:center;padding:6px" maxlength="4"></div>
+<div class="form-group" style="margin:0;flex:1;min-width:160px"><label>Category Name</label><input name="name" class="form-control" required placeholder="e.g. Altar, Shrine, Samadhi, Pathway..."></div>
+<div class="form-group" style="margin:0;width:200px"><label>Description</label><input name="description" class="form-control" placeholder="Optional description"></div>
+<div class="form-group" style="margin:0;width:90px"><label>Color</label><input name="color" class="form-control" type="color" value="#9C27B0" style="padding:6px;height:44px"></div>
+<button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+</form>
+</div>
+</div>
+<div class="admin-card">
+{% if sub_spot_categories %}
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead><tr><th style="width:50px">Icon</th><th>Name</th><th>Slug</th><th>Description</th><th>Color</th><th>Points</th><th style="width:140px">Actions</th></tr></thead>
+<tbody>
+{% for cat in sub_spot_categories %}
+<tr>
+<td style="font-size:22px;text-align:center">{{ cat.icon }}</td>
+<td style="font-weight:600">{{ cat.name }}</td>
+<td style="font-size:12px;color:var(--text-light)">{{ cat.slug }}</td>
+<td style="font-size:13px;color:var(--text-mid)">{{ cat.description or '—' }}</td>
+<td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:20px;height:20px;border-radius:5px;background:{{ cat.color }};display:inline-block"></span><span style="font-size:11px;color:var(--text-light)">{{ cat.color }}</span></span></td>
+<td><span class="badge" style="background:{{ cat.color }}15;color:{{ cat.color }};border:1px solid {{ cat.color }}30">{{ cat.point_count }}</span></td>
+<td style="display:flex;gap:6px">
+<button type="button" class="btn btn-secondary btn-sm" style="font-size:11px" onclick="openCatEdit('sub',{{ cat.id }},'{{ cat.name|e }}','{{ cat.description|e }}','{{ cat.icon }}','{{ cat.color }}')"><i class="fas fa-edit"></i></button>
+<button type="button" class="btn btn-danger btn-sm btn-icon cat-del-btn" onclick="catDeleteConfirm(this,'sub',{{ cat.id }})"><i class="fas fa-trash"></i></button>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty"><span class="icon">✦</span><h3>No T4 categories yet</h3><p>Add categories like Altar, Shrine, Samadhi to classify Key Points.</p></div>
+{% endif %}
+</div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="catEditModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.4);align-items:center;justify-content:center">
+<div style="background:white;border-radius:16px;padding:28px;width:460px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+<h3 style="margin-bottom:16px;font-family:'Josefin Sans',sans-serif" id="catEditTitle">Edit Category</h3>
+<form id="catEditForm" method="POST">
+<div style="display:grid;gap:12px">
+<div style="display:flex;gap:12px">
+<div class="form-group" style="margin:0;width:70px"><label>Icon</label><input name="icon" id="catEditIcon" class="form-control" style="font-size:22px;text-align:center;padding:6px" maxlength="4"></div>
+<div class="form-group" style="margin:0;flex:1"><label>Name</label><input name="name" id="catEditName" class="form-control" required></div>
+</div>
+<div class="form-group" style="margin:0"><label>Description</label><input name="description" id="catEditDesc" class="form-control"></div>
+<div class="form-group" style="margin:0;width:120px"><label>Color</label><input name="color" id="catEditColor" type="color" class="form-control" style="padding:6px;height:44px"></div>
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+<button type="button" class="btn btn-secondary" onclick="closeCatEdit()">Cancel</button>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+function openCatEdit(type,id,name,desc,icon,color){
+    const base=type==='spot'?'/admin/spot-category/':'/admin/sub-category/';
+    document.getElementById('catEditForm').action=base+id+'/update';
+    document.getElementById('catEditTitle').textContent=type==='spot'?'Edit T3 Category':'Edit T4 Category';
+    document.getElementById('catEditIcon').value=icon;
+    document.getElementById('catEditName').value=name;
+    document.getElementById('catEditDesc').value=desc;
+    document.getElementById('catEditColor').value=color;
+    document.getElementById('catEditModal').style.display='flex';
+}
+function closeCatEdit(){document.getElementById('catEditModal').style.display='none'}
+function catDeleteConfirm(btn,type,id){
+    if(btn.dataset.confirmed){
+        const base=type==='spot'?'/admin/spot-category/':'/admin/sub-category/';
+        const f=document.createElement('form');f.method='POST';f.action=base+id+'/delete';
+        document.body.appendChild(f);f.submit();return;
+    }
+    btn.dataset.confirmed='1';
+    btn.innerHTML='<i class="fas fa-exclamation-triangle"></i> Sure?';
+    btn.style.background='#e74c3c';btn.style.color='white';btn.style.minWidth='70px';
+    setTimeout(()=>{btn.innerHTML='<i class="fas fa-trash"></i>';btn.style.background='';btn.style.color='';btn.style.minWidth='';delete btn.dataset.confirmed},3000);
+}
+</script>
 {% endblock %}

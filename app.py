@@ -153,6 +153,12 @@ def init_db():
     CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT NOT NULL, entity_type TEXT, entity_id INTEGER, details TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     ''')
     db.commit()
+    # Migration: add gallery_captions column if not exists
+    for table in ('key_places','key_spots','sub_spots'):
+        cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'gallery_captions' not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN gallery_captions TEXT DEFAULT '{{}}'")
+    db.commit()
 
 def seed_db():
     db = get_db()
@@ -557,7 +563,8 @@ def key_place_detail(slug, kp_slug):
     siblings=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 AND id!=? ORDER BY sort_order",(place['id'],kp['id'])).fetchall()
     tags=db.execute("SELECT t.* FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?",(place['id'],)).fetchall()
     kp_gallery=[x.strip() for x in (kp['gallery_images'] or '').split(',') if x.strip()]
-    return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,key_spots=spots_with_subs,siblings=siblings,tags=tags,kp_gallery=kp_gallery)
+    kp_captions=json.loads(kp['gallery_captions'] or '{}') if kp['gallery_captions'] else {}
+    return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,key_spots=spots_with_subs,siblings=siblings,tags=tags,kp_gallery=kp_gallery,kp_captions=kp_captions)
 
 @app.route('/place/<slug>/key/<kp_slug>/spot/<ks_slug>')
 def key_spot_detail(slug, kp_slug, ks_slug):
@@ -570,8 +577,9 @@ def key_spot_detail(slug, kp_slug, ks_slug):
     sub_spots=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.is_visible=1 ORDER BY ss.sort_order",(ks['id'],)).fetchall()
     ks_customs=db.execute("SELECT kscv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM key_spot_custom_values kscv JOIN custom_field_defs cfd ON kscv.field_def_id=cfd.id WHERE kscv.key_spot_id=? AND kscv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(ks['id'],)).fetchall()
     ks_gallery=[x.strip() for x in (ks['gallery_images'] or '').split(',') if x.strip()]
+    ks_captions=json.loads(ks['gallery_captions'] or '{}') if ks.get('gallery_captions') else {}
     siblings=db.execute("SELECT ks2.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks2 LEFT JOIN spot_categories sc ON ks2.category_id=sc.id WHERE ks2.key_place_id=? AND ks2.is_visible=1 AND ks2.id!=? ORDER BY ks2.sort_order",(kp['id'],ks['id'])).fetchall()
-    return render_template('frontend/key_spot.html',place=place,kp=kp,ks=ks,sub_spots=sub_spots,siblings=siblings,ks_customs=ks_customs,ks_gallery=ks_gallery)
+    return render_template('frontend/key_spot.html',place=place,kp=kp,ks=ks,sub_spots=sub_spots,siblings=siblings,ks_customs=ks_customs,ks_gallery=ks_gallery,ks_captions=ks_captions)
 
 @app.route('/place/<slug>/key/<kp_slug>/spot/<ks_slug>/sub/<ss_slug>')
 def sub_spot_detail(slug, kp_slug, ks_slug, ss_slug):
@@ -719,7 +727,7 @@ def admin_place_edit(place_id):
     # Fetch ALL sub_spots (key points) for this dham (for Tier 4 tab)
     all_points=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color,ks.title as ks_title,ks.id as ks_id,ks.slug as ks_slug,sc2.name as ks_cat_name,sc2.icon as ks_cat_icon,kp.title as kp_title,kp.id as kp_id FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id JOIN key_spots ks ON ss.key_spot_id=ks.id LEFT JOIN spot_categories sc2 ON ks.category_id=sc2.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order",(place_id,)).fetchall()
     # Fetch gallery images from place_media
-    gallery_media=db.execute("SELECT m.id,m.filename,m.original_name,m.file_type FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order",(place_id,)).fetchall()
+    gallery_media=db.execute("SELECT m.id,m.filename,m.original_name,m.file_type,m.caption FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order",(place_id,)).fetchall()
     return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points,gallery_media=gallery_media)
 
 def _save_place(place_id):
@@ -742,7 +750,22 @@ def _save_place(place_id):
         place_id=db.execute("SELECT last_insert_rowid()").fetchone()[0]
     db.execute("DELETE FROM place_tags WHERE place_id=?",(place_id,))
     for tid in f.getlist('tags'): db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)",(place_id,tid))
-    # Handle T1 gallery image uploads
+    # Handle T1 gallery image uploads (individual)
+    idx=0
+    while True:
+        nk=f't1_new_gallery_{idx}'
+        if nk not in request.files: break
+        gf=request.files[nk]
+        if gf and gf.filename:
+            rp = save_upload(gf, 'images')
+            if rp:
+                mid = db.execute("SELECT id FROM media WHERE filename=?",(rp,)).fetchone()
+                if mid:
+                    db.execute("INSERT INTO place_media (place_id,media_id,media_role) VALUES (?,?,?)",(place_id,mid['id'],'gallery'))
+                    nc=f.get(f't1_new_caption_{idx}','').strip()
+                    if nc: db.execute("UPDATE media SET caption=? WHERE id=?",(nc,mid['id']))
+        idx+=1
+    # Also handle old-style multi-upload for backward compat
     if 'gallery_files' in request.files:
         for gf in request.files.getlist('gallery_files'):
             if gf and gf.filename:
@@ -750,6 +773,12 @@ def _save_place(place_id):
                 if rp:
                     mid = db.execute("SELECT id FROM media WHERE filename=?",(rp,)).fetchone()
                     if mid: db.execute("INSERT INTO place_media (place_id,media_id,media_role) VALUES (?,?,?)",(place_id,mid['id'],'gallery'))
+    # Update captions for existing T1 media
+    for key in f:
+        if key.startswith('t1_media_caption_'):
+            media_id=int(key.replace('t1_media_caption_',''))
+            cap_val=f[key].strip()
+            db.execute("UPDATE media SET caption=? WHERE id=?",(cap_val,media_id))
     # Custom values
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     for cf in cfs:
@@ -794,12 +823,36 @@ def _save_place(place_id):
             if new_imgs:
                 existing_imgs=[x for x in kgallery.split(',') if x.strip()] if kgallery else []
                 kgallery=','.join(existing_imgs+new_imgs)
+        # Individual gallery uploads for T2
+        new_kp_captions = {}
+        idx=0
+        while True:
+            nk=f'kp_{kpi}_new_gallery_{idx}'
+            if nk not in request.files: break
+            uf=request.files[nk]
+            if uf and uf.filename:
+                u=save_upload(uf,'images')
+                if u:
+                    existing_imgs=[x for x in kgallery.split(',') if x.strip()] if kgallery else []
+                    existing_imgs.append(u); kgallery=','.join(existing_imgs)
+                    nc=f.get(f'kp_{kpi}_new_caption_{idx}','').strip()
+                    if nc: new_kp_captions[u]=nc
+            idx+=1
+        # Gather T2 captions
+        kp_captions={}
+        kp_captions.update(new_kp_captions)
+        for key in f:
+            if key.startswith(f'kp_{kpi}_caption_'):
+                img_path=key[len(f'kp_{kpi}_caption_'):]
+                cap_val=f[key].strip()
+                if cap_val: kp_captions[img_path]=cap_val
+        kp_captions_json=json.dumps(kp_captions)
         if kpid and kpid in existing_kpids:
-            db.execute("UPDATE key_places SET title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (kt,ks,ksd,kfc,kimg,kgallery,klat,klng,kpi,kv,kpid)); submitted_kpids.append(kpid)
+            db.execute("UPDATE key_places SET title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (kt,ks,ksd,kfc,kimg,kgallery,kp_captions_json,klat,klng,kpi,kv,kpid)); submitted_kpids.append(kpid)
         else:
-            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,gallery_images,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                (place_id,kt,ks,ksd,kfc,kimg,kgallery,klat,klng,kpi,kv))
+            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                (place_id,kt,ks,ksd,kfc,kimg,kgallery,kp_captions_json,klat,klng,kpi,kv))
             kpid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted_kpids.append(kpid)
         for cf in cfs:
             kcv=''; kcfk=f"kp_{kpi}_cf_file_{cf['id']}"
@@ -858,6 +911,7 @@ def admin_key_spots_save(kp_id):
             if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
         # Gallery images
         gallery=f.get(f'ks_{i}_gallery_existing','')
+        # Handle old-style multi-file upload (backward compat)
         gk=f'ks_{i}_gallery_files'
         if gk in request.files:
             new_imgs=[]
@@ -866,12 +920,37 @@ def admin_key_spots_save(kp_id):
             if new_imgs:
                 existing_imgs=[x for x in gallery.split(',') if x.strip()] if gallery else []
                 gallery=','.join(existing_imgs+new_imgs)
+        # Handle new individual gallery uploads
+        new_upload_captions = {}
+        idx=0
+        while True:
+            nk=f'ks_{i}_new_gallery_{idx}'
+            if nk not in request.files: break
+            uf=request.files[nk]
+            if uf and uf.filename:
+                u=save_upload(uf,'images')
+                if u:
+                    existing_imgs=[x for x in gallery.split(',') if x.strip()] if gallery else []
+                    existing_imgs.append(u); gallery=','.join(existing_imgs)
+                    # Capture caption for this new upload
+                    nc=f.get(f'ks_{i}_new_caption_{idx}','').strip()
+                    if nc: new_upload_captions[u]=nc
+            idx+=1
+        # Gather captions
+        captions={}
+        captions.update(new_upload_captions)
+        for key in f:
+            if key.startswith(f'ks_{i}_caption_'):
+                img_path=key[len(f'ks_{i}_caption_'):]
+                cap_val=f[key].strip()
+                if cap_val: captions[img_path]=cap_val
+        captions_json=json.dumps(captions)
         if sid and sid in existing:
-            db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
+            db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
         else:
-            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (kp_id,catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis))
+            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (kp_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
         # Save custom fields for this spot
         for cf in cfs:
@@ -941,12 +1020,36 @@ def admin_sub_spots_save(ks_id):
             if new_imgs:
                 existing_imgs=[x for x in gallery.split(',') if x.strip()] if gallery else []
                 gallery=','.join(existing_imgs+new_imgs)
+        # Handle new individual gallery uploads
+        new_upload_captions = {}
+        idx=0
+        while True:
+            nk=f'ss_{i}_new_gallery_{idx}'
+            if nk not in request.files: break
+            uf=request.files[nk]
+            if uf and uf.filename:
+                u=save_upload(uf,'images')
+                if u:
+                    existing_imgs=[x for x in gallery.split(',') if x.strip()] if gallery else []
+                    existing_imgs.append(u); gallery=','.join(existing_imgs)
+                    nc=f.get(f'ss_{i}_new_caption_{idx}','').strip()
+                    if nc: new_upload_captions[u]=nc
+            idx+=1
+        # Gather captions
+        captions={}
+        captions.update(new_upload_captions)
+        for key in f:
+            if key.startswith(f'ss_{i}_caption_'):
+                img_path=key[len(f'ss_{i}_caption_'):]
+                cap_val=f[key].strip()
+                if cap_val: captions[img_path]=cap_val
+        captions_json=json.dumps(captions)
         if sid and sid in existing:
-            db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
+            db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
         else:
-            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (ks_id,catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis))
+            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (ks_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
         for cf in cfs:
             cv=''; cfk=f"ss_{i}_cf_file_{cf['id']}"
@@ -1111,11 +1214,69 @@ def admin_tags():
         try: db.execute("INSERT INTO tags (name,slug,description,color) VALUES (?,?,?,?)",(request.form['name'],slugify(request.form['name']),request.form.get('description',''),request.form.get('color','#C76B8F'))); db.commit(); flash('Created!','success')
         except sqlite3.IntegrityError: flash('Exists.','error')
         return redirect(url_for('admin_tags'))
-    return render_template('admin/tags.html',tags=db.execute("SELECT t.*,COUNT(pt.place_id) as place_count FROM tags t LEFT JOIN place_tags pt ON t.id=pt.tag_id GROUP BY t.id ORDER BY t.name").fetchall())
+    spot_categories=db.execute("SELECT sc.*,(SELECT COUNT(*) FROM key_spots WHERE category_id=sc.id) as spot_count FROM spot_categories sc ORDER BY sc.name").fetchall()
+    sub_spot_categories=db.execute("SELECT ssc.*,(SELECT COUNT(*) FROM sub_spots WHERE category_id=ssc.id) as point_count FROM sub_spot_categories ssc ORDER BY ssc.name").fetchall()
+    return render_template('admin/tags.html',tags=db.execute("SELECT t.*,COUNT(pt.place_id) as place_count FROM tags t LEFT JOIN place_tags pt ON t.id=pt.tag_id GROUP BY t.id ORDER BY t.name").fetchall(),spot_categories=spot_categories,sub_spot_categories=sub_spot_categories)
 
 @app.route('/admin/tags/<int:tag_id>/delete', methods=['POST'])
 @login_required
 def admin_tag_delete(tag_id): get_db().execute("DELETE FROM tags WHERE id=?",(tag_id,)); get_db().commit(); flash('Deleted.','info'); return redirect(url_for('admin_tags'))
+
+# ─── T3 Spot Category CRUD ───
+@app.route('/admin/spot-category/new', methods=['POST'])
+@login_required
+def admin_spot_category_new():
+    db=get_db(); f=request.form
+    try:
+        db.execute("INSERT INTO spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slugify(f['name']),f['name'],f.get('description',''),f.get('icon','📍'),f.get('color','#666')))
+        db.commit(); flash('T3 category created!','success')
+    except sqlite3.IntegrityError: flash('Category already exists.','error')
+    return redirect(url_for('admin_tags'))
+
+@app.route('/admin/spot-category/<int:cat_id>/update', methods=['POST'])
+@login_required
+def admin_spot_category_update(cat_id):
+    db=get_db(); f=request.form
+    db.execute("UPDATE spot_categories SET name=?,slug=?,description=?,icon=?,color=? WHERE id=?",(f['name'],slugify(f['name']),f.get('description',''),f.get('icon','📍'),f.get('color','#666'),cat_id))
+    db.commit(); flash('T3 category updated!','success')
+    return redirect(url_for('admin_tags'))
+
+@app.route('/admin/spot-category/<int:cat_id>/delete', methods=['POST'])
+@login_required
+def admin_spot_category_delete(cat_id):
+    db=get_db()
+    db.execute("UPDATE key_spots SET category_id=NULL WHERE category_id=?",(cat_id,))
+    db.execute("DELETE FROM spot_categories WHERE id=?",(cat_id,))
+    db.commit(); flash('T3 category deleted.','info')
+    return redirect(url_for('admin_tags'))
+
+# ─── T4 Sub-Spot Category CRUD ───
+@app.route('/admin/sub-category/new', methods=['POST'])
+@login_required
+def admin_sub_category_new():
+    db=get_db(); f=request.form
+    try:
+        db.execute("INSERT INTO sub_spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slugify(f['name']),f['name'],f.get('description',''),f.get('icon','📍'),f.get('color','#666')))
+        db.commit(); flash('T4 category created!','success')
+    except sqlite3.IntegrityError: flash('Category already exists.','error')
+    return redirect(url_for('admin_tags'))
+
+@app.route('/admin/sub-category/<int:cat_id>/update', methods=['POST'])
+@login_required
+def admin_sub_category_update(cat_id):
+    db=get_db(); f=request.form
+    db.execute("UPDATE sub_spot_categories SET name=?,slug=?,description=?,icon=?,color=? WHERE id=?",(f['name'],slugify(f['name']),f.get('description',''),f.get('icon','📍'),f.get('color','#666'),cat_id))
+    db.commit(); flash('T4 category updated!','success')
+    return redirect(url_for('admin_tags'))
+
+@app.route('/admin/sub-category/<int:cat_id>/delete', methods=['POST'])
+@login_required
+def admin_sub_category_delete(cat_id):
+    db=get_db()
+    db.execute("UPDATE sub_spots SET category_id=NULL WHERE category_id=?",(cat_id,))
+    db.execute("DELETE FROM sub_spot_categories WHERE id=?",(cat_id,))
+    db.commit(); flash('T4 category deleted.','info')
+    return redirect(url_for('admin_tags'))
 
 # ─── Admin Help Guide ───
 @app.route('/admin/help')

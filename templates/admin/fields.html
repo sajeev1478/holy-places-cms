@@ -3,13 +3,85 @@
 {% block page_title %}Custom Fields{% endblock %}
 
 {% block admin_content %}
+<!-- Help Accordion: Custom Fields -->
+<div class="help-accordion">
+<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
+<span style="font-size:18px">⚙️</span>
+<h4>ℹ️ How Custom Fields Work</h4>
+<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+</div>
+<div class="help-accordion-body"><div class="help-accordion-inner">
+<h5>What are Custom Fields?</h5>
+<p>Custom Fields add <strong>extra pieces of information</strong> to any tier beyond the built-in fields (title, description, image). For example, a temple might need "Opening Time", "Entry Fee", or "Audio Guide URL".</p>
+<h5>Creating a Custom Field</h5>
+<p>Use the "Add New Field" form below. Each field needs:</p>
+<ul>
+<li><strong>Icon:</strong> Emoji shown next to the field on the frontend</li>
+<li><strong>Label:</strong> Display name (e.g., "Opening Hours")</li>
+<li><strong>Field Type:</strong> Text, Number, Image, Audio, Video, Rich Text, JSON, etc.</li>
+<li><strong>Applies To:</strong> Which tiers see this field (All, T1 Only, T2+, T3+, etc.)</li>
+<li><strong>Order:</strong> Sort position — lower numbers appear first</li>
+</ul>
+<h5>Available Field Types</h5>
+<table>
+<tr><th>Type</th><th>Use For</th><th>Example</th></tr>
+<tr><td>📝 Text</td><td>Short text (one line)</td><td>Opening time, Phone</td></tr>
+<tr><td>📄 Textarea</td><td>Long text (multiple lines)</td><td>Detailed description</td></tr>
+<tr><td>📰 Rich Text</td><td>Formatted text with bold, links</td><td>History & Significance</td></tr>
+<tr><td>🔢 Number</td><td>Numeric values</td><td>Entry fee, Elevation</td></tr>
+<tr><td>🔗 URL</td><td>Web links, audio/video URLs</td><td>YouTube link, website</td></tr>
+<tr><td>🖼️ Image / 📸 Multi</td><td>Image upload(s)</td><td>Map, floor plan, gallery</td></tr>
+<tr><td>🎵 Audio / 🎬 Video</td><td>Media file upload</td><td>Aarti recording, virtual tour</td></tr>
+<tr><td>📦 JSON</td><td>Structured data</td><td>Schedule array, price tiers</td></tr>
+</table>
+<h5>"Applies To" Options</h5>
+<ul>
+<li><strong>🌐 All Tiers:</strong> Appears in T1, T2, T3, and T4 forms</li>
+<li><strong>🏛️ T1 Only / 📍 T2 Only / 🎯 T3 Only / ✦ T4 Only:</strong> Appears only in that tier</li>
+<li><strong>📍 T2+:</strong> Appears in T2, T3, T4 (not T1)</li>
+<li><strong>🎯 T3+:</strong> Appears in T3 and T4 (not T1 or T2)</li>
+</ul>
+<div class="ha-tip">💡 <strong>Tip:</strong> Create fields strategically! "Entry Fee" makes sense for T3. "Total Temples" suits T1. "GPS Note" fits T4.</div>
+</div></div>
+</div>
+
+<!-- Help Accordion: JSON Info -->
+<div class="help-accordion" style="border-left-color:#FF9800">
+<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
+<span style="font-size:18px">📋</span>
+<h4>ℹ️ About JSON Data Type</h4>
+<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+</div>
+<div class="help-accordion-body"><div class="help-accordion-inner">
+<h5>What is JSON?</h5>
+<p>JSON (JavaScript Object Notation) is a simple way to store structured data as text — like a very organized list. The system uses JSON internally to store things like custom field values and visibility settings.</p>
+<div class="ha-warn">⚠️ <strong>Important:</strong> You generally do NOT need to write JSON manually — the admin panel handles it for you. Only use the JSON field type if you need to store structured data that doesn't fit other field types.</div>
+<h5>What JSON Looks Like</h5>
+<div class="code-block">
+{<br>
+&nbsp;&nbsp;<span class="key">"opening_time"</span>: <span class="str">"5:00 AM"</span>,<br>
+&nbsp;&nbsp;<span class="key">"closing_time"</span>: <span class="str">"9:00 PM"</span>,<br>
+&nbsp;&nbsp;<span class="key">"entry_fee"</span>: <span class="val">0</span>,<br>
+&nbsp;&nbsp;<span class="key">"has_darshan"</span>: <span class="val">true</span><br>
+}
+</div>
+<h5>How JSON is Used in the System</h5>
+<ul>
+<li><strong>Field Visibility:</strong> On/off toggles for frontend display are saved as JSON</li>
+<li><strong>Custom Field Values:</strong> Data like opening times, fees are stored as JSON internally</li>
+<li><strong>Gallery Captions:</strong> Image captions are stored as JSON</li>
+</ul>
+<div class="ha-tip">💡 <strong>Key takeaway:</strong> You never need to write JSON yourself. The admin forms handle everything. JSON is just how the system stores your data behind the scenes.</div>
+</div></div>
+</div>
+
 <p style="color:var(--text-light);margin-bottom:20px;font-size:14px">Define extra fields that appear on all tiers (T1 Holy Dhams, T2 Key Places, T3 Key Spots, T4 Key Points). Each field has an icon shown on the frontend.</p>
 
 <!-- Add Field -->
-<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card" style="margin-bottom:20px;overflow:visible">
 <div class="admin-card-header"><h3>Add New Field</h3></div>
-<div class="admin-card-body">
-<form method="POST" action="{{ url_for('admin_field_new') }}" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
+<div class="admin-card-body" style="overflow:visible">
+<form method="POST" action="{{ url_for('admin_field_new') }}" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;position:relative;z-index:10">
 <div class="form-group" style="margin:0;width:70px">
 <label>Icon</label>
 <div class="icon-picker-wrap" style="position:relative">
