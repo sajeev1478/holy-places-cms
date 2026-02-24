@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Email & Notification Settings{% endblock %}
+{% block admin_content %}
+<form method="POST" style="max-width:700px">
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-header"><h3>📧 Report Email Recipients</h3></div>
+<div style="padding:20px">
+<p style="font-size:13px;color:var(--text-mid);margin-bottom:16px">Comma-separated email addresses that will receive error reports and feedback submissions:</p>
+<div class="form-group"><label>Email Addresses</label>
+<textarea name="report_emails" class="form-control" rows="3" placeholder="email1@example.com, email2@example.com">{{ settings.get('report_emails','') }}</textarea>
+</div>
+<div style="font-size:12px;font-weight:600;margin-bottom:10px;color:var(--text-dark)">Or select users who should receive reports:</div>
+<div style="display:grid;gap:6px;margin-bottom:12px">
+{% for u in users %}
+<label style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--bg-cream);border-radius:10px;cursor:pointer;font-size:13px">
+<input type="checkbox" name="receive_users" value="{{ u.id }}" {{ 'checked' if u.receive_reports }} style="accent-color:var(--primary)">
+<span style="font-weight:600">{{ u.display_name or u.username }}</span>
+<span style="color:var(--text-light);font-size:11px">{{ u.email }}</span>
+<span style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:50px;background:{{ '#C76B8F15' if u.role=='super_admin' else '#2E86AB15' }};color:{{ '#C76B8F' if u.role=='super_admin' else '#2E86AB' }}">{{ u.role }}</span>
+</label>
+{% endfor %}
+</div>
+</div>
+</div>
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-header"><h3>📮 SMTP Settings <span style="font-size:11px;font-weight:400;color:var(--text-light)">(Optional — for sending actual emails)</span></h3></div>
+<div style="padding:20px">
+<p style="font-size:13px;color:var(--text-mid);margin-bottom:16px">Configure SMTP to send actual email notifications. Without SMTP, reports are saved in the database and visible in the Reports section.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div class="form-group"><label>SMTP Host</label><input name="smtp_host" class="form-control" value="{{ settings.get('smtp_host','') }}" placeholder="smtp.gmail.com"></div>
+<div class="form-group"><label>SMTP Port</label><input name="smtp_port" class="form-control" value="{{ settings.get('smtp_port','587') }}" placeholder="587"></div>
+<div class="form-group"><label>SMTP Username</label><input name="smtp_user" class="form-control" value="{{ settings.get('smtp_user','') }}" placeholder="your@email.com"></div>
+<div class="form-group"><label>SMTP Password</label><input name="smtp_pass" class="form-control" type="password" value="{{ settings.get('smtp_pass','') }}" placeholder="App password"></div>
+</div>
+</div>
+</div>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
+</form>
+{% endblock %}

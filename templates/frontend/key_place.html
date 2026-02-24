@@ -22,6 +22,8 @@
 {% set total_subs = namespace(val=0) %}{% for ksd in key_spots %}{% set total_subs.val = total_subs.val + ksd.sub_spots|length %}{% endfor %}
 {% if total_subs.val %}<div style="padding:10px 18px;background:rgba(255,255,255,.1);border-radius:10px"><strong>{{ total_subs.val }}</strong> Key Points</div>{% endif %}
 </div>{% endif %}
+
+<div style="margin-top:16px"><button class="report-btn" onclick="openReportModal(this.dataset.info)" data-info="&lt;strong&gt;📍 Page Info&lt;/strong&gt;&lt;br&gt;🏛️ &lt;b&gt;T1 Holy Dham:&lt;/b&gt; {{ place.title }}&lt;br&gt;📍 &lt;b&gt;T2 Key Place:&lt;/b&gt; {{ kp.title }}">🚩 Report an Error</button></div>
 </div>
 </section>
 

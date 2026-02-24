@@ -16,10 +16,13 @@
 .hero-title em{color:var(--rose-deep);font-style:italic}
 .hero-desc{font-size:18px;color:var(--text-mid);line-height:1.8;margin-bottom:20px;max-width:480px}
 /* ─── Hero Image Slider ─── */
-.hero-slider{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:3/2;width:100%}
-.hs-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease,transform 1.4s ease;transform:scale(1.06)}
-.hs-slide.active{opacity:1;transform:scale(1)}
-.hs-slide img{width:100%;height:100%;object-fit:cover}
+.hero-slider{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:3/2;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.12)}
+.hs-slide{position:absolute;inset:0;opacity:0;z-index:1;transition:opacity 1.8s cubic-bezier(.4,0,.2,1),transform 3s cubic-bezier(.25,.1,.25,1),filter 1.5s ease}
+.hs-slide:nth-child(odd){transform:scale(1.12) translateX(20px);filter:brightness(.6) blur(3px)}
+.hs-slide:nth-child(even){transform:scale(1.12) translateX(-20px);filter:brightness(.6) blur(3px)}
+.hs-slide.active{opacity:1;z-index:2;transform:scale(1) translateX(0);filter:brightness(1) blur(0)}
+.hs-slide img{width:100%;height:100%;object-fit:cover;transition:transform 8s cubic-bezier(.25,.1,.25,1)}
+.hs-slide.active img{transform:scale(1.05)}
 .hs-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(45,31,46,.75) 0%,transparent 55%)}
 .hs-info{position:absolute;bottom:0;left:0;right:0;padding:28px 24px;z-index:2}
 .hs-tier-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:50px;color:white;margin-bottom:8px}
@@ -106,7 +109,7 @@
 {% if img.tier == 'T2' and img.dham_title %}<div class="hs-breadcrumb">{{ img.dham_title }}</div>{% endif %}
 {% if img.tier == 'T3' and img.kp_title %}<div class="hs-breadcrumb">{{ img.kp_title }} › {{ img.dham_title }}</div>{% endif %}
 {% if img.tier == 'T4' and img.ks_title %}<div class="hs-breadcrumb">{{ img.ks_title }} › {{ img.kp_title }} › {{ img.dham_title }}</div>{% endif %}
-<a class="hs-cta" href="{% if img.tier=='T1' %}{{ url_for('place_detail',slug=img.slug) }}{% elif img.tier=='T2' %}{{ url_for('key_place_detail',slug=img.dham_slug,kp_slug=img.slug) }}{% elif img.tier=='T3' %}{{ url_for('key_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.slug) }}{% elif img.tier=='T4' %}{{ url_for('sub_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.ks_slug,ss_slug=img.slug) }}{% endif %}">View {{ tier_labels.get(img.tier,'Place') }} →</a>
+<a class="hs-cta" href="{% if img.tier=='T1' %}{{ url_for('place_detail',slug=img.slug) }}{% elif img.tier=='T2' %}{{ url_for('key_place_detail',slug=img.dham_slug,kp_slug=img.slug) }}{% elif img.tier=='T3' %}{{ url_for('key_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.slug) }}{% elif img.tier=='T4' %}{{ url_for('sub_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.ks_slug,ss_slug=img.slug) }}{% endif %}">View {{ img.title }} →</a>
 </div>
 </div>
 {% endfor %}
@@ -239,8 +242,8 @@
   var sl=document.getElementById('heroSlider');if(!sl)return;
   var ss=sl.querySelectorAll('.hs-slide'),ds=sl.querySelectorAll('.hs-dot'),c=0,t=ss.length,tm,b=false;
   if(t<2)return;
-  function go(n){if(b)return;b=true;ss[c].classList.remove('active');if(ds[c])ds[c].classList.remove('active');c=(n%t+t)%t;ss[c].classList.add('active');if(ds[c])ds[c].classList.add('active');setTimeout(function(){b=false},600)}
-  function au(){tm=setInterval(function(){go(c+1)},3000)}
+  function go(n){if(b)return;b=true;ss[c].classList.remove('active');if(ds[c])ds[c].classList.remove('active');c=(n%t+t)%t;ss[c].classList.add('active');if(ds[c])ds[c].classList.add('active');setTimeout(function(){b=false},2000)}
+  function au(){tm=setInterval(function(){go(c+1)},6000)}
   function re(){clearInterval(tm);au()}
   ds.forEach(function(d){d.addEventListener('click',function(){go(+d.dataset.i);re()})});
   au();

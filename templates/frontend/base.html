@@ -205,6 +205,34 @@ nav{display:none}
 .cf-item .cf-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .cf-item .cf-label{font-size:12px;color:var(--text-light);font-weight:600;letter-spacing:.3px}
 .cf-item .cf-value{font-size:14px;font-weight:600;color:var(--text-dark)}
+
+/* ═══ Report Error Modal ═══ */
+.report-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+.report-modal-overlay.active{display:flex}
+.report-modal{background:white;border-radius:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3);animation:rmSlide .4s cubic-bezier(.4,0,.2,1)}
+@keyframes rmSlide{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.report-modal-head{padding:24px 28px 16px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between}
+.report-modal-head h3{font-family:'Josefin Sans',sans-serif;font-size:20px;display:flex;align-items:center;gap:10px}
+.report-modal-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--cream-deep);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.report-modal-close:hover{background:#E53935;color:white}
+.report-modal-body{padding:20px 28px 28px}
+.rm-tier-info{background:var(--cream);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;line-height:1.8}
+.rm-tier-info strong{color:var(--text-dark);display:block;margin-bottom:4px;font-size:13px}
+.rm-field{margin-bottom:14px}
+.rm-field label{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--text-dark)}
+.rm-field input,.rm-field textarea,.rm-field select{width:100%;padding:10px 14px;border:2px solid var(--cream-deep);border-radius:10px;font-family:'Nunito Sans',sans-serif;font-size:14px;outline:none;transition:border .2s;box-sizing:border-box}
+.rm-field input:focus,.rm-field textarea:focus,.rm-field select:focus{border-color:var(--rose)}
+.rm-captcha{display:flex;align-items:center;gap:12px;background:var(--cream);border-radius:10px;padding:10px 14px;font-family:'Plus Jakarta Sans',sans-serif}
+.rm-captcha-q{font-size:18px;font-weight:800;color:var(--rose-deep);min-width:90px}
+.rm-captcha input{width:80px;padding:8px 12px;border:2px solid var(--cream-deep);border-radius:8px;font-size:16px;text-align:center;outline:none}
+.rm-captcha input:focus{border-color:var(--rose)}
+.rm-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--rose-deep),var(--rose-dark));color:white;border:none;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .3s}
+.rm-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(199,107,143,.4)}
+.rm-success{text-align:center;padding:40px 20px}
+.rm-success .check{width:64px;height:64px;background:#4CAF50;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;color:white}
+.rm-errors{background:#FFF3F3;border:1px solid #FFCDD2;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#C62828}
+.report-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(231,72,69,.08);border:1.5px solid rgba(231,72,69,.2);color:#E74845;padding:8px 18px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .3s;text-decoration:none}
+.report-btn:hover{background:rgba(231,72,69,.15);transform:translateY(-1px)}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -377,5 +405,93 @@ function initSlider(el) {
 document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('.gallery-slider').forEach(initSlider));
 </script>
 {% block extra_js %}{% endblock %}
+
+<!-- Report Error / Feedback Modal -->
+<div class="report-modal-overlay" id="reportModal">
+<div class="report-modal">
+<div class="report-modal-head">
+<h3>🚩 Report / Feedback</h3>
+<button class="report-modal-close" onclick="closeReportModal()">✕</button>
+</div>
+<div class="report-modal-body" id="reportModalBody">
+<div class="rm-tier-info" id="rmTierInfo"></div>
+<div id="rmErrors" class="rm-errors" style="display:none"></div>
+<div class="rm-field"><label>Type</label>
+<select id="rmType"><option value="error">🔴 Report an Error</option><option value="feedback">💬 General Feedback</option></select></div>
+<div class="rm-field"><label>Your Name *</label><input id="rmName" placeholder="Your name"></div>
+<div class="rm-field"><label>Email Address *</label><input id="rmEmail" type="email" placeholder="your@email.com"></div>
+<div class="rm-field"><label>Message *</label><textarea id="rmMessage" rows="4" placeholder="Describe the error or share your feedback..."></textarea></div>
+<div class="rm-field">
+<label>Verify you are human *</label>
+<div class="rm-captcha">
+<span class="rm-captcha-q" id="rmCaptchaQ"></span>
+<span>=</span>
+<input id="rmCaptchaA" type="number" placeholder="?">
+<input type="hidden" id="rmCaptchaE">
+</div>
+</div>
+<button class="rm-submit" onclick="submitReport()">Submit Report</button>
+</div>
+</div>
+</div>
+
+
+<script>
+// Report Error Modal
+function openReportModal(tierInfo){
+  // Decode HTML entities from data attribute
+  var tmp = document.createElement('div');
+  tmp.innerHTML = tierInfo || '';
+  var decoded = tmp.innerHTML;
+  document.getElementById('rmTierInfo').innerHTML = decoded;
+  document.getElementById('rmErrors').style.display='none';
+  document.getElementById('rmErrors').innerHTML='';
+  document.getElementById('rmName').value='';
+  document.getElementById('rmEmail').value='';
+  document.getElementById('rmMessage').value='';
+  document.getElementById('rmCaptchaA').value='';
+  document.getElementById('rmType').value='error';
+  // Generate captcha
+  var a=Math.floor(Math.random()*40)+10, b=Math.floor(Math.random()*20)+5;
+  var op=Math.random()>.5?'+':'-';
+  if(op==='-'&&b>a){var t=a;a=b;b=t}
+  var ans=op==='+'?a+b:a-b;
+  document.getElementById('rmCaptchaQ').textContent=a+' '+op+' '+b;
+  document.getElementById('rmCaptchaE').value=ans;
+  // Reset submit button
+  var btn = document.querySelector('.rm-submit');
+  if(btn){btn.disabled=false; btn.textContent='Submit Report';}
+  // Show modal
+  document.getElementById('reportModal').classList.add('active');
+}
+function closeReportModal(){document.getElementById('reportModal').classList.remove('active')}
+function submitReport(){
+  var btn=document.querySelector('.rm-submit');
+  btn.disabled=true; btn.textContent='Submitting...';
+  var fd=new FormData();
+  fd.append('report_name',document.getElementById('rmName').value);
+  fd.append('report_email',document.getElementById('rmEmail').value);
+  fd.append('report_message',document.getElementById('rmMessage').value);
+  fd.append('report_type',document.getElementById('rmType').value);
+  fd.append('page_url',window.location.href);
+  fd.append('tier_info',document.getElementById('rmTierInfo').innerText||'');
+  fd.append('captcha_answer',document.getElementById('rmCaptchaA').value);
+  fd.append('captcha_expected',document.getElementById('rmCaptchaE').value);
+  fetch('/report-error',{method:'POST',body:fd}).then(r=>r.json()).then(data=>{
+    if(data.ok){
+      document.getElementById('reportModalBody').innerHTML='<div class="rm-success"><div class="check">✓</div><h3 style="font-family:Josefin Sans;margin-bottom:8px">Thank You!</h3><p style="color:var(--text-mid);font-size:14px">Your report has been submitted successfully. Our team will review it shortly.</p><button class="rm-submit" style="margin-top:20px;max-width:200px;margin-left:auto;margin-right:auto;display:block" onclick="closeReportModal()">Close</button></div>';
+    } else {
+      var el=document.getElementById('rmErrors');
+      el.innerHTML=(data.errors||['Unknown error']).join('<br>');
+      el.style.display='block';
+      btn.disabled=false; btn.textContent='Submit Report';
+    }
+  }).catch(function(){
+    btn.disabled=false; btn.textContent='Submit Report';
+    alert('Network error. Please try again.');
+  });
+}
+document.getElementById('reportModal').addEventListener('click',function(e){if(e.target===this)closeReportModal()});
+</script>
 </body>
 </html>

@@ -120,7 +120,7 @@ def close_db(exception):
 def init_db():
     db = get_db()
     db.executescript('''
-    CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'editor', permissions TEXT DEFAULT '{}', is_active INTEGER DEFAULT 1, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, last_login TIMESTAMP);
+    CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'editor', permissions TEXT DEFAULT '{}', is_active INTEGER DEFAULT 1, receive_reports INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, last_login TIMESTAMP);
     CREATE TABLE IF NOT EXISTS modules (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, description TEXT, icon TEXT DEFAULT '📁', sort_order INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1, fields_schema TEXT DEFAULT '[]', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS places (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, short_description TEXT, full_content TEXT, state TEXT, city TEXT, country TEXT DEFAULT 'India', latitude REAL, longitude REAL, featured_image TEXT, status TEXT DEFAULT 'draft', is_featured INTEGER DEFAULT 0, view_count INTEGER DEFAULT 0, field_visibility TEXT DEFAULT '{}', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS custom_field_defs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, label TEXT NOT NULL, field_type TEXT NOT NULL DEFAULT 'text', placeholder TEXT DEFAULT '', icon TEXT DEFAULT '📋', is_active INTEGER DEFAULT 1, sort_order INTEGER DEFAULT 0, applies_to TEXT DEFAULT 'both', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
@@ -148,6 +148,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS place_tags (place_id INTEGER NOT NULL, tag_id INTEGER NOT NULL, PRIMARY KEY (place_id, tag_id), FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS nearby_places (place_id INTEGER NOT NULL, nearby_place_id INTEGER NOT NULL, distance_km REAL, PRIMARY KEY (place_id, nearby_place_id));
     CREATE TABLE IF NOT EXISTS permission_definitions (id INTEGER PRIMARY KEY AUTOINCREMENT, permission_key TEXT UNIQUE NOT NULL, label TEXT NOT NULL, description TEXT, category TEXT DEFAULT 'general');
+    CREATE TABLE IF NOT EXISTS site_settings (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT UNIQUE NOT NULL, value TEXT DEFAULT '');
+    CREATE TABLE IF NOT EXISTS feedback_reports (id INTEGER PRIMARY KEY AUTOINCREMENT, report_type TEXT DEFAULT 'error', name TEXT, email TEXT NOT NULL, message TEXT NOT NULL, page_url TEXT, tier_info TEXT, captcha_ok INTEGER DEFAULT 0, status TEXT DEFAULT 'new', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT NOT NULL, entity_type TEXT, entity_id INTEGER, details TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     ''')
     db.commit()
@@ -195,6 +197,8 @@ def seed_db():
         'iskcon': make_seed_image('seed_iskcon.jpg', '#E74845', '#B03030', '🙏 ISKCON Mandir'),
         'banke_bihari': make_seed_image('seed_banke_bihari.jpg', '#9C27B0', '#6A1B82', '🪔 Banke Bihari'),
         'kesi_ghat': make_seed_image('seed_kesi_ghat.jpg', '#2196F3', '#1565C0', '🌊 Kesi Ghat'),
+        'samadhi': make_seed_image('seed_samadhi.jpg', '#FF6F00', '#E65100', '🙏 Prabhupada Samadhi'),
+        'altar': make_seed_image('seed_altar.jpg', '#AD1457', '#880E4F', '🪔 Krishna-Balaram Altar'),
     }
 
     # ─── Seed Tier-3 Spot Categories ───
@@ -204,9 +208,18 @@ def seed_db():
     for slug,name,desc,icon,color in SUB_SPOT_CATEGORIES:
         db.execute("INSERT INTO sub_spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slug,name,desc,icon,color))
 
-    # Users
-    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions) VALUES (?,?,?,?,?,?)", ('admin','admin@holyplaces.com',hashlib.sha256(b'admin123').hexdigest(),'Super Admin','super_admin','{"all":true}'))
+    # Users — Super Admins
+    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('admin','admin@holyplaces.com',hashlib.sha256(b'admin123').hexdigest(),'Super Admin','super_admin','{"all":true}',1))
+    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('sajeev','sajeev1478@gmail.com',hashlib.sha256(b'holyplace2025').hexdigest(),'Sajeev','super_admin','{"all":true}',1))
+    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('manoj','manojrpai@gmail.com',hashlib.sha256(b'holyplace2025').hexdigest(),'Manoj','super_admin','{"all":true}',1))
+    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('madana','madana.murari.rns@iskcon.net',hashlib.sha256(b'holyplace2025').hexdigest(),'Madana Murari','super_admin','{"all":true}',1))
     db.execute("INSERT INTO users (username,email,password_hash,display_name,role,created_by) VALUES (?,?,?,?,?,?)", ('editor','editor@holyplaces.com',hashlib.sha256(b'editor123').hexdigest(),'Content Editor','editor',1))
+    # Default email settings
+    db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('report_emails','sajeev1478@gmail.com,manojrpai@gmail.com,madana.murari.rns@iskcon.net'))
+    db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_host',''))
+    db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_port','587'))
+    db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_user',''))
+    db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_pass',''))
     # Modules
     for name,slug,desc,icon,order in [('Holy Dhams','holy-dhams','Sacred destinations','🛕',1),('Temples','temples','Temple profiles','🏛️',2),('Sacred Stories','sacred-stories','Mythological tales','📖',3),('Festivals','festivals','Religious events','🎪',4),('Pilgrimage Guides','pilgrimage-guides','Travel guides','🚶',5),('Events','events','Spiritual events','📅',6),('Bhajans & Kirtans','bhajans-kirtans','Devotional music','🎵',7),('Spiritual Articles','spiritual-articles','Spiritual writings','📝',8)]:
         db.execute("INSERT INTO modules (name,slug,description,icon,sort_order,is_active,created_by) VALUES (?,?,?,?,?,1,1)", (name,slug,desc,icon,order))
@@ -258,8 +271,16 @@ def seed_db():
         (kp_ids['govardhan'],parikrama_cat,'Govardhan Parikrama','govardhan-parikrama','21 km circumambulation of the sacred hill.','<p>The parikrama path encircles Govardhan Hill and is walked barefoot by millions of devotees annually.</p>',27.4930,77.4580,4),
     ]
     ks_ids = {}
+    # Generate additional seed images for T3 spots
+    seed_images['nidhivan'] = make_seed_image('seed_nidhivan.jpg', '#1B5E20', '#2E7D32', '🌳 Nidhivan')
+    seed_images['govardhan_hill'] = make_seed_image('seed_govardhan_hill.jpg', '#4E342E', '#795548', '⛰️ Govardhan Hill')
+    seed_images['radha_kund'] = make_seed_image('seed_radha_kund.jpg', '#D81B60', '#F06292', '💧 Radha Kund')
+    seed_images['radha_raman'] = make_seed_image('seed_radha_raman.jpg', '#FF6F00', '#FFA726', '🪔 Radha Raman')
+    seed_images['kusum_sarovar'] = make_seed_image('seed_kusum_sarovar.jpg', '#0D47A1', '#42A5F5', '🏛️ Kusum Sarovar')
+    seed_images['parikrama'] = make_seed_image('seed_parikrama.jpg', '#33691E', '#8BC34A', '🚶 Parikrama')
+    ks_images = {'iskcon-krishna-balaram': seed_images.get('iskcon'), 'banke-bihari': seed_images.get('banke_bihari'), 'radha-raman': seed_images.get('radha_raman'), 'kesi-ghat': seed_images.get('kesi_ghat'), 'nidhivan': seed_images.get('nidhivan'), 'govardhan-hill': seed_images.get('govardhan_hill'), 'radha-kund': seed_images.get('radha_kund'), 'kusum-sarovar': seed_images.get('kusum_sarovar'), 'govardhan-parikrama': seed_images.get('parikrama')}
     for kpid,catid,t,s,sd,fc,lat,lng,o in ks_data:
-        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,'Uttar Pradesh','Mathura','India',lat,lng,o))
+        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,ks_images.get(s),'Uttar Pradesh','Mathura','India',lat,lng,o))
         ks_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
 
     # ─── Tier 4: Sub-Spots (with categories) ───
@@ -274,8 +295,11 @@ def seed_db():
         (ks_ids['iskcon-krishna-balaram'],altar_cat,'Krishna-Balaram Altar','krishna-balaram-altar','The main altar with the presiding deities.','<p>The central altar features the beautiful deities of Sri Sri Krishna-Balaram, Radha-Shyamasundar, and Gaura-Nitai.</p>',3),
         (ks_ids['iskcon-krishna-balaram'],courtyard_cat,'Temple Courtyard','temple-courtyard','Open gathering space for kirtans.','<p>The spacious courtyard hosts daily kirtans, festivals, and spiritual programs.</p>',4),
     ]
+    seed_images['quarters'] = make_seed_image('seed_quarters.jpg', '#5D4037', '#8D6E63', '🏠 Prabhupada Quarters')
+    seed_images['courtyard'] = make_seed_image('seed_courtyard.jpg', '#1565C0', '#64B5F6', '🏛️ Temple Courtyard')
+    ss_images = {'prabhupada-samadhi': seed_images.get('samadhi'), 'krishna-balaram-altar': seed_images.get('altar'), 'prabhupada-quarters': seed_images.get('quarters'), 'temple-courtyard': seed_images.get('courtyard')}
     for ksid,catid,t,s,sd,fc,o in ss_data:
-        db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,state,city,country,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,'Uttar Pradesh','Vrindavan','India',o))
+        db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,state,city,country,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,ss_images.get(s),'Uttar Pradesh','Vrindavan','India',o))
 
     # More sample dhams
     other_dham_imgs = {'mayapur-dham': seed_images.get('mayapur'), 'kedarnath-dham': seed_images.get('kedarnath'), 'jagannath-puri-dham': seed_images.get('jagannath')}
@@ -380,49 +404,51 @@ def home():
         fd['all_images'] = ','.join(all_imgs) if all_imgs else ''
         featured_list.append(fd)
     featured = featured_list
-    # Collect images from ALL tiers — featured_image AND gallery_images
+    # Collect images from ALL tiers for hero slider (randomized)
     hero_images=[]
-    def add_hero(img_path, row_dict):
-        if img_path and img_path.strip():
-            d = dict(row_dict)
-            d['image'] = img_path.split(',')[0].strip()  # take first if comma-separated
-            hero_images.append(d)
     # T1 Holy Dhams
-    for row in db.execute("SELECT featured_image,title,slug,'T1' as tier FROM places WHERE status='published' ORDER BY is_featured DESC LIMIT 6").fetchall():
-        add_hero(row['featured_image'], row)
-    # Also check place_media for T1 gallery images
-    for row in db.execute("""SELECT m.filename as gimg, p.title, p.slug, 'T1' as tier
-        FROM media m JOIN place_media pm ON m.id=pm.media_id JOIN places p ON pm.place_id=p.id
-        WHERE m.file_type='image' AND p.status='published' LIMIT 4""").fetchall():
-        d = dict(row); d['image'] = row['gimg']; hero_images.append(d)
+    for row in db.execute("SELECT featured_image,title,slug,'T1' as tier,'' as dham_slug,'' as dham_title,'' as kp_slug,'' as kp_title,'' as ks_slug,'' as ks_title FROM places WHERE status='published' AND featured_image IS NOT NULL AND featured_image!='' ORDER BY RANDOM() LIMIT 4").fetchall():
+        d=dict(row); d['image']=row['featured_image']; hero_images.append(d)
+    # T1 gallery from place_media
+    for row in db.execute("""SELECT m.filename as image,p.title,p.slug,'T1' as tier,'' as dham_slug,p.title as dham_title,'' as kp_slug,'' as kp_title,'' as ks_slug,'' as ks_title
+        FROM media m JOIN place_media pm ON m.id=pm.media_id JOIN places p ON pm.place_id=p.id WHERE m.file_type='image' AND p.status='published' ORDER BY RANDOM() LIMIT 3""").fetchall():
+        hero_images.append(dict(row))
     # T2 Key Places
-    for row in db.execute("""SELECT kp.featured_image,kp.gallery_images,kp.title,p.slug as dham_slug,kp.slug,p.title as dham_title,'T2' as tier
-        FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.is_visible=1 AND p.status='published' LIMIT 6""").fetchall():
-        add_hero(row['featured_image'], row)
-        if row['gallery_images']:
-            for gf in row['gallery_images'].split(',')[:1]:
-                add_hero(gf, row)
+    for row in db.execute("""SELECT kp.featured_image as image,kp.title,kp.slug,p.slug as dham_slug,p.title as dham_title,'T2' as tier,'' as kp_slug,'' as kp_title,'' as ks_slug,'' as ks_title
+        FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.is_visible=1 AND p.status='published' AND kp.featured_image IS NOT NULL AND kp.featured_image!='' ORDER BY RANDOM() LIMIT 4""").fetchall():
+        hero_images.append(dict(row))
+    # T2 gallery images
+    for row in db.execute("""SELECT kp.gallery_images,kp.title,kp.slug,p.slug as dham_slug,p.title as dham_title,'T2' as tier,'' as kp_slug,'' as kp_title,'' as ks_slug,'' as ks_title
+        FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.is_visible=1 AND p.status='published' AND kp.gallery_images IS NOT NULL AND kp.gallery_images!='' ORDER BY RANDOM() LIMIT 3""").fetchall():
+        for gi in row['gallery_images'].split(',')[:1]:
+            if gi.strip(): d=dict(row); d['image']=gi.strip(); hero_images.append(d)
     # T3 Key Spots
-    for row in db.execute("""SELECT ks.featured_image,ks.gallery_images,ks.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug,p.title as dham_title,kp.title as kp_title,'T3' as tier
+    for row in db.execute("""SELECT ks.featured_image as image,ks.title,ks.slug,p.slug as dham_slug,p.title as dham_title,kp.slug as kp_slug,kp.title as kp_title,'T3' as tier,'' as ks_slug,'' as ks_title
         FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id
-        WHERE ks.is_visible=1 AND p.status='published' LIMIT 6""").fetchall():
-        add_hero(row['featured_image'], row)
-        if row['gallery_images']:
-            for gf in row['gallery_images'].split(',')[:1]:
-                add_hero(gf, row)
+        WHERE ks.is_visible=1 AND p.status='published' AND ks.featured_image IS NOT NULL AND ks.featured_image!='' ORDER BY RANDOM() LIMIT 4""").fetchall():
+        hero_images.append(dict(row))
+    # T3 gallery
+    for row in db.execute("""SELECT ks.gallery_images,ks.title,ks.slug,p.slug as dham_slug,p.title as dham_title,kp.slug as kp_slug,kp.title as kp_title,'T3' as tier,'' as ks_slug,'' as ks_title
+        FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id
+        WHERE ks.is_visible=1 AND p.status='published' AND ks.gallery_images IS NOT NULL AND ks.gallery_images!='' ORDER BY RANDOM() LIMIT 3""").fetchall():
+        for gi in row['gallery_images'].split(',')[:1]:
+            if gi.strip(): d=dict(row); d['image']=gi.strip(); hero_images.append(d)
     # T4 Key Points
-    for row in db.execute("""SELECT ss.featured_image,ss.gallery_images,ss.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug as ks_slug,ss.slug,p.title as dham_title,kp.title as kp_title,ks.title as ks_title,'T4' as tier
+    for row in db.execute("""SELECT ss.featured_image as image,ss.title,ss.slug,p.slug as dham_slug,p.title as dham_title,kp.slug as kp_slug,kp.title as kp_title,ks.slug as ks_slug,ks.title as ks_title,'T4' as tier
         FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id
-        WHERE ss.is_visible=1 AND p.status='published' LIMIT 6""").fetchall():
-        add_hero(row['featured_image'], row)
-        if row['gallery_images']:
-            for gf in row['gallery_images'].split(',')[:1]:
-                add_hero(gf, row)
-    # Deduplicate by image path
+        WHERE ss.is_visible=1 AND p.status='published' AND ss.featured_image IS NOT NULL AND ss.featured_image!='' ORDER BY RANDOM() LIMIT 4""").fetchall():
+        hero_images.append(dict(row))
+    # T4 gallery
+    for row in db.execute("""SELECT ss.gallery_images,ss.title,ss.slug,p.slug as dham_slug,p.title as dham_title,kp.slug as kp_slug,kp.title as kp_title,ks.slug as ks_slug,ks.title as ks_title,'T4' as tier
+        FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id
+        WHERE ss.is_visible=1 AND p.status='published' AND ss.gallery_images IS NOT NULL AND ss.gallery_images!='' ORDER BY RANDOM() LIMIT 3""").fetchall():
+        for gi in row['gallery_images'].split(',')[:1]:
+            if gi.strip(): d=dict(row); d['image']=gi.strip(); hero_images.append(d)
+    # Deduplicate and shuffle
     seen=set(); unique=[]
     for h in hero_images:
-        if h['image'] not in seen:
-            seen.add(h['image']); unique.append(h)
+        if h.get('image') and h['image'] not in seen: seen.add(h['image']); unique.append(h)
+    random.shuffle(unique)
     hero_images=unique[:12]
     modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
     stories=db.execute("SELECT me.*,m.name as module_name,m.icon as module_icon FROM module_entries me JOIN modules m ON me.module_id=m.id WHERE me.status='published' AND m.slug='sacred-stories' ORDER BY me.created_at DESC LIMIT 4").fetchall()
@@ -698,7 +724,8 @@ def admin_place_edit(place_id):
 
 def _save_place(place_id):
     db=get_db(); f=request.form; title=f['title']; slug=slugify(title)
-    fi=f.get('featured_image_existing','')
+    fi=f.get('featured_image_existing','').strip()
+    if not fi: fi=''  # Handle cleared by delete
     if 'featured_image_file' in request.files:
         uf=request.files['featured_image_file']
         if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
@@ -1051,8 +1078,8 @@ def admin_user_new():
     if request.method=='POST':
         if db.execute("SELECT id FROM users WHERE username=? OR email=?",(request.form['username'],request.form['email'])).fetchone(): flash('Exists.','error')
         else:
-            db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,created_by) VALUES (?,?,?,?,?,?,?)",
-                (request.form['username'],request.form['email'],hash_password(request.form['password']),request.form.get('display_name',request.form['username']),request.form.get('role','editor'),json.dumps({k:True for k in request.form.getlist('permissions')}),session['user_id']))
+            db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports,created_by) VALUES (?,?,?,?,?,?,?,?)",
+                (request.form['username'],request.form['email'],hash_password(request.form['password']),request.form.get('display_name',request.form['username']),request.form.get('role','editor'),json.dumps({k:True for k in request.form.getlist('permissions')}),1 if request.form.get('receive_reports') else 0,session['user_id']))
             db.commit(); flash('Created!','success'); return redirect(url_for('admin_users'))
     return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False)
 
@@ -1063,7 +1090,7 @@ def admin_user_edit(user_id):
     db=get_db(); user=db.execute("SELECT * FROM users WHERE id=?",(user_id,)).fetchone()
     if not user: abort(404)
     if request.method=='POST':
-        u={'email':request.form['email'],'display_name':request.form.get('display_name',user['username']),'role':request.form.get('role','editor'),'permissions':json.dumps({k:True for k in request.form.getlist('permissions')}),'is_active':1 if request.form.get('is_active') else 0}
+        u={'email':request.form['email'],'display_name':request.form.get('display_name',user['username']),'role':request.form.get('role','editor'),'permissions':json.dumps({k:True for k in request.form.getlist('permissions')}),'is_active':1 if request.form.get('is_active') else 0,'receive_reports':1 if request.form.get('receive_reports') else 0}
         if request.form.get('password'): u['password_hash']=hash_password(request.form['password'])
         db.execute(f"UPDATE users SET {','.join(f'{k}=?' for k in u)} WHERE id=?",list(u.values())+[user_id]); db.commit(); flash('Updated!','success'); return redirect(url_for('admin_users'))
     return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True)
@@ -1137,6 +1164,131 @@ def admin_delete_gallery_image():
         return jsonify({'ok':True})
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)})
+
+# ─── Report Error / Feedback (Frontend) ───
+@app.route('/report-error', methods=['POST'])
+def report_error():
+    f = request.form
+    name = f.get('report_name','').strip()
+    email = f.get('report_email','').strip()
+    msg = f.get('report_message','').strip()
+    rtype = f.get('report_type','error')
+    page_url = f.get('page_url','')
+    tier_info = f.get('tier_info','')
+    captcha_a = f.get('captcha_answer','').strip()
+    captcha_e = f.get('captcha_expected','').strip()
+    errors = []
+    if not name: errors.append('Name is required')
+    if not email or not re.match(r'^[\w.+-]+@[\w-]+\.[\w.-]+$', email): errors.append('Valid email is required')
+    if not msg: errors.append('Message is required')
+    if captcha_a != captcha_e: errors.append('Captcha answer is incorrect')
+    if errors:
+        return jsonify({'ok':False,'errors':errors})
+    db = get_db()
+    db.execute("INSERT INTO feedback_reports (report_type,name,email,message,page_url,tier_info,captcha_ok) VALUES (?,?,?,?,?,?,1)",
+        (rtype,name,email,msg,page_url,tier_info))
+    db.commit()
+    # Try sending email
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        smtp_host = db.execute("SELECT value FROM site_settings WHERE key='smtp_host'").fetchone()
+        smtp_port = db.execute("SELECT value FROM site_settings WHERE key='smtp_port'").fetchone()
+        smtp_user = db.execute("SELECT value FROM site_settings WHERE key='smtp_user'").fetchone()
+        smtp_pass = db.execute("SELECT value FROM site_settings WHERE key='smtp_pass'").fetchone()
+        recipients_row = db.execute("SELECT value FROM site_settings WHERE key='report_emails'").fetchone()
+        recipients = [e.strip() for e in (recipients_row['value'] if recipients_row else '').split(',') if e.strip()]
+        # Also add users with receive_reports=1
+        for u in db.execute("SELECT email FROM users WHERE receive_reports=1 AND is_active=1").fetchall():
+            if u['email'] and u['email'] not in recipients: recipients.append(u['email'])
+        if smtp_host and smtp_host['value'] and smtp_user and smtp_user['value'] and recipients:
+            type_label = 'Error Reported' if rtype == 'error' else 'General Feedback'
+            subject = f"Holy Place - Tier {type_label} Form submitted for review"
+            body = f"<h2>🛕 {type_label}</h2><table border='1' cellpadding='8' style='border-collapse:collapse'>"
+            body += f"<tr><td><b>Type</b></td><td>{'🔴 Error Report' if rtype=='error' else '💬 General Feedback'}</td></tr>"
+            body += f"<tr><td><b>Name</b></td><td>{name}</td></tr>"
+            body += f"<tr><td><b>Email</b></td><td>{email}</td></tr>"
+            body += f"<tr><td><b>Tier Info</b></td><td>{tier_info}</td></tr>"
+            body += f"<tr><td><b>Page URL</b></td><td><a href='{page_url}'>{page_url}</a></td></tr>"
+            body += f"<tr><td><b>Message</b></td><td>{msg}</td></tr></table>"
+            mime = MIMEMultipart('alternative')
+            mime['Subject'] = subject
+            mime['From'] = smtp_user['value']
+            mime['To'] = ', '.join(recipients)
+            mime.attach(MIMEText(body, 'html'))
+            server = smtplib.SMTP(smtp_host['value'], int(smtp_port['value'] if smtp_port else '587'))
+            server.starttls()
+            server.login(smtp_user['value'], smtp_pass['value'] if smtp_pass else '')
+            server.sendmail(smtp_user['value'], recipients, mime.as_string())
+            server.quit()
+    except Exception as e:
+        print(f"Email send failed (report saved to DB): {e}")
+    return jsonify({'ok':True,'message':'Thank you! Your report has been submitted.'})
+
+# ─── Admin: View Reports ───
+@app.route('/admin/reports')
+@login_required
+def admin_reports():
+    db = get_db()
+    reports = db.execute("SELECT * FROM feedback_reports ORDER BY created_at DESC LIMIT 100").fetchall()
+    return render_template('admin/reports.html', reports=reports)
+
+@app.route('/admin/reports/<int:rid>/status', methods=['POST'])
+@login_required
+def admin_report_status(rid):
+    db = get_db()
+    new_status = request.form.get('status','reviewed')
+    db.execute("UPDATE feedback_reports SET status=? WHERE id=?",(new_status,rid))
+    db.commit()
+    flash(f'Report #{rid} marked as {new_status}','success')
+    return redirect(url_for('admin_reports'))
+
+@app.route('/admin/reports/<int:rid>/delete', methods=['POST'])
+@login_required
+def admin_report_delete(rid):
+    get_db().execute("DELETE FROM feedback_reports WHERE id=?",(rid,)); get_db().commit()
+    flash('Report deleted','info'); return redirect(url_for('admin_reports'))
+
+# ─── Admin: Email Settings ───
+@app.route('/admin/settings/emails', methods=['GET','POST'])
+@login_required
+def admin_email_settings():
+    db = get_db()
+    user = db.execute("SELECT role FROM users WHERE id=?",(session.get('user_id'),)).fetchone()
+    if not user or user['role'] != 'super_admin':
+        flash('Only Super Admins can access email settings','error')
+        return redirect(url_for('admin_dashboard'))
+    if request.method == 'POST':
+        for key in ['report_emails','smtp_host','smtp_port','smtp_user','smtp_pass']:
+            val = request.form.get(key,'')
+            db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(key,val,val))
+        # Update receive_reports for users
+        db.execute("UPDATE users SET receive_reports=0")
+        for uid in request.form.getlist('receive_users'):
+            db.execute("UPDATE users SET receive_reports=1 WHERE id=?",(uid,))
+        db.commit()
+        flash('Email settings saved!','success')
+        return redirect(url_for('admin_email_settings'))
+    settings = {r['key']:r['value'] for r in db.execute("SELECT key,value FROM site_settings").fetchall()}
+    users = db.execute("SELECT id,username,email,display_name,role,receive_reports FROM users WHERE is_active=1 ORDER BY role DESC,username").fetchall()
+    return render_template('admin/email_settings.html', settings=settings, users=users)
+
+# ─── Admin: User management — super_admin check ───
+@app.route('/admin/users/<int:uid>/update-role', methods=['POST'])
+@login_required
+def admin_user_update_role(uid):
+    db = get_db()
+    caller = db.execute("SELECT role FROM users WHERE id=?",(session.get('user_id'),)).fetchone()
+    if not caller or caller['role'] != 'super_admin':
+        flash('Only Super Admins can change roles','error')
+        return redirect(url_for('admin_users'))
+    new_role = request.form.get('role','editor')
+    receive = 1 if request.form.get('receive_reports') else 0
+    db.execute("UPDATE users SET role=?,receive_reports=? WHERE id=?",(new_role,receive,uid))
+    db.commit()
+    flash(f'User #{uid} updated','success')
+    return redirect(url_for('admin_users'))
 
 # ─── API ───
 @app.route('/api/v1/places')

@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Feedback & Error Reports{% endblock %}
+{% block admin_content %}
+<div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+<span style="background:#E8F5E9;color:#2E7D32;padding:6px 14px;border-radius:50px;font-size:13px;font-weight:600">📬 {{ reports|length }} Total Reports</span>
+<span style="background:#FFF3E0;color:#E65100;padding:6px 14px;border-radius:50px;font-size:13px;font-weight:600">🔴 {{ reports|selectattr('status','equalto','new')|list|length }} New</span>
+</div>
+{% if reports %}
+<div style="display:grid;gap:14px">
+{% for r in reports %}
+<div class="admin-card" style="border-left:4px solid {{ '#E53935' if r.report_type=='error' else '#2196F3' }}">
+<div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:10px;padding:16px 20px">
+<div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<span style="font-size:9px;font-weight:700;padding:3px 10px;border-radius:50px;background:{{ '#E5393515' if r.report_type=='error' else '#2196F315' }};color:{{ '#E53935' if r.report_type=='error' else '#2196F3' }};text-transform:uppercase;letter-spacing:1px">{{ '🔴 Error' if r.report_type=='error' else '💬 Feedback' }}</span>
+<span style="font-size:9px;font-weight:700;padding:3px 10px;border-radius:50px;background:{{ '#4CAF5015' if r.status=='reviewed' else '#FF980015' if r.status=='new' else '#9E9E9E15' }};color:{{ '#4CAF50' if r.status=='reviewed' else '#FF9800' if r.status=='new' else '#9E9E9E' }};text-transform:uppercase;letter-spacing:1px">{{ r.status }}</span>
+<span style="font-size:11px;color:var(--text-light)">{{ r.created_at }}</span>
+</div>
+<div style="font-family:'Josefin Sans',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px">{{ r.name }} &lt;{{ r.email }}&gt;</div>
+<div style="font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:8px">{{ r.message }}</div>
+{% if r.tier_info %}<div style="background:var(--bg-cream);padding:8px 14px;border-radius:8px;font-size:12px;color:var(--text-mid);margin-bottom:6px">📍 {{ r.tier_info }}</div>{% endif %}
+{% if r.page_url %}<div style="font-size:11px"><a href="{{ r.page_url }}" target="_blank" style="color:var(--primary)">🔗 {{ r.page_url }}</a></div>{% endif %}
+</div>
+<div style="display:flex;gap:6px;flex-shrink:0">
+{% if r.status == 'new' %}
+<form method="POST" action="/admin/reports/{{ r.id }}/status"><input type="hidden" name="status" value="reviewed">
+<button type="submit" class="btn btn-sm" style="background:#4CAF5015;color:#4CAF50;border:1px solid #4CAF5030;font-size:11px"><i class="fas fa-check"></i> Mark Reviewed</button></form>{% endif %}
+<form method="POST" action="/admin/reports/{{ r.id }}/delete" onsubmit="return confirm('Delete this report?')">
+<button type="submit" class="btn btn-sm" style="background:#E5393515;color:#E53935;border:1px solid #E5393530;font-size:11px"><i class="fas fa-trash"></i></button></form>
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="admin-card" style="text-align:center;padding:60px 20px">
+<div style="font-size:48px;margin-bottom:12px">📭</div>
+<h3 style="font-family:'Josefin Sans';font-size:20px;margin-bottom:6px">No Reports Yet</h3>
+<p style="color:var(--text-mid);font-size:14px">When visitors report errors or submit feedback, they'll appear here.</p>
+</div>
+{% endif %}
+{% endblock %}
