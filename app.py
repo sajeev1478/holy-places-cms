@@ -4,7 +4,7 @@ Holy Dham CMS - Main Application (v3)
 With Category Framework for Tier 3 & Tier 4
 """
 
-import os, json, uuid, hashlib, sqlite3, functools
+import os, json, uuid, hashlib, sqlite3, functools, re, random
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import (Flask, render_template, request, redirect, url_for, flash,
@@ -318,11 +318,103 @@ def inject_globals():
 @app.route('/')
 def home():
     db=get_db()
-    featured=db.execute("SELECT p.*,GROUP_CONCAT(t.name) as tag_names FROM places p LEFT JOIN place_tags pt ON p.id=pt.place_id LEFT JOIN tags t ON pt.tag_id=t.id WHERE p.status='published' AND p.is_featured=1 GROUP BY p.id ORDER BY p.updated_at DESC LIMIT 6").fetchall()
+    # Fetch up to 16 dhams with tier counts
+    featured=db.execute("""SELECT p.*,GROUP_CONCAT(DISTINCT t.name) as tag_names,
+        (SELECT COUNT(*) FROM key_places kp WHERE kp.parent_place_id=p.id AND kp.is_visible=1) as kp_count,
+        (SELECT COUNT(*) FROM key_spots ks JOIN key_places kp2 ON ks.key_place_id=kp2.id WHERE kp2.parent_place_id=p.id AND ks.is_visible=1) as ks_count,
+        (SELECT COUNT(*) FROM sub_spots ss JOIN key_spots ks2 ON ss.key_spot_id=ks2.id JOIN key_places kp3 ON ks2.key_place_id=kp3.id WHERE kp3.parent_place_id=p.id AND ss.is_visible=1) as ss_count
+        FROM places p LEFT JOIN place_tags pt ON p.id=pt.place_id LEFT JOIN tags t ON pt.tag_id=t.id
+        WHERE p.status='published' GROUP BY p.id ORDER BY p.is_featured DESC,p.updated_at DESC LIMIT 16""").fetchall()
+    # Collect all gallery images from all tiers for hero slider
+    hero_images=[]
+    for row in db.execute("SELECT featured_image,title,slug,'T1' as tier,'dham' as tier_label FROM places WHERE status='published' AND featured_image IS NOT NULL AND featured_image!='' LIMIT 3").fetchall():
+        hero_images.append(dict(row))
+    for row in db.execute("""SELECT kp.featured_image,kp.title,p.slug as dham_slug,kp.slug,p.title as dham_title,'T2' as tier,'key-place' as tier_label
+        FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.featured_image IS NOT NULL AND kp.featured_image!='' AND kp.is_visible=1 AND p.status='published' LIMIT 3""").fetchall():
+        hero_images.append(dict(row))
+    for row in db.execute("""SELECT ks.featured_image,ks.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug,p.title as dham_title,kp.title as kp_title,'T3' as tier,'key-spot' as tier_label,sc.icon as cat_icon
+        FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id LEFT JOIN spot_categories sc ON ks.category_id=sc.id
+        WHERE ks.featured_image IS NOT NULL AND ks.featured_image!='' AND ks.is_visible=1 AND p.status='published' LIMIT 3""").fetchall():
+        hero_images.append(dict(row))
+    for row in db.execute("""SELECT ss.featured_image,ss.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug as ks_slug,ss.slug,p.title as dham_title,kp.title as kp_title,ks.title as ks_title,'T4' as tier,'key-point' as tier_label,ssc.icon as cat_icon
+        FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id
+        WHERE ss.featured_image IS NOT NULL AND ss.featured_image!='' AND ss.is_visible=1 AND p.status='published' LIMIT 3""").fetchall():
+        hero_images.append(dict(row))
     modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
     stories=db.execute("SELECT me.*,m.name as module_name,m.icon as module_icon FROM module_entries me JOIN modules m ON me.module_id=m.id WHERE me.status='published' AND m.slug='sacred-stories' ORDER BY me.created_at DESC LIMIT 4").fetchall()
     stats={'places':db.execute("SELECT COUNT(*) FROM places WHERE status='published'").fetchone()[0],'entries':db.execute("SELECT COUNT(*) FROM module_entries WHERE status='published'").fetchone()[0],'modules':db.execute("SELECT COUNT(*) FROM modules WHERE is_active=1").fetchone()[0]}
-    return render_template('frontend/home.html',featured=featured,recent=featured,modules=modules,stories=stories,stats=stats)
+    return render_template('frontend/home.html',featured=featured,recent=featured,modules=modules,stories=stories,stats=stats,hero_images=hero_images)
+
+# ─── All Dhams Page ───
+@app.route('/all-dhams')
+def all_dhams():
+    db=get_db(); q=request.args.get('q','')
+    query="""SELECT p.*,GROUP_CONCAT(DISTINCT t.name) as tag_names,
+        (SELECT COUNT(*) FROM key_places kp WHERE kp.parent_place_id=p.id AND kp.is_visible=1) as kp_count,
+        (SELECT COUNT(*) FROM key_spots ks JOIN key_places kp2 ON ks.key_place_id=kp2.id WHERE kp2.parent_place_id=p.id AND ks.is_visible=1) as ks_count,
+        (SELECT COUNT(*) FROM sub_spots ss JOIN key_spots ks2 ON ss.key_spot_id=ks2.id JOIN key_places kp3 ON ks2.key_place_id=kp3.id WHERE kp3.parent_place_id=p.id AND ss.is_visible=1) as ss_count
+        FROM places p LEFT JOIN place_tags pt ON p.id=pt.place_id LEFT JOIN tags t ON pt.tag_id=t.id WHERE p.status='published'"""
+    params=[]
+    if q: query+=" AND (p.title LIKE ? OR p.short_description LIKE ? OR p.city LIKE ? OR p.state LIKE ?)"; params.extend([f'%{q}%']*4)
+    query+=" GROUP BY p.id ORDER BY p.is_featured DESC,p.title"
+    places=db.execute(query,params).fetchall()
+    return render_template('frontend/all_dhams.html',places=places,query=q)
+
+# ─── Static Pages ───
+@app.route('/about')
+def about(): return render_template('frontend/about.html')
+@app.route('/privacy')
+def privacy(): return render_template('frontend/privacy.html')
+@app.route('/terms')
+def terms(): return render_template('frontend/terms.html')
+
+@app.route('/contact', methods=['GET','POST'])
+def contact():
+    if request.method=='POST':
+        name=request.form.get('name','').strip()
+        email=request.form.get('email','').strip()
+        subject=request.form.get('subject','').strip()
+        message=request.form.get('message','').strip()
+        captcha_answer=request.form.get('captcha_answer','').strip()
+        captcha_expected=request.form.get('captcha_expected','').strip()
+        errors=[]
+        if not name: errors.append('Please share your name with us.')
+        if not email: errors.append('We need your email to get back to you.')
+        elif not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',email): errors.append('That email address doesn\'t look quite right. Could you double-check it?')
+        if not subject: errors.append('A brief subject helps us understand your message better.')
+        if not message: errors.append('Please write your message so we can help you.')
+        if not captcha_answer: errors.append('Please solve the small math puzzle to verify you\'re a real person.')
+        elif captcha_answer!=captcha_expected: errors.append('The math answer wasn\'t quite right. Please try again with the new puzzle.')
+        if errors:
+            a=random.randint(10,50); b=random.randint(10,49)
+            op=random.choice(['+','-']); ans=a+b if op=='+' else a-b
+            for e in errors: flash(e,'error')
+            return render_template('frontend/contact.html',captcha_a=a,captcha_b=b,captcha_op=op,captcha_ans=str(ans),form={'name':name,'email':email,'subject':subject,'message':message})
+        # Success
+        flash('Thank you for reaching out! Your message has been received with gratitude. We\'ll get back to you soon. 🙏','success')
+        a=random.randint(10,50); b=random.randint(10,49)
+        op=random.choice(['+','-']); ans=a+b if op=='+' else a-b
+        return render_template('frontend/contact.html',captcha_a=a,captcha_b=b,captcha_op=op,captcha_ans=str(ans),form={})
+    a=random.randint(10,50); b=random.randint(10,49)
+    op=random.choice(['+','-']); ans=a+b if op=='+' else a-b
+    return render_template('frontend/contact.html',captcha_a=a,captcha_b=b,captcha_op=op,captcha_ans=str(ans),form={})
+
+# ─── Live Search API (for inline search) ───
+@app.route('/api/v1/live-search')
+def api_live_search():
+    q=request.args.get('q','').strip()
+    if not q or len(q)<2: return jsonify([])
+    db=get_db(); results=[]
+    like=f'%{q}%'
+    for r in db.execute("SELECT id,title,slug,city,state,'T1' as tier,'Holy Dham' as tier_label FROM places WHERE status='published' AND (title LIKE ? OR city LIKE ? OR state LIKE ?) LIMIT 5",(like,like,like)).fetchall():
+        results.append({'title':r['title'],'tier':r['tier'],'tier_label':r['tier_label'],'location':f"{r['city'] or ''}, {r['state'] or ''}".strip(', '),'url':url_for('place_detail',slug=r['slug'])})
+    for r in db.execute("SELECT kp.title,kp.slug,p.slug as dham_slug,p.title as dham_title,'T2' as tier,'Key Place' as tier_label FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.is_visible=1 AND p.status='published' AND kp.title LIKE ? LIMIT 5",(like,)).fetchall():
+        results.append({'title':r['title'],'tier':r['tier'],'tier_label':r['tier_label'],'location':r['dham_title'],'url':url_for('key_place_detail',slug=r['dham_slug'],kp_slug=r['slug'])})
+    for r in db.execute("SELECT ks.title,ks.slug,kp.slug as kp_slug,p.slug as dham_slug,kp.title as kp_title,p.title as dham_title,'T3' as tier,'Key Spot' as tier_label FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.is_visible=1 AND p.status='published' AND ks.title LIKE ? LIMIT 5",(like,)).fetchall():
+        results.append({'title':r['title'],'tier':r['tier'],'tier_label':r['tier_label'],'location':f"{r['kp_title']} › {r['dham_title']}",'url':url_for('key_spot_detail',slug=r['dham_slug'],kp_slug=r['kp_slug'],ks_slug=r['slug'])})
+    for r in db.execute("SELECT ss.title,ss.slug,ks.slug as ks_slug,kp.slug as kp_slug,p.slug as dham_slug,ks.title as ks_title,kp.title as kp_title,p.title as dham_title,'T4' as tier,'Key Point' as tier_label FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ss.is_visible=1 AND p.status='published' AND ss.title LIKE ? LIMIT 5",(like,)).fetchall():
+        results.append({'title':r['title'],'tier':r['tier'],'tier_label':r['tier_label'],'location':f"{r['ks_title']} › {r['kp_title']} › {r['dham_title']}",'url':url_for('sub_spot_detail',slug=r['dham_slug'],kp_slug=r['kp_slug'],ks_slug=r['ks_slug'],ss_slug=r['slug'])})
+    return jsonify(results[:15])
 
 @app.route('/place/<slug>')
 def place_detail(slug):

@@ -39,9 +39,31 @@ nav a{color:var(--text-mid);font-family:'Plus Jakarta Sans',sans-serif;font-size
 nav a:hover,nav a.active{color:var(--rose-deep);background:var(--rose-pale)}
 .nav-search{width:40px;height:40px;border:1px solid var(--border);border-radius:10px;background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-light);transition:all .2s;margin-left:4px}
 .nav-search:hover{border-color:var(--rose);color:var(--rose-deep)}
-.nav-btn{background:var(--rose-deep);color:white;border:none;padding:10px 24px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .3s;margin-left:4px}
-.nav-btn:hover{background:var(--rose-dark);transform:translateY(-1px)}
 .mobile-toggle{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-dark)}
+
+/* ─── Inline Nav Search ─── */
+.nav-search-wrap{position:relative;margin-left:6px}
+.nav-search-box{display:flex;align-items:center;gap:8px;background:white;border:1.5px solid var(--border);border-radius:50px;padding:6px 14px;transition:all .3s;min-width:200px}
+.nav-search-box:focus-within{border-color:var(--rose);box-shadow:0 4px 20px rgba(199,107,143,.12);min-width:280px}
+.nav-search-icon{font-size:13px;color:var(--text-light)}
+.nav-search-input{border:none;outline:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;background:transparent;width:100%;color:var(--text-dark)}
+.nav-search-input::placeholder{color:var(--text-light);font-size:12px}
+.nav-search-kbd{font-size:10px;padding:1px 6px;background:var(--cream-dark);border:1px solid var(--border);border-radius:4px;color:var(--text-light);font-family:monospace;display:none}
+.nav-search-box:focus-within .nav-search-kbd{display:inline}
+.nav-search-results{position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:360px;background:white;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.15);border:1px solid var(--border);display:none;max-height:420px;overflow-y:auto;z-index:200}
+.nav-search-results.active{display:block}
+.nsr-item{display:flex;gap:12px;padding:12px 16px;align-items:center;cursor:pointer;transition:background .15s;text-decoration:none;color:inherit;border-bottom:1px solid var(--cream-dark)}
+.nsr-item:last-child{border-bottom:none}
+.nsr-item:hover{background:var(--cream)}
+.nsr-tier{font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:50px;color:white;flex-shrink:0}
+.nsr-title{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:600}
+.nsr-loc{font-size:11px;color:var(--text-light)}
+.nsr-empty{padding:20px;text-align:center;color:var(--text-light);font-size:13px}
+
+/* ─── Beautiful File Upload ─── */
+input[type="file"]{position:relative;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text-mid)}
+input[type="file"]::file-selector-button{background:linear-gradient(135deg,var(--rose-deep),var(--rose-dark));color:white;border:none;padding:8px 18px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-right:12px;transition:all .25s;box-shadow:0 2px 8px rgba(199,107,143,.2)}
+input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(199,107,143,.35)}
 
 /* ─── Mobile Nav ─── */
 .mobile-nav{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(253,248,243,.98);z-index:200;padding:80px 32px 32px;flex-direction:column;gap:8px}
@@ -194,12 +216,19 @@ nav{display:none}
 <a class="logo" href="{{ url_for('home') }}"><span class="logo-flower">🪷</span><span class="logo-text">Holy<span>Dham</span></span></a>
 <nav>
 <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' }}">Home</a>
-<a href="{{ url_for('explore') }}" class="{{ 'active' if request.endpoint == 'explore' }}">Explore</a>
-{% for mod in active_modules[:5] %}
+{% for mod in active_modules[:4] %}
 <a href="{{ url_for('module_page', slug=mod.slug) }}" class="{{ 'active' if request.endpoint == 'module_page' and request.view_args.get('slug') == mod.slug }}">{{ mod.name }}</a>
 {% endfor %}
-<button class="nav-search" onclick="document.getElementById('searchModal').style.display='flex'"><i class="fas fa-search"></i></button>
-<a class="nav-btn" href="{{ url_for('explore') }}">Explore All</a>
+<a href="{{ url_for('contact') }}" class="{{ 'active' if request.endpoint == 'contact' }}">Contact</a>
+<!-- Inline Search -->
+<div class="nav-search-wrap">
+<div class="nav-search-box">
+<i class="fas fa-search nav-search-icon"></i>
+<input type="text" id="navSearchInput" class="nav-search-input" placeholder="Search dhams, spots, points..." autocomplete="off">
+<kbd class="nav-search-kbd">Esc</kbd>
+</div>
+<div class="nav-search-results" id="navSearchResults"></div>
+</div>
 </nav>
 <button class="mobile-toggle" onclick="document.getElementById('mobileNav').classList.add('open')">☰</button>
 </div>
@@ -209,21 +238,11 @@ nav{display:none}
 <div class="mobile-nav" id="mobileNav">
 <button class="mobile-nav-close" onclick="this.parentElement.classList.remove('open')">✕</button>
 <a href="{{ url_for('home') }}">🏠 Home</a>
-<a href="{{ url_for('explore') }}">🔍 Explore</a>
 {% for mod in active_modules %}
 <a href="{{ url_for('module_page', slug=mod.slug) }}">{{ mod.icon }} {{ mod.name }}</a>
 {% endfor %}
-</div>
-
-<!-- Search Modal -->
-<div id="searchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-start;justify-content:center;padding-top:120px" onclick="if(event.target===this)this.style.display='none'">
-<div style="background:white;border-radius:20px;padding:32px;width:90%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
-<form action="{{ url_for('search') }}" method="GET" style="display:flex;gap:12px">
-<input name="q" type="text" placeholder="Search holy dhams, temples, stories..." autofocus
- style="flex:1;padding:14px 20px;border:2px solid var(--border);border-radius:50px;font-family:'Nunito Sans',sans-serif;font-size:16px;outline:none">
-<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
-</form>
-</div>
+<a href="{{ url_for('contact') }}">✉️ Contact</a>
+<a href="{{ url_for('about') }}">ℹ️ About Us</a>
 </div>
 
 <!-- Main Content -->
@@ -252,35 +271,68 @@ nav{display:none}
 </div>
 <div class="footer-col">
 <h4>Explore</h4>
-{% for mod in active_modules[:5] %}
+<a href="{{ url_for('all_dhams') }}">All Holy Dhams</a>
+{% for mod in active_modules[:4] %}
 <a href="{{ url_for('module_page', slug=mod.slug) }}">{{ mod.name }}</a>
 {% endfor %}
 </div>
 <div class="footer-col">
-<h4>Resources</h4>
-<a href="{{ url_for('explore') }}">All Places</a>
-<a href="#">Photo Gallery</a>
-<a href="#">Audio Library</a>
-<a href="#">Video Tours</a>
+<h4>Company</h4>
+<a href="{{ url_for('about') }}">About Us</a>
+<a href="{{ url_for('contact') }}">Contact</a>
+<a href="{{ url_for('privacy') }}">Privacy Policy</a>
+<a href="{{ url_for('terms') }}">Terms of Service</a>
 </div>
 <div class="footer-col">
 <h4>Connect</h4>
-<a href="#">About Us</a>
-<a href="#">Contact</a>
+<a href="{{ url_for('contact') }}">Get In Touch</a>
 <a href="{{ url_for('admin_login') }}">Admin Panel</a>
-<a href="#">Mobile App</a>
+<a href="{{ url_for('all_dhams') }}">Browse Dhams</a>
 </div>
 </div>
 <div class="footer-bottom">
 <span>© {{ current_year }} Holy Dham CMS. Made with 🙏</span>
-<span>Privacy · Terms · Sitemap</span>
+<span><a href="{{ url_for('privacy') }}" style="color:inherit">Privacy</a> · <a href="{{ url_for('terms') }}" style="color:inherit">Terms</a> · <a href="{{ url_for('about') }}" style="color:inherit">About</a></span>
 </div>
 </footer>
 
+<!-- Scroll Up/Down Buttons -->
+<div id="scrollBtns" style="position:fixed;right:20px;bottom:20px;z-index:90;display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .3s;pointer-events:none">
+<button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="width:42px;height:42px;border-radius:50%;background:var(--rose-deep);color:white;border:none;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(199,107,143,.3);transition:all .2s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'"><i class="fas fa-chevron-up"></i></button>
+<button onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" style="width:42px;height:42px;border-radius:50%;background:var(--text-dark);color:white;border:none;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:all .2s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'"><i class="fas fa-chevron-down"></i></button>
+</div>
+
 <script>
-window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50)});
-// Auto-hide flash messages
+window.addEventListener('scroll',()=>{
+  document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
+  const sb=document.getElementById('scrollBtns');
+  if(window.scrollY>300){sb.style.opacity='1';sb.style.pointerEvents='auto'}
+  else{sb.style.opacity='0';sb.style.pointerEvents='none'}
+});
 setTimeout(()=>{document.querySelectorAll('[style*="fadeIn"]').forEach(el=>el.style.opacity='0')},4000);
+
+/* ═══ INLINE LIVE SEARCH ═══ */
+(function(){
+  const inp=document.getElementById('navSearchInput'),box=document.getElementById('navSearchResults');
+  if(!inp||!box)return;
+  let timer;
+  const tierColors={T1:'#C76B8F',T2:'#2E86AB',T3:'#E74845',T4:'#9C27B0'};
+  inp.addEventListener('input',function(){
+    clearTimeout(timer);
+    const q=this.value.trim();
+    if(q.length<2){box.classList.remove('active');box.innerHTML='';return}
+    timer=setTimeout(()=>{
+      fetch('/api/v1/live-search?q='+encodeURIComponent(q))
+      .then(r=>r.json()).then(data=>{
+        if(!data.length){box.innerHTML='<div class="nsr-empty">No results found. Try a different search term.</div>';box.classList.add('active');return}
+        box.innerHTML=data.map(r=>`<a class="nsr-item" href="${r.url}"><span class="nsr-tier" style="background:${tierColors[r.tier]||'#888'}">${r.tier}</span><div><div class="nsr-title">${r.title}</div><div class="nsr-loc">${r.tier_label} · ${r.location}</div></div></a>`).join('');
+        box.classList.add('active');
+      });
+    },250);
+  });
+  inp.addEventListener('keydown',e=>{if(e.key==='Escape'){inp.value='';box.classList.remove('active');inp.blur()}});
+  document.addEventListener('click',e=>{if(!e.target.closest('.nav-search-wrap'))box.classList.remove('active')});
+})();
 
 /* ═══ GALLERY SLIDER ENGINE — Multiple Transitions ═══ */
 function initSlider(el) {
@@ -296,17 +348,13 @@ function initSlider(el) {
         const prev = cur;
         cur = (n % total + total) % total;
         const effect = effects[cur % effects.length];
-        // Remove all transition classes from prev
         slides[prev].classList.remove('active');
         slides[prev].classList.add(effect === 'zoom-out' ? 'zoom-out' : effect === 'slide-left' ? 'slide-left' : effect === 'slide-right' ? 'slide-right' : 'fade-out');
-        // Activate new slide
         slides[cur].classList.remove('fade-out','zoom-out','slide-left','slide-right');
         slides[cur].classList.add('active');
-        // Update dots and counter
         dots.forEach((d, i) => d.classList.toggle('active', i === cur));
         if (currentSpan) currentSpan.textContent = cur + 1;
         else if (counter) counter.textContent = (cur + 1) + ' / ' + total;
-        // Cleanup after transition
         setTimeout(() => {
             slides[prev].classList.remove('fade-out','zoom-out','slide-left','slide-right');
             transitioning = false;
@@ -317,11 +365,9 @@ function initSlider(el) {
     el.querySelector('.gs-prev')?.addEventListener('click', () => { show(cur - 1); reset(); });
     el.querySelector('.gs-next')?.addEventListener('click', () => { show(cur + 1); reset(); });
     dots.forEach((d, i) => d.addEventListener('click', () => { show(i); reset(); }));
-    // Touch support
     let tx = 0;
     el.addEventListener('touchstart', e => tx = e.touches[0].clientX, {passive: true});
     el.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) { show(dx < 0 ? cur + 1 : cur - 1); reset(); } }, {passive: true});
-    // Keyboard support
     el.setAttribute('tabindex', '0');
     el.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { show(cur - 1); reset(); } if (e.key === 'ArrowRight') { show(cur + 1); reset(); } });
     if (total > 1 && el.dataset.auto !== 'false') auto();

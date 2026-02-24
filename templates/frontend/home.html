@@ -3,13 +3,12 @@
 
 {% block extra_css %}
 <style>
-/* ─── Hero ─── */
 .hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:100px 0 60px}
 .hero-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;z-index:0}
 .hero-blob-1{width:600px;height:600px;background:var(--rose-pale);top:-100px;right:-100px}
 .hero-blob-2{width:400px;height:400px;background:var(--sage-light);bottom:-50px;left:-50px}
 .hero-blob-3{width:300px;height:300px;background:var(--cream-deep);top:50%;left:40%}
-.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;position:relative;z-index:1}
+.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;position:relative;z-index:1}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:white;border-radius:50px;padding:8px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--rose-deep);font-weight:500;margin-bottom:28px;box-shadow:0 4px 20px rgba(200,100,143,.1)}
 .hero-badge .pulse{width:8px;height:8px;background:var(--rose);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -17,26 +16,40 @@
 .hero-title em{color:var(--rose-deep);font-style:italic}
 .hero-desc{font-size:18px;color:var(--text-mid);line-height:1.8;margin-bottom:36px;max-width:480px}
 .hero-btns{display:flex;gap:14px;flex-wrap:wrap}
-.hero-image-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:480px;margin:0 auto}
-.hero-img{border-radius:20px;overflow:hidden}
-.hero-img-bg{width:100%;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:48px}
-.hero-img:nth-child(2){margin-top:40px}
-.hero-img:nth-child(3){margin-top:-40px}
-.hero-float{position:absolute;background:white;border-radius:16px;padding:16px 20px;box-shadow:0 8px 30px rgba(0,0,0,.08);display:flex;align-items:center;gap:12px;bottom:30px;left:-10px;z-index:2;animation:float 4s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.float-icon{width:44px;height:44px;background:var(--sage-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.float-num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:18px}
-.float-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--text-light)}
-
-/* ─── Category Ribbon ─── */
+/* ─── Hero Image Slider ─── */
+.hero-slider{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:4/5;max-height:520px}
+.hs-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease,transform 1.4s ease;transform:scale(1.06)}
+.hs-slide.active{opacity:1;transform:scale(1)}
+.hs-slide img{width:100%;height:100%;object-fit:cover}
+.hs-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(45,31,46,.75) 0%,transparent 55%)}
+.hs-info{position:absolute;bottom:0;left:0;right:0;padding:28px 24px;z-index:2}
+.hs-tier-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:50px;color:white;margin-bottom:8px}
+.hs-title{font-family:'Josefin Sans',sans-serif;font-size:20px;color:white;margin-bottom:10px;line-height:1.3;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+.hs-cta{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.95);color:var(--text-dark);padding:8px 20px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;text-decoration:none;transition:all .3s}
+.hs-cta:hover{background:white;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);color:var(--rose-deep)}
+.hs-dots{position:absolute;bottom:12px;right:20px;display:flex;gap:6px;z-index:3}
+.hs-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .3s;cursor:pointer}
+.hs-dot.active{background:white;transform:scale(1.4)}
 .cat-ribbon{padding:40px 0;overflow:hidden}
-.cat-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;-ms-overflow-style:none}
+.cat-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
 .cat-scroll::-webkit-scrollbar{display:none}
-
-/* ─── Places Grid ─── */
-.places-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-
-/* ─── Stories ─── */
+/* ─── 4-Column Dham Grid ─── */
+.dhams-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.dham-card{background:white;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);transition:all .4s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative}
+.dham-card:hover{transform:translateY(-6px);border-color:var(--rose);box-shadow:0 8px 32px rgba(199,107,143,.18),0 0 0 1px rgba(199,107,143,.1),0 0 60px rgba(199,107,143,.06)}
+.dham-card-img{width:100%;aspect-ratio:3/2;position:relative;overflow:hidden;background:var(--cream-dark)}
+.dham-card-img img,.dci-bg{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.dham-card:hover .dham-card-img img,.dham-card:hover .dci-bg{transform:scale(1.08)}
+.dham-card-body{padding:14px 16px 16px}
+.dham-card-title{font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dham-card-title a{color:var(--text-dark);text-decoration:none}
+.dham-card-title a:hover{color:var(--rose-deep)}
+.dham-card-loc{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:var(--text-light);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.dham-card-tiers{display:flex;gap:5px;flex-wrap:wrap}
+.dham-tier-chip{font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:600;padding:2px 7px;border-radius:5px;display:flex;align-items:center;gap:2px}
+.dt-t2{background:#2E86AB12;color:#2E86AB}.dt-t3{background:#E7484512;color:#E74845}.dt-t4{background:#9C27B012;color:#9C27B0}
+.view-all-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 36px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:600;background:var(--rose-deep);color:white;text-decoration:none;transition:all .3s;box-shadow:0 8px 30px rgba(199,107,143,.25)}
+.view-all-btn:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 12px 40px rgba(199,107,143,.35);color:white}
 .stories-bg{background:white}
 .stories-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:24px}
 .story-main{background:var(--cream);border-radius:20px;overflow:hidden}
@@ -46,17 +59,13 @@
 .story-title{font-family:'Josefin Sans',sans-serif;font-size:24px;margin-bottom:10px;line-height:1.3}
 .story-excerpt{font-size:15px;color:var(--text-mid);line-height:1.7;margin-bottom:16px}
 .story-side{display:flex;flex-direction:column;gap:14px}
-.story-sm{background:var(--cream);border-radius:14px;padding:20px;display:flex;gap:14px;cursor:pointer;transition:all .3s}
+.story-sm{background:var(--cream);border-radius:14px;padding:20px;display:flex;gap:14px;cursor:pointer;transition:all .3s;text-decoration:none;color:inherit}
 .story-sm:hover{background:var(--rose-pale)}
 .story-sm-icon{width:50px;height:50px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 .story-sm-title{font-family:'Josefin Sans',sans-serif;font-size:15px;margin-bottom:4px}
 .story-sm-meta{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--text-light)}
-
-/* ─── Audio Featured ─── */
 .audio-featured{display:grid;grid-template-columns:auto 1fr;gap:36px;align-items:center}
 .audio-cover{width:160px;height:160px;border-radius:20px;background:linear-gradient(135deg,var(--rose-deep),var(--saffron));display:flex;align-items:center;justify-content:center;font-size:60px;flex-shrink:0}
-
-/* ─── Newsletter ─── */
 .newsletter{background:var(--rose-pale);border-radius:24px;padding:56px;text-align:center;position:relative;overflow:hidden}
 .newsletter::before{content:'🪷';position:absolute;font-size:200px;opacity:.06;top:-40px;right:-40px}
 .newsletter h2{font-family:'Josefin Sans',sans-serif;font-size:32px;margin-bottom:12px}
@@ -64,28 +73,13 @@
 .newsletter-form{display:flex;gap:12px;max-width:440px;margin:0 auto}
 .newsletter-input{flex:1;padding:14px 20px;border:2px solid var(--cream-deep);border-radius:50px;background:white;font-family:'Nunito Sans',sans-serif;font-size:15px;outline:none}
 .newsletter-input:focus{border-color:var(--rose)}
-
-/* ─── Responsive ─── */
-@media(max-width:1024px){
-.hero-inner{grid-template-columns:1fr;text-align:center}
-.hero-desc{margin:0 auto 36px}
-.hero-btns{justify-content:center}
-.hero-image-grid{max-width:360px;margin-top:32px}
-.places-grid{grid-template-columns:repeat(2,1fr)}
-.stories-grid{grid-template-columns:1fr}
-.audio-featured{grid-template-columns:1fr;text-align:center;justify-items:center}
-}
-@media(max-width:768px){
-.hero{padding:100px 0 40px}
-.places-grid{grid-template-columns:1fr}
-.newsletter{padding:36px 20px}
-.newsletter-form{flex-direction:column}
-}
+@media(max-width:1024px){.hero-inner{grid-template-columns:1fr;text-align:center}.hero-desc{margin:0 auto 36px}.hero-btns{justify-content:center}.hero-slider{max-height:360px;margin-top:20px}.dhams-grid{grid-template-columns:repeat(2,1fr)}.stories-grid{grid-template-columns:1fr}.audio-featured{grid-template-columns:1fr;text-align:center;justify-items:center}}
+@media(max-width:768px){.hero{padding:100px 0 40px}.dhams-grid{grid-template-columns:1fr 1fr}.newsletter{padding:36px 20px}.newsletter-form{flex-direction:column}}
+@media(max-width:480px){.dhams-grid{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero -->
 <section class="hero">
 <div class="hero-blob hero-blob-1"></div>
 <div class="hero-blob hero-blob-2"></div>
@@ -97,31 +91,49 @@
 <h1 class="hero-title">Your Journey to<br><em>Sacred India</em><br>Starts Here</h1>
 <p class="hero-desc">Discover temples, sacred stories, festivals, and spiritual practices through a beautifully curated devotional experience.</p>
 <div class="hero-btns">
-<a href="{{ url_for('explore') }}" class="btn btn-primary">Explore Holy Dhams</a>
-<a href="#featured" class="btn btn-secondary">▶ Watch & Listen</a>
+<a href="{{ url_for('all_dhams') }}" class="btn btn-primary">Explore Holy Dhams</a>
+<a href="#dhams" class="btn btn-secondary">▶ Browse All</a>
 </div>
 </div>
-<div style="position:relative">
-<div class="hero-image-grid">
-<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#E8D5C4,#D4B896)">🛕</div></div>
-<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#D4E5D4,#A8C5A8)">🏔️</div></div>
-<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#F8E5EE,#E8C5D4)">🪔</div></div>
-<div class="hero-img"><div class="hero-img-bg" style="background:linear-gradient(135deg,#E5D4E8,#C5A8D4)">📿</div></div>
+<!-- Hero Image Slider -->
+<div class="hero-slider" id="heroSlider">
+{% set tier_colors = {'T1':'#C76B8F','T2':'#2E86AB','T3':'#E74845','T4':'#9C27B0'} %}
+{% set tier_labels = {'T1':'Holy Dham','T2':'Key Place','T3':'Key Spot','T4':'Key Point'} %}
+{% if hero_images %}
+{% for img in hero_images %}
+<div class="hs-slide{% if loop.first %} active{% endif %}">
+<img src="/static/uploads/{{ img.featured_image }}" alt="{{ img.title }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}">
+<div class="hs-overlay"></div>
+<div class="hs-info">
+<span class="hs-tier-badge" style="background:{{ tier_colors.get(img.tier,'#888') }}">{{ img.tier }} · {{ tier_labels.get(img.tier,'') }}</span>
+<div class="hs-title">{{ img.title }}</div>
+<a class="hs-cta" href="{% if img.tier=='T1' %}{{ url_for('place_detail',slug=img.slug) }}{% elif img.tier=='T2' %}{{ url_for('key_place_detail',slug=img.dham_slug,kp_slug=img.slug) }}{% elif img.tier=='T3' %}{{ url_for('key_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.slug) }}{% elif img.tier=='T4' %}{{ url_for('sub_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.ks_slug,ss_slug=img.slug) }}{% endif %}">Visit {{ tier_labels.get(img.tier,'') }} →</a>
 </div>
-<div class="hero-float">
-<div class="float-icon">🙏</div>
-<div><div class="float-num">{{ stats.places }}+</div><div class="float-label">Holy Dhams</div></div>
 </div>
+{% endfor %}
+<div class="hs-dots">
+{% for img in hero_images %}<span class="hs-dot{% if loop.first %} active{% endif %}" data-i="{{ loop.index0 }}"></span>{% endfor %}
+</div>
+{% else %}
+<div class="hs-slide active" style="background:linear-gradient(135deg,#E8D5C4,#D4B896);display:flex;align-items:center;justify-content:center">
+<span style="font-size:80px">🛕</span>
+<div class="hs-overlay"></div>
+<div class="hs-info">
+<span class="hs-tier-badge" style="background:#C76B8F">Sacred Destinations</span>
+<div class="hs-title">Explore India's Holiest Places</div>
+<a class="hs-cta" href="{{ url_for('all_dhams') }}">Browse All Dhams →</a>
+</div>
+</div>
+{% endif %}
 </div>
 </div>
 </div>
 </section>
 
-<!-- Category Ribbon -->
 <section class="cat-ribbon">
 <div class="container">
 <div class="cat-scroll">
-<a class="pill active" href="{{ url_for('explore') }}"><span class="icon">✨</span> All Dhams</a>
+<a class="pill active" href="{{ url_for('all_dhams') }}"><span class="icon">✨</span> All Dhams</a>
 {% for mod in modules %}
 <a class="pill" href="{{ url_for('module_page', slug=mod.slug) }}"><span class="icon">{{ mod.icon }}</span> {{ mod.name }}</a>
 {% endfor %}
@@ -129,56 +141,44 @@
 </div>
 </section>
 
-<!-- Featured Places -->
-<section class="section" id="featured">
+<section class="section" id="dhams" style="padding-top:40px">
 <div class="container">
-<div class="section-header">
-<div class="section-header-row">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:36px">
 <div>
-<div class="section-tag">Featured Destinations</div>
-<h2 class="section-title">Most Visited Holy Dhams</h2>
+<div class="section-tag">🙏 Sacred Destinations</div>
+<h2 class="section-title">Holy Dhams</h2>
 </div>
-<a href="{{ url_for('explore') }}" class="section-link">View all dhams →</a>
+<a href="{{ url_for('all_dhams') }}" class="view-all-btn">View All Dhams →</a>
 </div>
+<div class="dhams-grid">
+{% for place in featured[:16] %}
+<div class="dham-card" onclick="window.location='{{ url_for('place_detail', slug=place.slug) }}'">
+<div class="dham-card-img">
+{% if place.featured_image %}<img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" loading="lazy">{% else %}<div class="dci-bg" style="background:linear-gradient(135deg,{{ ['#E8D5C4,#D4B896','#D4E5D4,#A8C5A8','#F8E5EE,#D4A8B8','#E5D4E8,#C5A8D4','#D4D8E5,#A8B0C5','#E8E5D4,#C5C0A8'][loop.index0 % 6] }});display:flex;align-items:center;justify-content:center;font-size:36px">🛕</div>{% endif %}
 </div>
-<div class="places-grid">
-{% for place in featured[:6] %}
-<div class="card">
-<a href="{{ url_for('place_detail', slug=place.slug) }}" class="card-img">
-<div class="card-img-bg" style="background:linear-gradient(135deg,
-{{ ['#E8D5C4,#D4B896','#D4E5D4,#A8C5A8','#F8E5EE,#D4A8B8','#E5D4E8,#C5A8D4','#D4D8E5,#A8B0C5','#E8E5D4,#C5C0A8'][loop.index0 % 6] }});
-display:flex;align-items:center;justify-content:center;font-size:48px;height:100%">🛕</div>
-{% if place.tag_names %}
-<span class="card-tag">{{ place.tag_names.split(',')[0] }}</span>
-{% endif %}
-</a>
-<div class="card-body">
-<h3 class="card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></h3>
-<div class="card-loc"><i class="fas fa-map-marker-alt"></i> {{ place.city }}, {{ place.state }}</div>
-<div class="card-meta">
-<span><i class="fas fa-eye"></i> {{ place.view_count }} views</span>
-<span><i class="fas fa-images"></i> Gallery</span>
+<div class="dham-card-body">
+<div class="dham-card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></div>
+<div class="dham-card-loc"><i class="fas fa-map-marker-alt" style="font-size:10px"></i> {{ place.city }}{% if place.state %}, {{ place.state }}{% endif %}{% if place.country %}, {{ place.country }}{% endif %}</div>
+<div class="dham-card-tiers">
+{% if place.kp_count %}<span class="dham-tier-chip dt-t2">T2 {{ place.kp_count }}</span>{% endif %}
+{% if place.ks_count %}<span class="dham-tier-chip dt-t3">T3 {{ place.ks_count }}</span>{% endif %}
+{% if place.ss_count %}<span class="dham-tier-chip dt-t4">T4 {{ place.ss_count }}</span>{% endif %}
 </div>
 </div>
 </div>
 {% endfor %}
 </div>
+<div style="text-align:center;margin-top:40px">
+<a href="{{ url_for('all_dhams') }}" class="view-all-btn">View All Dhams →</a>
+</div>
 </div>
 </section>
 
-<!-- Sacred Stories -->
 {% if stories %}
 <section class="section stories-bg">
 <div class="container">
-<div class="section-header">
-<div class="section-header-row">
-<div>
-<div class="section-tag">Sacred Stories</div>
-<h2 class="section-title">Tales of Devotion & Faith</h2>
-</div>
-<a href="{{ url_for('module_page', slug='sacred-stories') }}" class="section-link">All stories →</a>
-</div>
-</div>
+<div class="section-header"><div class="section-header-row"><div><div class="section-tag">Sacred Stories</div><h2 class="section-title">Tales of Devotion & Faith</h2></div>
+<a href="{{ url_for('module_page', slug='sacred-stories') }}" class="section-link">All stories →</a></div></div>
 <div class="stories-grid">
 {% if stories[0] %}
 <div class="story-main">
@@ -195,10 +195,7 @@ display:flex;align-items:center;justify-content:center;font-size:48px;height:100
 {% for story in stories[1:] %}
 <a class="story-sm" href="{{ url_for('entry_detail', mod_slug='sacred-stories', entry_slug=story.slug) }}">
 <div class="story-sm-icon">{{ ['🪔','🌊','🐒','🦚'][loop.index0 % 4] }}</div>
-<div>
-<h4 class="story-sm-title">{{ story.title }}</h4>
-<div class="story-sm-meta">Sacred Stories · {{ story.content|striptags|wordcount // 200 + 1 }} min read</div>
-</div>
+<div><h4 class="story-sm-title">{{ story.title }}</h4><div class="story-sm-meta">Sacred Stories · {{ story.content|striptags|wordcount // 200 + 1 }} min read</div></div>
 </a>
 {% endfor %}
 </div>
@@ -207,35 +204,22 @@ display:flex;align-items:center;justify-content:center;font-size:48px;height:100
 </section>
 {% endif %}
 
-<!-- Audio Section -->
 <section class="section">
 <div class="container">
-<div class="section-header">
-<div class="section-tag">Listen & Meditate</div>
-<h2 class="section-title">Divine Melodies</h2>
-</div>
-<div class="audio-player">
-<div class="audio-featured">
+<div class="section-header"><div class="section-tag">Listen & Meditate</div><h2 class="section-title">Divine Melodies</h2></div>
+<div class="audio-player"><div class="audio-featured">
 <div class="audio-cover">🎵</div>
 <div>
 <h3>Om Namah Shivaya – Temple Rendition</h3>
 <div class="artist">Evening Aarti Collection · Kedarnath Temple</div>
 <div class="audio-progress"><div class="audio-progress-fill" style="width:40%"></div></div>
 <div class="audio-times"><span>3:24</span><span>8:47</span></div>
-<div class="audio-controls">
-<button class="audio-ctrl"><i class="fas fa-backward"></i></button>
-<button class="audio-ctrl play"><i class="fas fa-play"></i></button>
-<button class="audio-ctrl"><i class="fas fa-forward"></i></button>
-<button class="audio-ctrl"><i class="fas fa-random"></i></button>
-<button class="audio-ctrl"><i class="fas fa-redo"></i></button>
+<div class="audio-controls"><button class="audio-ctrl"><i class="fas fa-backward"></i></button><button class="audio-ctrl play"><i class="fas fa-play"></i></button><button class="audio-ctrl"><i class="fas fa-forward"></i></button><button class="audio-ctrl"><i class="fas fa-random"></i></button><button class="audio-ctrl"><i class="fas fa-redo"></i></button></div>
 </div>
-</div>
-</div>
-</div>
+</div></div>
 </div>
 </section>
 
-<!-- Newsletter -->
 <section class="section">
 <div class="container">
 <div class="newsletter">
@@ -248,4 +232,19 @@ display:flex;align-items:center;justify-content:center;font-size:48px;height:100
 </div>
 </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  var sl=document.getElementById('heroSlider');if(!sl)return;
+  var ss=sl.querySelectorAll('.hs-slide'),ds=sl.querySelectorAll('.hs-dot'),c=0,t=ss.length,tm,b=false;
+  if(t<2)return;
+  function go(n){if(b)return;b=true;ss[c].classList.remove('active');if(ds[c])ds[c].classList.remove('active');c=(n%t+t)%t;ss[c].classList.add('active');if(ds[c])ds[c].classList.add('active');setTimeout(function(){b=false},600)}
+  function au(){tm=setInterval(function(){go(c+1)},3000)}
+  function re(){clearInterval(tm);au()}
+  ds.forEach(function(d){d.addEventListener('click',function(){go(+d.dataset.i);re()})});
+  au();
+})();
+</script>
 {% endblock %}

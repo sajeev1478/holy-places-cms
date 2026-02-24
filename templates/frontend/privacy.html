@@ -1,0 +1,118 @@
+{% extends "frontend/base.html" %}
+{% block title %}Privacy Policy{% endblock %}
+{% block meta_desc %}HolyDham's privacy policy — how we collect, use, and protect your personal information.{% endblock %}
+
+{% block extra_css %}
+<style>
+.legal-hero{padding:140px 0 40px;background:linear-gradient(180deg,var(--rose-pale) 0%,var(--cream) 100%);text-align:center}
+.legal-hero h1{font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,4vw,42px);margin-bottom:8px}
+.legal-hero p{color:var(--text-light);font-size:14px}
+.legal-body{max-width:800px;margin:0 auto;padding:48px 40px 80px}
+.legal-body h2{font-family:'Josefin Sans',sans-serif;font-size:22px;color:var(--text-dark);margin:36px 0 12px;padding-top:20px;border-top:1px solid var(--border)}
+.legal-body h2:first-of-type{border-top:none;margin-top:0;padding-top:0}
+.legal-body p{color:var(--text-mid);line-height:1.85;margin-bottom:14px;font-size:15px}
+.legal-body ul{color:var(--text-mid);margin:8px 0 16px 24px;line-height:1.85;font-size:15px}
+.legal-body li{margin-bottom:6px}
+.legal-body strong{color:var(--text-dark)}
+.legal-updated{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--text-light);background:var(--cream-dark);display:inline-block;padding:6px 16px;border-radius:50px;margin-bottom:28px}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="legal-hero">
+<div class="container">
+<h1>🔒 Privacy Policy</h1>
+<p>Last updated: {{ current_year }}</p>
+</div>
+</section>
+
+<div class="legal-body">
+<span class="legal-updated">Effective Date: January 1, {{ current_year }}</span>
+
+<h2>1. Introduction</h2>
+<p>Welcome to HolyDham ("we," "our," or "us"). We are deeply committed to protecting your privacy and handling your personal information with care and respect. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.</p>
+<p>By using HolyDham, you agree to the collection and use of information in accordance with this policy. If you do not agree with any part of this policy, please discontinue use of our services.</p>
+
+<h2>2. Information We Collect</h2>
+<p><strong>Information You Provide Directly:</strong></p>
+<ul>
+<li><strong>Contact Information:</strong> When you use our contact form, you may provide your name, email address, subject, and message content.</li>
+<li><strong>Newsletter Subscription:</strong> If you subscribe to our newsletter, we collect your email address.</li>
+<li><strong>Account Information:</strong> If you create an admin account, we collect your username, email, and password (stored securely using one-way hashing).</li>
+<li><strong>User-Generated Content:</strong> Any content you submit, including images, descriptions, or comments.</li>
+</ul>
+<p><strong>Information Collected Automatically:</strong></p>
+<ul>
+<li><strong>Usage Data:</strong> Pages visited, time spent on pages, click patterns, and navigation paths.</li>
+<li><strong>Device Information:</strong> Browser type, operating system, screen resolution, and device type.</li>
+<li><strong>Log Data:</strong> IP address, access times, referring URLs, and pages viewed.</li>
+<li><strong>Cookies:</strong> Small data files stored on your device to enhance your browsing experience and maintain session state.</li>
+</ul>
+
+<h2>3. How We Use Your Information</h2>
+<p>We use the information we collect for the following purposes:</p>
+<ul>
+<li><strong>Service Delivery:</strong> To operate, maintain, and improve the HolyDham platform and its features.</li>
+<li><strong>Communication:</strong> To respond to your inquiries, send newsletter updates (if subscribed), and provide customer support.</li>
+<li><strong>Analytics:</strong> To understand how users interact with our platform, identify popular content, and improve user experience.</li>
+<li><strong>Security:</strong> To detect, prevent, and address technical issues, fraud, or unauthorized access.</li>
+<li><strong>Content Curation:</strong> To personalize and improve the spiritual content we present based on aggregated usage patterns.</li>
+</ul>
+
+<h2>4. Data Sharing & Disclosure</h2>
+<p>We deeply value your trust and do <strong>not sell, trade, or rent</strong> your personal information to third parties. We may share information only in the following limited circumstances:</p>
+<ul>
+<li><strong>Service Providers:</strong> With trusted third-party services that help us operate our platform (hosting, analytics, email delivery), bound by confidentiality agreements.</li>
+<li><strong>Legal Requirements:</strong> When required by law, court order, or governmental regulation.</li>
+<li><strong>Safety:</strong> To protect the rights, property, or safety of HolyDham, our users, or the public.</li>
+<li><strong>Consent:</strong> With your explicit consent for any other purpose.</li>
+</ul>
+
+<h2>5. Cookies & Tracking</h2>
+<p>HolyDham uses essential cookies to maintain your session and remember your preferences. We may also use analytics cookies to understand site usage. You can control cookie settings through your browser preferences. Disabling cookies may affect some functionality of the platform.</p>
+<p>We do not use advertising cookies or tracking pixels from third-party advertisers.</p>
+
+<h2>6. Data Security</h2>
+<p>We implement industry-standard security measures to protect your personal information, including:</p>
+<ul>
+<li>Secure password hashing (SHA-256 with salting) for all accounts</li>
+<li>HTTPS encryption for all data transmission</li>
+<li>Regular security audits and vulnerability assessments</li>
+<li>Access controls limiting data access to authorized personnel only</li>
+<li>Regular data backups with encrypted storage</li>
+</ul>
+<p>While we strive to protect your information, no method of electronic transmission or storage is 100% secure. We encourage you to use strong, unique passwords and exercise caution when sharing personal information online.</p>
+
+<h2>7. Data Retention</h2>
+<p>We retain your personal information only for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required or permitted by law. Contact form submissions are retained for up to 12 months. Analytics data is retained in aggregated, anonymized form.</p>
+
+<h2>8. Your Rights</h2>
+<p>Depending on your jurisdiction, you may have the following rights regarding your personal data:</p>
+<ul>
+<li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li>
+<li><strong>Correction:</strong> Request correction of inaccurate or incomplete data.</li>
+<li><strong>Deletion:</strong> Request deletion of your personal data (subject to legal requirements).</li>
+<li><strong>Objection:</strong> Object to the processing of your data for certain purposes.</li>
+<li><strong>Portability:</strong> Request transfer of your data in a machine-readable format.</li>
+<li><strong>Withdrawal:</strong> Withdraw consent for data processing at any time.</li>
+</ul>
+<p>To exercise any of these rights, please contact us through our <a href="{{ url_for('contact') }}">contact page</a>.</p>
+
+<h2>9. Children's Privacy</h2>
+<p>HolyDham is a spiritual knowledge platform suitable for all ages. We do not knowingly collect personal information from children under 13 without parental consent. If we discover that a child under 13 has provided personal information, we will promptly delete it. Parents or guardians who believe their child has submitted personal information should contact us immediately.</p>
+
+<h2>10. Third-Party Links</h2>
+<p>Our platform may contain links to external websites or services. We are not responsible for the privacy practices of these third-party sites. We encourage you to read the privacy policies of any external sites you visit.</p>
+
+<h2>11. Changes to This Policy</h2>
+<p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Effective Date." We encourage you to review this policy periodically. Continued use of HolyDham after changes constitutes acceptance of the revised policy.</p>
+
+<h2>12. Contact Us</h2>
+<p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please reach out to us:</p>
+<ul>
+<li><strong>Contact Page:</strong> <a href="{{ url_for('contact') }}">{{ url_for('contact', _external=True) }}</a></li>
+<li><strong>Email:</strong> privacy@holydham.com</li>
+</ul>
+<p>We take every privacy inquiry seriously and will respond within a reasonable timeframe. Thank you for trusting HolyDham with your spiritual journey. 🙏</p>
+</div>
+{% endblock %}

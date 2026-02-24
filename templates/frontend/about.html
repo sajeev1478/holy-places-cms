@@ -1,0 +1,99 @@
+{% extends "frontend/base.html" %}
+{% block title %}About Us{% endblock %}
+{% block meta_desc %}Learn about HolyDham — our mission to preserve and share India's sacred spiritual heritage with the world.{% endblock %}
+
+{% block extra_css %}
+<style>
+.about-hero{padding:140px 0 60px;background:linear-gradient(180deg,var(--rose-pale) 0%,var(--cream) 100%);text-align:center}
+.about-hero h1{font-family:'Josefin Sans',sans-serif;font-size:clamp(32px,4vw,52px);margin-bottom:16px}
+.about-hero p{color:var(--text-mid);font-size:18px;max-width:600px;margin:0 auto;line-height:1.8}
+.about-section{padding:60px 0}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.about-img{border-radius:24px;overflow:hidden;aspect-ratio:4/3;background:linear-gradient(135deg,var(--rose-pale),var(--cream-deep));display:flex;align-items:center;justify-content:center;font-size:100px}
+.about-content h2{font-family:'Josefin Sans',sans-serif;font-size:28px;margin-bottom:16px;color:var(--text-dark)}
+.about-content p{color:var(--text-mid);line-height:1.8;margin-bottom:16px;font-size:16px}
+.values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+.value-card{background:white;border-radius:20px;padding:32px;border:1px solid var(--border);transition:all .3s}
+.value-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px var(--shadow);border-color:var(--rose-pale)}
+.value-icon{font-size:36px;margin-bottom:16px}
+.value-card h3{font-family:'Josefin Sans',sans-serif;font-size:18px;margin-bottom:8px}
+.value-card p{color:var(--text-mid);font-size:14px;line-height:1.7}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin:48px 0;text-align:center}
+.stat-box{background:white;border-radius:16px;padding:28px;border:1px solid var(--border)}
+.stat-num{font-family:'Josefin Sans',sans-serif;font-size:36px;color:var(--rose-deep);font-weight:700}
+.stat-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text-light);margin-top:4px}
+.team-note{background:var(--rose-pale);border-radius:24px;padding:48px;text-align:center;margin-top:48px}
+.team-note h2{font-family:'Josefin Sans',sans-serif;font-size:28px;margin-bottom:12px}
+.team-note p{color:var(--text-mid);font-size:16px;line-height:1.8;max-width:640px;margin:0 auto 24px}
+@media(max-width:768px){.about-grid{grid-template-columns:1fr}.values-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="about-hero">
+<div class="container">
+<h1>🪷 About HolyDham</h1>
+<p>We are on a sacred mission to digitally preserve and share India's holiest destinations, spiritual stories, and devotional heritage with seekers around the world.</p>
+</div>
+</section>
+
+<section class="about-section">
+<div class="container">
+<div class="about-grid">
+<div class="about-img">🙏</div>
+<div class="about-content">
+<h2>Our Sacred Mission</h2>
+<p>HolyDham was born from a deep reverence for India's spiritual landscape — a land where every river, mountain, and temple carries the echo of divine pastimes. We recognized that this immense spiritual heritage, passed down through millennia, deserved a modern, accessible, and beautifully crafted digital home.</p>
+<p>Our platform meticulously catalogs holy dhams across India using a unique 4-tier hierarchy system — from the broadest sacred regions (Tier 1 – Holy Dhams) down to the exact meditation micro-points (Tier 4 – Key Points) where seekers can connect with the divine.</p>
+<p>Every entry is curated with love, featuring detailed descriptions, gallery images, audio recordings, location data, and custom spiritual metadata that helps pilgrims, researchers, and devotees alike discover the sacred geography of Bharat.</p>
+</div>
+</div>
+
+<div class="stats-row">
+<div class="stat-box"><div class="stat-num">4</div><div class="stat-label">Tier Hierarchy</div></div>
+<div class="stat-box"><div class="stat-num">100+</div><div class="stat-label">Sacred Locations</div></div>
+<div class="stat-box"><div class="stat-num">50+</div><div class="stat-label">Spiritual Stories</div></div>
+<div class="stat-box"><div class="stat-num">∞</div><div class="stat-label">Divine Grace</div></div>
+</div>
+
+<div class="values-grid">
+<div class="value-card">
+<div class="value-icon">📜</div>
+<h3>Authentic Content</h3>
+<p>Every piece of information is sourced from authentic scriptural texts, local traditions, and verified accounts. We respect the sanctity of each sacred place and present information with utmost devotion and accuracy.</p>
+</div>
+<div class="value-card">
+<div class="value-icon">🗺️</div>
+<h3>4-Tier Mapping</h3>
+<p>Our unique hierarchy system (Holy Dham → Key Places → Key Spots → Key Points) provides granular navigation from broad sacred regions down to exact spots where divine pastimes occurred — a level of detail found nowhere else.</p>
+</div>
+<div class="value-card">
+<div class="value-icon">🎵</div>
+<h3>Multimedia Experience</h3>
+<p>Beyond text, we offer gallery images, audio recordings of bhajans and aarti, video tours, and rich custom fields for each location — creating an immersive spiritual experience that transcends the screen.</p>
+</div>
+<div class="value-card">
+<div class="value-icon">🌍</div>
+<h3>Open & Accessible</h3>
+<p>We believe sacred knowledge should be freely available to all seekers regardless of geography. HolyDham is designed to be accessible on all devices, fast-loading, and easy to navigate for users worldwide.</p>
+</div>
+<div class="value-card">
+<div class="value-icon">🔔</div>
+<h3>Living Platform</h3>
+<p>This is not a static archive. We continuously add new dhams, update existing entries, and enrich content with fresh media, stories, and community contributions. The platform grows as our collective devotion grows.</p>
+</div>
+<div class="value-card">
+<div class="value-icon">🙏</div>
+<h3>Seva-Driven</h3>
+<p>HolyDham is a labor of love — a digital seva. Our team works with the spirit of selfless service, motivated not by commercial gain but by the desire to help every soul find their sacred connection with the divine.</p>
+</div>
+</div>
+
+<div class="team-note">
+<h2>Built With Love & Devotion</h2>
+<p>HolyDham is created and maintained by a small team of devotees, technologists, and spiritual seekers who share a common passion — preserving India's sacred heritage for future generations. We welcome contributions, corrections, and suggestions from the community.</p>
+<a href="{{ url_for('contact') }}" class="btn btn-primary" style="margin-top:8px">Get In Touch →</a>
+</div>
+</div>
+</section>
+{% endblock %}

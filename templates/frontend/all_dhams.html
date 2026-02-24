@@ -1,0 +1,105 @@
+{% extends "frontend/base.html" %}
+{% block title %}All Holy Dhams{% endblock %}
+
+{% block extra_css %}
+<style>
+.ad-hero{padding:120px 0 40px;text-align:center;background:linear-gradient(180deg,var(--rose-pale) 0%,var(--cream) 100%)}
+.ad-hero h1{font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,4vw,48px);margin-bottom:12px}
+.ad-hero p{color:var(--text-mid);font-size:16px;max-width:480px;margin:0 auto 28px}
+.ad-search-wrap{max-width:560px;margin:0 auto;position:relative}
+.ad-search-box{display:flex;align-items:center;gap:10px;background:white;border:2px solid var(--border);border-radius:50px;padding:12px 24px;transition:all .3s;box-shadow:0 4px 20px var(--shadow)}
+.ad-search-box:focus-within{border-color:var(--rose);box-shadow:0 8px 32px rgba(199,107,143,.15)}
+.ad-search-box i{color:var(--text-light);font-size:16px}
+.ad-search-box input{border:none;outline:none;flex:1;font-family:'Nunito Sans',sans-serif;font-size:16px;background:transparent}
+.ad-search-box input::placeholder{color:var(--text-light)}
+.ad-results{position:absolute;top:calc(100% + 8px);left:0;right:0;background:white;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.12);border:1px solid var(--border);display:none;max-height:400px;overflow-y:auto;z-index:50}
+.ad-results.active{display:block}
+.adr-item{display:flex;gap:12px;padding:12px 20px;align-items:center;cursor:pointer;transition:background .15s;text-decoration:none;color:inherit;border-bottom:1px solid var(--cream-dark)}
+.adr-item:last-child{border-bottom:none}
+.adr-item:hover{background:var(--cream)}
+.adr-tier{font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:50px;color:white;flex-shrink:0}
+.adr-title{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:600}
+.adr-loc{font-size:11px;color:var(--text-light)}
+.adr-empty{padding:20px;text-align:center;color:var(--text-light);font-size:14px}
+.ad-count{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text-light);margin-bottom:28px}
+.dhams-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.dham-card{background:white;border-radius:16px;overflow:hidden;border:1.5px solid var(--border);transition:all .4s cubic-bezier(.4,0,.2,1);cursor:pointer}
+.dham-card:hover{transform:translateY(-6px);border-color:var(--rose);box-shadow:0 8px 32px rgba(199,107,143,.18),0 0 0 1px rgba(199,107,143,.1),0 0 60px rgba(199,107,143,.06)}
+.dham-card-img{width:100%;aspect-ratio:3/2;position:relative;overflow:hidden;background:var(--cream-dark)}
+.dham-card-img img,.dci-bg{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.dham-card:hover .dham-card-img img,.dham-card:hover .dci-bg{transform:scale(1.08)}
+.dham-card-body{padding:14px 16px 16px}
+.dham-card-title{font-family:'Josefin Sans',sans-serif;font-size:15px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dham-card-title a{color:var(--text-dark);text-decoration:none}
+.dham-card-title a:hover{color:var(--rose-deep)}
+.dham-card-loc{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:var(--text-light);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.dham-card-tiers{display:flex;gap:5px;flex-wrap:wrap}
+.dham-tier-chip{font-family:'Plus Jakarta Sans',sans-serif;font-size:9px;font-weight:600;padding:2px 7px;border-radius:5px}
+.dt-t2{background:#2E86AB12;color:#2E86AB}.dt-t3{background:#E7484512;color:#E74845}.dt-t4{background:#9C27B012;color:#9C27B0}
+@media(max-width:1024px){.dhams-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.dhams-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="ad-hero">
+<div class="container">
+<h1>🪷 All Holy Dhams</h1>
+<p>Browse every sacred destination in our collection. Search by name, city, or even a specific spot deep within a dham.</p>
+<div class="ad-search-wrap">
+<div class="ad-search-box">
+<i class="fas fa-search"></i>
+<input type="text" id="adSearch" placeholder="Try &quot;Prabhupada Samadhi&quot; or &quot;Vrindavan&quot; — search across all 4 tiers..." autocomplete="off">
+</div>
+<div class="ad-results" id="adResults"></div>
+</div>
+</div>
+</section>
+
+<section class="section" style="padding-top:24px">
+<div class="container">
+<div class="ad-count">{{ places|length }} Holy Dham{{ 's' if places|length != 1 }} found{% if query %} for "{{ query }}"{% endif %}</div>
+<div class="dhams-grid">
+{% for place in places %}
+<div class="dham-card" onclick="window.location='{{ url_for('place_detail', slug=place.slug) }}'">
+<div class="dham-card-img">
+{% if place.featured_image %}<img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" loading="lazy">{% else %}<div class="dci-bg" style="background:linear-gradient(135deg,{{ ['#E8D5C4,#D4B896','#D4E5D4,#A8C5A8','#F8E5EE,#D4A8B8','#E5D4E8,#C5A8D4','#D4D8E5,#A8B0C5','#E8E5D4,#C5C0A8'][loop.index0 % 6] }});display:flex;align-items:center;justify-content:center;font-size:36px">🛕</div>{% endif %}
+</div>
+<div class="dham-card-body">
+<div class="dham-card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></div>
+<div class="dham-card-loc"><i class="fas fa-map-marker-alt" style="font-size:10px"></i> {{ place.city }}{% if place.state %}, {{ place.state }}{% endif %}{% if place.country %}, {{ place.country }}{% endif %}</div>
+<div class="dham-card-tiers">
+{% if place.kp_count %}<span class="dham-tier-chip dt-t2">T2 {{ place.kp_count }}</span>{% endif %}
+{% if place.ks_count %}<span class="dham-tier-chip dt-t3">T3 {{ place.ks_count }}</span>{% endif %}
+{% if place.ss_count %}<span class="dham-tier-chip dt-t4">T4 {{ place.ss_count }}</span>{% endif %}
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  var inp=document.getElementById('adSearch'),box=document.getElementById('adResults'),timer;
+  var tc={T1:'#C76B8F',T2:'#2E86AB',T3:'#E74845',T4:'#9C27B0'};
+  if(!inp)return;
+  inp.addEventListener('input',function(){
+    clearTimeout(timer);var q=this.value.trim();
+    if(q.length<2){box.classList.remove('active');box.innerHTML='';return}
+    timer=setTimeout(function(){
+      fetch('/api/v1/live-search?q='+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(data){
+        if(!data.length){box.innerHTML='<div class="adr-empty">No results found. Try a different search.</div>';box.classList.add('active');return}
+        box.innerHTML=data.map(function(r){return '<a class="adr-item" href="'+r.url+'"><span class="adr-tier" style="background:'+(tc[r.tier]||'#888')+'">'+r.tier+'</span><div><div class="adr-title">'+r.title+'</div><div class="adr-loc">'+r.tier_label+' · '+r.location+'</div></div></a>'}).join('');
+        box.classList.add('active');
+      });
+    },250);
+  });
+  inp.addEventListener('keydown',function(e){if(e.key==='Escape'){inp.value='';box.classList.remove('active')}});
+  document.addEventListener('click',function(e){if(!e.target.closest('.ad-search-wrap'))box.classList.remove('active')});
+})();
+</script>
+{% endblock %}

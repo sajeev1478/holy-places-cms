@@ -1,0 +1,162 @@
+{% extends "frontend/base.html" %}
+{% block title %}Contact Us{% endblock %}
+{% block meta_desc %}Get in touch with HolyDham — we'd love to hear from you. Questions, suggestions, or just saying namaste!{% endblock %}
+
+{% block extra_css %}
+<style>
+.contact-hero{padding:140px 0 40px;background:linear-gradient(180deg,var(--rose-pale) 0%,var(--cream) 100%);text-align:center}
+.contact-hero h1{font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,4vw,42px);margin-bottom:8px}
+.contact-hero p{color:var(--text-mid);font-size:16px;max-width:520px;margin:0 auto;line-height:1.7}
+.contact-section{padding:48px 0 80px}
+.contact-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:start}
+.contact-info{padding:36px;background:white;border-radius:20px;border:1px solid var(--border)}
+.contact-info h2{font-family:'Josefin Sans',sans-serif;font-size:24px;margin-bottom:16px}
+.contact-info p{color:var(--text-mid);font-size:15px;line-height:1.7;margin-bottom:24px}
+.ci-item{display:flex;gap:14px;align-items:flex-start;margin-bottom:20px}
+.ci-icon{width:44px;height:44px;border-radius:12px;background:var(--rose-pale);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ci-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:2px}
+.ci-value{font-size:15px;color:var(--text-dark);font-weight:500}
+.ci-divider{height:1px;background:var(--border);margin:20px 0}
+.ci-hours{font-size:13px;color:var(--text-mid);line-height:1.6}
+.contact-form-wrap{background:white;border-radius:20px;padding:36px;border:1px solid var(--border)}
+.contact-form-wrap h2{font-family:'Josefin Sans',sans-serif;font-size:24px;margin-bottom:20px}
+.cf-group{margin-bottom:18px}
+.cf-label{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:6px}
+.cf-label .req{color:var(--rose-deep)}
+.cf-input{width:100%;padding:12px 18px;border:2px solid var(--border);border-radius:12px;font-family:'Nunito Sans',sans-serif;font-size:15px;outline:none;transition:border-color .3s;background:var(--cream)}
+.cf-input:focus{border-color:var(--rose);background:white}
+textarea.cf-input{resize:vertical;min-height:120px}
+.cf-hint{font-size:11px;color:var(--text-light);margin-top:4px}
+.cf-captcha{display:flex;align-items:center;gap:12px;margin-bottom:18px;background:var(--cream-dark);padding:16px 20px;border-radius:12px}
+.cf-captcha-q{font-family:'Josefin Sans',sans-serif;font-size:20px;color:var(--text-dark);white-space:nowrap}
+.cf-captcha-eq{font-size:18px;color:var(--text-light);margin:0 4px}
+.cf-captcha input{width:80px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'Josefin Sans',sans-serif;font-size:18px;text-align:center;outline:none;background:white}
+.cf-captcha input:focus{border-color:var(--rose)}
+.cf-captcha-label{font-size:12px;color:var(--text-light);line-height:1.4}
+.cf-submit{width:100%;padding:16px;border:none;border-radius:50px;background:var(--rose-deep);color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s;box-shadow:0 8px 30px rgba(199,107,143,.25)}
+.cf-submit:hover{background:var(--rose-dark);transform:translateY(-2px);box-shadow:0 12px 40px rgba(199,107,143,.35)}
+.cf-error{background:#FFF0F0;border:1px solid #FFCDD2;border-radius:12px;padding:16px 20px;margin-bottom:20px}
+.cf-error-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;color:#C62828;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.cf-error-list{list-style:none;padding:0;margin:0}
+.cf-error-list li{font-size:13px;color:#D32F2F;padding:3px 0;padding-left:16px;position:relative;line-height:1.5}
+.cf-error-list li::before{content:'·';position:absolute;left:4px;font-weight:bold}
+.cf-success{background:#E8F5E9;border:1px solid #C8E6C9;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center}
+.cf-success p{color:#2E7D32;font-size:15px;line-height:1.6}
+@media(max-width:768px){.contact-grid{grid-template-columns:1fr}.cf-captcha{flex-wrap:wrap}}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="contact-hero">
+<div class="container">
+<h1>🙏 Get In Touch</h1>
+<p>We'd love to hear from you — whether it's a question about a holy dham, a suggestion, a correction, or just a simple namaste.</p>
+</div>
+</section>
+
+<section class="contact-section">
+<div class="container">
+<div class="contact-grid">
+<!-- Left: Info -->
+<div class="contact-info">
+<h2>How to Reach Us</h2>
+<p>Our team reads every message with care. We aim to respond within 24-48 hours. For urgent matters, please mention it in your subject line.</p>
+
+<div class="ci-item">
+<div class="ci-icon">✉️</div>
+<div><div class="ci-label">Email</div><div class="ci-value">namaste@holydham.com</div></div>
+</div>
+<div class="ci-item">
+<div class="ci-icon">📍</div>
+<div><div class="ci-label">Location</div><div class="ci-value">Serving from India, For the World</div></div>
+</div>
+<div class="ci-item">
+<div class="ci-icon">🙏</div>
+<div><div class="ci-label">Our Commitment</div><div class="ci-value">Every message is sacred to us</div></div>
+</div>
+
+<div class="ci-divider"></div>
+
+<div class="ci-hours">
+<strong>What we can help with:</strong><br>
+🛕 Questions about listed holy dhams<br>
+📝 Content corrections or additions<br>
+📸 Contributing images or media<br>
+💡 Feature suggestions or feedback<br>
+🤝 Partnership or collaboration inquiries<br>
+🐛 Reporting technical issues
+</div>
+</div>
+
+<!-- Right: Form -->
+<div class="contact-form-wrap">
+<h2>Send Us a Message</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% set errors = [] %}
+{% set successes = [] %}
+{% for cat, msg in messages %}
+{% if cat == 'error' %}{% if errors.append(msg) %}{% endif %}
+{% elif cat == 'success' %}{% if successes.append(msg) %}{% endif %}
+{% endif %}
+{% endfor %}
+
+{% if errors %}
+<div class="cf-error">
+<div class="cf-error-title">🙏 Oops! We need a little more from you:</div>
+<ul class="cf-error-list">
+{% for e in errors %}<li>{{ e }}</li>{% endfor %}
+</ul>
+</div>
+{% endif %}
+
+{% if successes %}
+{% for s in successes %}
+<div class="cf-success"><p>{{ s }}</p></div>
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endwith %}
+
+<form method="POST" action="{{ url_for('contact') }}" novalidate>
+<div class="cf-group">
+<label class="cf-label">Your Name <span class="req">*</span></label>
+<input type="text" name="name" class="cf-input" placeholder="How should we address you?" value="{{ form.get('name','') }}" required>
+</div>
+
+<div class="cf-group">
+<label class="cf-label">Email Address <span class="req">*</span></label>
+<input type="email" name="email" class="cf-input" placeholder="your.email@example.com" value="{{ form.get('email','') }}" required>
+<div class="cf-hint">We'll never share your email. It's only used to respond to your message.</div>
+</div>
+
+<div class="cf-group">
+<label class="cf-label">Subject <span class="req">*</span></label>
+<input type="text" name="subject" class="cf-input" placeholder="What is this about? (e.g. Content suggestion, Question)" value="{{ form.get('subject','') }}" required>
+</div>
+
+<div class="cf-group">
+<label class="cf-label">Your Message <span class="req">*</span></label>
+<textarea name="message" class="cf-input" placeholder="Please share your thoughts with us. We read every message carefully and value your time..." required>{{ form.get('message','') }}</textarea>
+</div>
+
+<div class="cf-captcha">
+<div>
+<div class="cf-captcha-label">🧮 Quick verification — please solve:</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+<span class="cf-captcha-q">{{ captcha_a }} {{ captcha_op }} {{ captcha_b }}</span>
+<span class="cf-captcha-eq">=</span>
+<input type="text" name="captcha_answer" placeholder="?" autocomplete="off" inputmode="numeric">
+</div>
+</div>
+<input type="hidden" name="captcha_expected" value="{{ captcha_ans }}">
+</div>
+
+<button type="submit" class="cf-submit">Send Message with Love 🙏</button>
+</form>
+</div>
+</div>
+</div>
+</section>
+{% endblock %}

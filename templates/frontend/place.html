@@ -158,7 +158,18 @@
 {% if hierarchy %}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
 <h4 style="font-size:13px;margin-bottom:6px;color:var(--text-light);font-weight:700;letter-spacing:1px;text-transform:uppercase">Dham Hierarchy</h4>
-<p style="font-size:11px;color:var(--text-light);line-height:1.5;margin-bottom:14px;opacity:.7">This dham is organized into 4 tiers. Browse from the broadest sacred region down to exact meditation points.</p>
+<p style="font-size:11px;color:var(--text-light);line-height:1.5;margin-bottom:10px;opacity:.7">This dham is organized into 4 tiers. Browse from the broadest sacred region down to exact meditation points.</p>
+
+<!-- How hierarchy works - right below subtitle -->
+<div style="margin-bottom:14px;padding:10px 12px;background:var(--cream-dark);border-radius:10px">
+<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-light);margin-bottom:6px">How this hierarchy works</div>
+<div style="display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--text-mid);line-height:1.4">
+<div><span style="color:#C76B8F;font-weight:700">T1 Holy Dham</span> → Sacred region of pastimes</div>
+<div style="padding-left:8px"><span style="color:#2E86AB;font-weight:700">T2 Key Places</span> → Major zones & pilgrimage stops</div>
+<div style="padding-left:16px"><span style="color:#E74845;font-weight:700">T3 Key Spots</span> → Specific leela locations</div>
+<div style="padding-left:24px"><span style="color:#9C27B0;font-weight:700">T4 Key Points</span> → Exact meditation micro-points</div>
+</div>
+</div>
 
 <!-- Tier 1 indicator -->
 <div style="background:#C76B8F08;border:1px solid #C76B8F20;border-radius:10px;padding:10px 12px;margin-bottom:14px">
@@ -195,16 +206,6 @@
 </div>{% endif %}
 </div>{% endfor %}
 
-<!-- Tier legend at bottom -->
-<div style="margin-top:14px;padding:10px 12px;background:var(--cream-dark);border-radius:10px">
-<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-light);margin-bottom:6px">How this hierarchy works</div>
-<div style="display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--text-mid);line-height:1.4">
-<div><span style="color:#C76B8F;font-weight:700">T1 Holy Dham</span> → Sacred region of pastimes</div>
-<div style="padding-left:8px"><span style="color:#2E86AB;font-weight:700">T2 Key Places</span> → Major zones & pilgrimage stops</div>
-<div style="padding-left:16px"><span style="color:#E74845;font-weight:700">T3 Key Spots</span> → Specific leela locations</div>
-<div style="padding-left:24px"><span style="color:#9C27B0;font-weight:700">T4 Key Points</span> → Exact meditation micro-points</div>
-</div>
-</div>
 </div>{% endif %}
 </div>
 
