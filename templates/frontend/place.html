@@ -25,7 +25,6 @@
 <div><span style="opacity:.5">Key Points</span> <strong style="margin-left:4px">{{ total_subs.val }}</strong></div>
 <div style="margin-left:auto;opacity:.5">👁️ {{ place.view_count or 0 }} views</div>
 </div>{% endif %}
-<div style="margin-top:16px"><button class="report-btn" onclick="openReportModal(this.dataset.info)" data-info="&lt;strong&gt;📍 Page Info&lt;/strong&gt;&lt;br&gt;🏛️ &lt;b&gt;T1 Holy Dham:&lt;/b&gt; {{ place.title }}&lt;br&gt;📍 {{ place.city or '' }}{% if place.city and place.state %}, {% endif %}{{ place.state or '' }}{% if place.country %}, {{ place.country }}{% endif %}">🚩 Report an Error</button></div>
 </div>
 </section>
 
@@ -219,6 +218,13 @@
 <h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Similar Dhams</h3>
 {% for rp in related %}<a href="{{ url_for('place_detail', slug=rp.slug) }}" style="display:block;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit"><strong style="color:var(--text-dark);font-size:14px">{{ rp.title }}</strong><p style="font-size:12px;color:var(--text-light);margin:4px 0 0">{{ rp.city }}{{ ', ' + rp.state if rp.state }}</p></a>{% endfor %}</div>{% endif %}
 </div>
+</div>
+</section>
+
+<!-- Report Error Button at bottom of page -->
+<section style="padding:20px 0 50px">
+<div class="container" style="text-align:center">
+<button class="report-btn" onclick="openReportModal(this.dataset.info)" data-info="&lt;strong&gt;📍 Page Info&lt;/strong&gt;&lt;br&gt;🏛️ &lt;b&gt;T1 Holy Dham:&lt;/b&gt; {{ place.title }}&lt;br&gt;📍 {{ place.city or '' }}{% if place.city and place.state %}, {% endif %}{{ place.state or '' }}{% if place.country %}, {{ place.country }}{% endif %}">🚩 Report an Error</button>
 </div>
 </section>
 

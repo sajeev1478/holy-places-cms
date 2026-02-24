@@ -409,8 +409,9 @@ function dblConfirmStep2(){
         document.getElementById('dcOk').style.background='#B71C1C';
         return;
     }
+    var cb = dcCallback;
     closeDblConfirm();
-    if(dcCallback) dcCallback();
+    if(cb) cb();
 }
 function closeDblConfirm(){
     document.getElementById('dblConfirm').classList.remove('active');
@@ -425,46 +426,82 @@ function deleteGalleryImage(tier, parentId, imagePath, thumbEl){
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body: JSON.stringify({tier:tier, parent_id:parentId, image:imagePath})
-        }).then(r=>r.json()).then(data=>{
+        }).then(function(r){ return r.json(); }).then(function(data){
             if(data.ok){
-                // Remove the visual thumbnail
                 var thumb = thumbEl.closest('.gal-thumb');
-                if(thumb) thumb.style.transition='all .3s'; thumb.style.opacity='0'; thumb.style.transform='scale(0.5)';
+                if(thumb){
+                    thumb.style.transition='all .3s';
+                    thumb.style.opacity='0';
+                    thumb.style.transform='scale(0.5)';
+                }
                 setTimeout(function(){
                     if(thumb) thumb.remove();
-                    // Update gallery count badge in parent section
                     var section = thumbEl.closest('.gal-section') || thumbEl.closest('.form-group');
                     if(section){
                         var remaining = section.querySelectorAll('.gal-thumb').length;
                         var countEl = section.querySelector('.gal-count');
                         if(countEl){
-                            if(remaining > 0) countEl.textContent = remaining + ' image' + (remaining!==1?'s':'');
+                            if(remaining > 0) countEl.textContent = remaining + ' image' + (remaining!==1?'s':'') + ' already uploaded';
                             else countEl.remove();
                         }
-                        // Update gallery hidden input
                         var hidden = section.querySelector('input[type=hidden][name*=gallery]');
                         if(hidden){
-                            var imgs = hidden.value.split(',').filter(function(x){return x.trim()!==imagePath && x.trim()!==''});
+                            var imgs = hidden.value.split(',').filter(function(x){return x.trim()!==imagePath && x.trim()!=='';});
                             hidden.value = imgs.join(',');
                         }
                     }
-                    // Clear featured_image hidden input if it matches (for any tier)
                     document.querySelectorAll('input[type=hidden]').forEach(function(inp){
-                        if((inp.name.indexOf('featured_image')!==-1 || inp.name.indexOf('_existing')!==-1) && inp.value.trim() === imagePath.trim()){
+                        if(inp.value.trim() === imagePath.trim()){
                             inp.value = '';
                         }
                     });
-                    // Show visual confirmation
-                    var toast = document.createElement('div');
-                    toast.className = 'delete-toast';
-                    toast.textContent = '✅ Image deleted successfully';
-                    document.body.appendChild(toast);
-                    setTimeout(function(){ toast.classList.add('show'); }, 10);
-                    setTimeout(function(){ toast.remove(); }, 3000);
+                    showDeleteToast();
                 }, 350);
             } else { alert(data.error||'Delete failed'); }
-        }).catch(function(e){alert('Network error: '+e)});
+        }).catch(function(e){ alert('Network error: '+e); });
     });
+}
+
+/* === Custom field image delete (client-side, saved on form submit) === */
+function cfDeleteImage(thumbEl, hiddenName, imagePath){
+    dblConfirmDelete('Delete this image? Change is saved when you submit the form.', function(){
+        var thumb = thumbEl.closest('.gal-thumb');
+        if(thumb){
+            thumb.style.transition='all .3s';
+            thumb.style.opacity='0';
+            thumb.style.transform='scale(0.5)';
+        }
+        setTimeout(function(){
+            if(thumb) thumb.remove();
+            /* Update the hidden input: remove this image from comma list */
+            var hidden = document.querySelector('input[type=hidden][name="'+hiddenName+'"]');
+            if(hidden){
+                var imgs = hidden.value.split(',').filter(function(x){ return x.trim()!==imagePath && x.trim()!==''; });
+                hidden.value = imgs.join(',');
+                if(!hidden.value) hidden.value = '';
+            }
+            /* Update count badge */
+            var section = thumbEl.closest('.gal-section') || thumbEl.closest('.form-group');
+            if(section){
+                var remaining = section.querySelectorAll('.gal-thumb').length;
+                var countEl = section.querySelector('.gal-count');
+                if(countEl){
+                    if(remaining > 0) countEl.textContent = remaining + ' image' + (remaining!==1?'s':'') + ' already uploaded';
+                    else countEl.remove();
+                }
+            }
+            showDeleteToast();
+        }, 350);
+    });
+}
+
+function showDeleteToast(){
+    var toast = document.createElement('div');
+    toast.className = 'delete-toast';
+    toast.textContent = '✅ Image deleted successfully';
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.classList.add('show'); }, 10);
+    setTimeout(function(){ toast.remove(); }, 3000);
 }
 
 /* Override all delete form submissions with double confirmation */

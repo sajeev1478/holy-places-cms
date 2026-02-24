@@ -23,7 +23,6 @@
 {% if total_subs.val %}<div style="padding:10px 18px;background:rgba(255,255,255,.1);border-radius:10px"><strong>{{ total_subs.val }}</strong> Key Points</div>{% endif %}
 </div>{% endif %}
 
-<div style="margin-top:16px"><button class="report-btn" onclick="openReportModal(this.dataset.info)" data-info="&lt;strong&gt;📍 Page Info&lt;/strong&gt;&lt;br&gt;🏛️ &lt;b&gt;T1 Holy Dham:&lt;/b&gt; {{ place.title }}&lt;br&gt;📍 &lt;b&gt;T2 Key Place:&lt;/b&gt; {{ kp.title }}">🚩 Report an Error</button></div>
 </div>
 </section>
 
@@ -118,6 +117,14 @@
 </div>
 </div>
 </section>
+
+<!-- Report Error Button at bottom of page -->
+<section style="padding:20px 0 50px">
+<div class="container" style="text-align:center">
+<button class="report-btn" onclick="openReportModal(this.dataset.info)" data-info="&lt;strong&gt;📍 Page Info&lt;/strong&gt;&lt;br&gt;🏛️ &lt;b&gt;T1 Holy Dham:&lt;/b&gt; {{ place.title }}&lt;br&gt;📍 &lt;b&gt;T2 Key Place:&lt;/b&gt; {{ kp.title }}">🚩 Report an Error</button>
+</div>
+</section>
+
 <style>
 @media(max-width:900px){section .container{grid-template-columns:1fr!important}}
 .rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:20px 0 10px;color:var(--text-dark);font-weight:700}

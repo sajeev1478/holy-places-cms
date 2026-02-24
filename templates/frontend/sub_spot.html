@@ -21,7 +21,6 @@
 <h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(26px,4vw,44px);font-weight:700;margin-bottom:8px">{{ ss.title }}</h1>
 {% if ss.short_description %}<p style="max-width:620px;font-size:15px;line-height:1.7;opacity:.8;font-family:'Nunito Sans',sans-serif">{{ ss.short_description }}</p>{% endif %}
 
-<div style="margin-top:16px"><button class="report-btn" onclick="openReportModal(this.dataset.info)" data-info="&lt;strong&gt;📍 Page Info&lt;/strong&gt;&lt;br&gt;🏛️ &lt;b&gt;T1 Holy Dham:&lt;/b&gt; {{ place.title }}&lt;br&gt;📍 &lt;b&gt;T2 Key Place:&lt;/b&gt; {{ kp.title }}&lt;br&gt;🎯 &lt;b&gt;T3 Key Spot:&lt;/b&gt; {{ ks.title }}&lt;br&gt;✦ &lt;b&gt;T4 Key Point:&lt;/b&gt; {{ ss.title }}">🚩 Report an Error</button></div>
 </div>
 </section>
 
@@ -127,6 +126,14 @@
 </div>
 </div>
 </section>
+
+<!-- Report Error Button at bottom of page -->
+<section style="padding:20px 0 50px">
+<div class="container" style="text-align:center">
+<button class="report-btn" onclick="openReportModal(this.dataset.info)" data-info="&lt;strong&gt;📍 Page Info&lt;/strong&gt;&lt;br&gt;🏛️ &lt;b&gt;T1 Holy Dham:&lt;/b&gt; {{ place.title }}&lt;br&gt;📍 &lt;b&gt;T2 Key Place:&lt;/b&gt; {{ kp.title }}&lt;br&gt;🎯 &lt;b&gt;T3 Key Spot:&lt;/b&gt; {{ ks.title }}&lt;br&gt;✦ &lt;b&gt;T4 Key Point:&lt;/b&gt; {{ ss.title }}">🚩 Report an Error</button>
+</div>
+</section>
+
 <style>
 @media(max-width:900px){section .container{grid-template-columns:1fr!important}}
 .rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:20px 0 10px;color:var(--text-dark);font-weight:700}
