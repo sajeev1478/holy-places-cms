@@ -170,7 +170,7 @@ footer{padding:60px 0;background:var(--text-dark);color:rgba(255,255,255,.6)}
 .footer-inner{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:768px){
-.header-inner{padding:14px 20px}
+.header-inner{padding:14px 16px}
 nav{display:none}
 .mobile-toggle{display:block}
 .container{padding:0 16px}
@@ -178,40 +178,90 @@ nav{display:none}
 .footer-inner{grid-template-columns:1fr;gap:32px;padding:0 16px}
 .footer-bottom{flex-direction:column;gap:8px;text-align:center;padding:20px 16px 0}
 }
-/* ─── Global Mobile Overflow Prevention ─── */
-html,body{overflow-x:hidden;width:100%}
-*,*::before,*::after{box-sizing:border-box}
-section{overflow-x:hidden}
-img,video,iframe,embed,object{max-width:100%;height:auto}
+
+/* ─── Nuclear Mobile Overflow Prevention ─── */
+html{overflow-x:hidden!important;width:100%!important}
+body{overflow-x:hidden!important;width:100%!important;min-width:0!important}
+*,*::before,*::after{box-sizing:border-box!important}
+img,video,iframe,embed,object{max-width:100%!important;height:auto}
 pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
+
+/* ─── Tier Page Grid — must go single-column on mobile ─── */
+@media(max-width:900px){
+  .tier-grid{grid-template-columns:1fr!important;gap:24px!important}
+}
+
+/* ─── Comprehensive Mobile ─── */
 @media(max-width:768px){
-  section[style*="padding:70px"]{padding:60px 0 40px!important}
-  section[style*="padding:50px"]{padding:32px 0!important}
-  section[style*="padding:45px"]{padding:28px 0!important}
+  /* Every section and container must clip */
+  section,section>*,.container,.container>*{max-width:100vw!important;overflow-x:hidden!important}
+
+  /* Hero padding */
+  .hero-section{padding:60px 0 36px!important}
+
+  /* Tier grid always stacks */
+  .tier-grid{grid-template-columns:1fr!important;gap:20px!important}
+
+  /* Featured image 30% smaller */
+  .featured-img-wrap{margin-left:10%!important;margin-right:10%!important}
+
+  /* Quick Info sidebar — text must wrap not overflow */
+  .quick-info-row{flex-wrap:wrap!important;gap:4px 8px!important}
+  .quick-info-row strong{text-align:right!important;word-break:break-word!important;max-width:55%!important}
+  .quick-info-row span{flex-shrink:0!important}
+
+  /* Gallery slider */
+  .gallery-slider{max-width:100%!important;width:100%!important;border-radius:12px!important}
+  .gallery-slider .gs-track{width:100%!important}
+  .gallery-slider .gs-slide img{max-width:94%!important;max-height:94%!important}
+  .gallery-slider .gs-nav{width:28px!important;height:28px!important;font-size:12px!important}
+  .gallery-slider .gs-prev{left:4px!important}
+  .gallery-slider .gs-next{right:4px!important}
+  .gallery-slider .gs-counter{font-size:10px!important;padding:3px 8px!important;top:8px!important;right:8px!important}
+
+  /* Hierarchy stats bar */
+  .hero-stats{gap:8px!important;padding:12px 14px!important;font-size:12px!important}
+  .hero-stats div{padding:0!important}
+
+  /* Tier legend badges */
+  .tier-legend{gap:6px!important}
+  .tier-legend>span{font-size:10px!important;padding:3px 8px!important}
+
+  /* Accordion cards */
+  .kp-toggle{padding:14px 12px!important;gap:8px!important}
+  .kp-toggle h3{font-size:16px!important}
+  .kp-toggle .kp-count{display:none!important}
+  .kp-body-inner{padding:0 12px 14px!important}
+  .ks-grid{grid-template-columns:1fr!important}
+
+  /* Explore title */
+  .explore-title{font-size:22px!important}
+
   /* Breadcrumb nav */
-  nav[style*="flex-wrap"]{font-size:11px!important;gap:4px!important}
-  /* Grid columns force single column */
-  [style*="grid-template-columns:1fr 340px"],
-  [style*="grid-template-columns:1fr 320px"]{grid-template-columns:1fr!important;gap:20px!important}
-  /* Prevent any element from being wider than viewport */
-  .container>*{max-width:100%}
-  /* Hero titles */
-  h1[style*="clamp"]{font-size:clamp(24px,7vw,36px)!important}
-  /* Gallery slider mobile */
-  .gallery-slider{max-width:100%!important;border-radius:12px!important}
-  .gallery-slider .gs-slide img{max-width:92%!important;max-height:92%!important}
-  .gallery-slider .gs-nav{width:32px!important;height:32px!important;font-size:14px!important}
-  .gallery-slider .gs-prev{left:6px!important}
-  .gallery-slider .gs-next{right:6px!important}
+  .breadcrumb-nav{font-size:11px!important;gap:4px!important}
+  .breadcrumb-nav a,.breadcrumb-nav span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
   /* Report button */
   .report-btn{font-size:13px!important;padding:10px 20px!important}
-  /* Cards and items */
-  [style*="display:grid"][style*="gap:14px"]{gap:10px!important}
-  [style*="padding:20px"]{padding:14px!important}
+
+  /* Back buttons row wrap */
+  .back-btns{flex-wrap:wrap!important;gap:8px!important}
+  .back-btns a{font-size:11px!important;padding:6px 10px!important}
+
   /* Map iframe */
-  iframe[style*="height:220px"],iframe[style*="height:200px"]{height:180px!important}
+  iframe{max-width:100%!important}
+
   /* Search results dropdown */
-  .nav-search-results{min-width:280px!important;left:-80px!important}
+  .nav-search-results{min-width:auto!important;left:0!important;right:0!important;width:calc(100vw - 32px)!important;max-width:100vw!important}
+
+  /* Custom field containers */
+  .cf-block{padding:14px!important}
+
+  /* Sidebar cards */
+  .sidebar-card{padding:18px!important}
+
+  /* Sub-spot tags wrap */
+  .ss-tags{flex-wrap:wrap!important}
 }
 /* ═══ GALLERY SLIDER — Beautiful transitions ═══ */
 .gallery-slider{position:relative;width:100%;max-width:600px;border-radius:16px;overflow:hidden;background:linear-gradient(145deg,#141418,#1e1e24);box-shadow:0 12px 48px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.08);margin:0 auto}
@@ -361,18 +411,43 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 </div>
 </footer>
 
-<!-- Scroll Up/Down Buttons -->
-<div id="scrollBtns" style="position:fixed;right:20px;bottom:20px;z-index:90;display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .3s;pointer-events:none">
-<button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="width:42px;height:42px;border-radius:50%;background:var(--rose-deep);color:white;border:none;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(199,107,143,.3);transition:all .2s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'"><i class="fas fa-chevron-up"></i></button>
-<button onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" style="width:42px;height:42px;border-radius:50%;background:var(--text-dark);color:white;border:none;cursor:pointer;font-size:16px;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:all .2s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='none'"><i class="fas fa-chevron-down"></i></button>
-</div>
+<!-- Smart Scroll Button (single, toggles direction) -->
+<button id="scrollBtn" style="position:fixed;right:16px;bottom:20px;z-index:90;width:30px;height:30px;border-radius:50%;background:var(--rose-deep);color:white;border:none;cursor:pointer;font-size:12px;box-shadow:0 3px 12px rgba(199,107,143,.35);transition:all .3s;display:none;align-items:center;justify-content:center" onclick="smartScroll()"><i class="fas fa-chevron-down" id="scrollIcon"></i></button>
 
 <script>
+/* ═══ SMART SCROLL BUTTON ═══ */
+(function(){
+  var btn=document.getElementById('scrollBtn'),icon=document.getElementById('scrollIcon');
+  if(!btn)return;
+  function update(){
+    var st=window.scrollY||window.pageYOffset;
+    var docH=document.documentElement.scrollHeight;
+    var winH=window.innerHeight;
+    var atBottom=(st+winH)>=(docH-80);
+    if(st<200){btn.style.display='none';return}
+    btn.style.display='flex';
+    if(atBottom){
+      icon.className='fas fa-chevron-up';
+      btn.style.background='var(--text-dark)';
+    } else {
+      icon.className='fas fa-chevron-down';
+      btn.style.background='var(--rose-deep)';
+    }
+  }
+  window.smartScroll=function(){
+    var st=window.scrollY||window.pageYOffset;
+    var docH=document.documentElement.scrollHeight;
+    var winH=window.innerHeight;
+    var atBottom=(st+winH)>=(docH-80);
+    if(atBottom) window.scrollTo({top:0,behavior:'smooth'});
+    else window.scrollTo({top:docH,behavior:'smooth'});
+  };
+  window.addEventListener('scroll',update);
+  update();
+})();
+
 window.addEventListener('scroll',()=>{
   document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
-  const sb=document.getElementById('scrollBtns');
-  if(window.scrollY>300){sb.style.opacity='1';sb.style.pointerEvents='auto'}
-  else{sb.style.opacity='0';sb.style.pointerEvents='none'}
 });
 setTimeout(()=>{document.querySelectorAll('[style*="fadeIn"]').forEach(el=>el.style.opacity='0')},4000);
 

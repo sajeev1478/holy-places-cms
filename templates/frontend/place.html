@@ -5,7 +5,7 @@
 
 {% block content %}
 <!-- Hero -->
-<section style="background:linear-gradient(135deg,#2D1F2E 0%,#4A2D4E 60%,#6B3A6E 100%);padding:70px 0 55px;color:white;position:relative;overflow:hidden">
+<section class="hero-section" style="background:linear-gradient(135deg,#2D1F2E 0%,#4A2D4E 60%,#6B3A6E 100%);padding:70px 0 55px;color:white;position:relative;overflow:hidden">
 <div style="position:absolute;inset:0;background:url('/static/uploads/{{ place.featured_image }}') center/cover;opacity:.12"></div>
 <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 80%,rgba(199,107,143,.15),transparent 60%)"></div>
 <div class="container" style="position:relative;z-index:1">
@@ -18,7 +18,7 @@
 {% if vis.get('city',1) or vis.get('state',1) %}<p style="font-size:17px;opacity:.85;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif"><span>📍</span>{% if vis.get('city',1) and place.city %}{{ place.city }}{% endif %}{% if vis.get('city',1) and place.city and vis.get('state',1) and place.state %}, {% endif %}{% if vis.get('state',1) and place.state %}{{ place.state }}{% endif %}{% if vis.get('country',1) and place.country %}, {{ place.country }}{% endif %}</p>{% endif %}
 {% if vis.get('short_description',1) and place.short_description %}<p style="max-width:700px;font-size:15px;line-height:1.7;opacity:.7;margin-top:12px;font-family:'Josefin Sans',sans-serif;font-weight:300">{{ place.short_description }}</p>{% endif %}
 <!-- Hierarchy Stats Bar -->
-{% if hierarchy %}<div class="place-hero-stats" style="display:flex;gap:24px;margin-top:24px;padding:16px 20px;background:rgba(255,255,255,.08);backdrop-filter:blur(6px);border-radius:14px;border:1px solid rgba(255,255,255,.1);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;flex-wrap:wrap">
+{% if hierarchy %}<div class="hero-stats" style="display:flex;gap:24px;margin-top:24px;padding:16px 20px;background:rgba(255,255,255,.08);backdrop-filter:blur(6px);border-radius:14px;border:1px solid rgba(255,255,255,.1);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;flex-wrap:wrap">
 <div><span style="opacity:.5">Key Places</span> <strong style="margin-left:4px">{{ hierarchy|length }}</strong></div>
 {% set total_spots = namespace(val=0) %}{% set total_subs = namespace(val=0) %}{% for h in hierarchy %}{% for ks in h.key_spots %}{% set total_spots.val = total_spots.val + 1 %}{% set total_subs.val = total_subs.val + ks.sub_spots|length %}{% endfor %}{% endfor %}
 <div><span style="opacity:.5">Key Spots</span> <strong style="margin-left:4px">{{ total_spots.val }}</strong></div>
@@ -30,12 +30,12 @@
 
 <!-- Main Content -->
 <section style="padding:50px 0">
-<div class="container" style="display:grid;grid-template-columns:1fr 340px;gap:40px;align-items:start">
+<div class="container tier-grid" style="display:grid;grid-template-columns:1fr 340px;gap:40px;align-items:start">
 <!-- Left Column -->
 <div>
 
 {% if vis.get('featured_image',1) and place.featured_image %}
-<div style="margin-bottom:32px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+<div class="featured-img-wrap" style="margin-bottom:32px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
 <img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'">
 </div>{% endif %}
 
@@ -45,7 +45,7 @@
 <!-- Custom Fields -->
 {% if custom_values %}
 <div style="margin-bottom:40px">{% for cv in custom_values %}{% if cv.value %}
-<div style="background:var(--cream-dark);border-radius:14px;padding:20px;margin-bottom:12px">
+<div class="cf-block" style="background:var(--cream-dark);border-radius:14px;padding:20px;margin-bottom:12px">
 <h4 style="font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:10px;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif">
 {% if cv.field_type == 'audio' %}🎵{% elif cv.field_type == 'video' %}🎬{% elif cv.field_type == 'url' %}🔗{% else %}📋{% endif %} {{ cv.label }}</h4>
 {% if cv.name in ('external_audio_url',) and cv.field_type == 'url' %}
@@ -145,13 +145,13 @@
 
 <!-- Right Sidebar -->
 <div>
-<div style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
+<div class="sidebar-card" style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
 <h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Quick Info</h3>
 <div style="display:flex;flex-direction:column;gap:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px">
-{% if vis.get('city',1) and place.city %}<div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">City</span><strong>{{ place.city }}</strong></div>{% endif %}
-{% if vis.get('state',1) and place.state %}<div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">State</span><strong>{{ place.state }}</strong></div>{% endif %}
-{% if vis.get('country',1) and place.country %}<div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Country</span><strong>{{ place.country }}</strong></div>{% endif %}
-{% for cv in custom_values %}{% if cv.value and cv.field_type in ('text','number') %}<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--text-light);white-space:nowrap;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cv.field_icon or '📋' }}</span> {{ cv.label }}</span><strong style="text-align:right">{{ cv.value }}</strong></div>{% endif %}{% endfor %}
+{% if vis.get('city',1) and place.city %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">City</span><strong>{{ place.city }}</strong></div>{% endif %}
+{% if vis.get('state',1) and place.state %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">State</span><strong>{{ place.state }}</strong></div>{% endif %}
+{% if vis.get('country',1) and place.country %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Country</span><strong>{{ place.country }}</strong></div>{% endif %}
+{% for cv in custom_values %}{% if cv.value and cv.field_type in ('text','number') %}<div class="quick-info-row" style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--text-light);white-space:nowrap;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cv.field_icon or '📋' }}</span> {{ cv.label }}</span><strong style="text-align:right">{{ cv.value }}</strong></div>{% endif %}{% endfor %}
 </div>
 
 <!-- Hierarchy Navigation with Tier Definitions -->
@@ -229,22 +229,6 @@
 </section>
 
 <style>
-@media(max-width:900px){
-  section .container{grid-template-columns:1fr!important;gap:24px!important}
-}
-@media(max-width:768px){
-  section .container{padding:0 16px!important}
-  .place-hero-stats{gap:12px!important;font-size:12px!important}
-  .place-hero-stats div{padding:0!important}
-  .kp-toggle{padding:14px 16px!important;gap:10px!important}
-  .kp-toggle h3{font-size:18px!important}
-  .kp-toggle .kp-count{display:none!important}
-  .kp-card .kp-body-inner{padding:0 16px 16px!important}
-  .ks-grid{grid-template-columns:1fr!important}
-  .tier-legend{gap:6px!important}
-  .tier-legend span{font-size:10px!important;padding:4px 8px!important}
-  .explore-title{font-size:22px!important}
-}
 .rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:24px;margin:24px 0 12px;color:var(--text-dark);font-weight:700}
 .rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:20px;margin:20px 0 10px;color:var(--text-dark);font-weight:600}
 .rich-content p{margin-bottom:12px}

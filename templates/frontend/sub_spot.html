@@ -3,12 +3,12 @@
 {% block content %}
 {% set accent = ss.cat_color or '#9C27B0' %}
 <!-- Hero -->
-<section style="background:linear-gradient(135deg,{{ accent }}cc 0%,{{ accent }}88 50%,{{ accent }}aa 100%);padding:70px 0 50px;color:white;position:relative;overflow:hidden">
+<section class="hero-section" style="background:linear-gradient(135deg,{{ accent }}cc 0%,{{ accent }}88 50%,{{ accent }}aa 100%);padding:70px 0 50px;color:white;position:relative;overflow:hidden">
 <div style="position:absolute;inset:0;background:url('/static/uploads/{{ ss.featured_image or place.featured_image }}') center/cover;opacity:.1"></div>
 <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.05))"></div>
 <div class="container" style="position:relative;z-index:1">
 <!-- Breadcrumb with tier badges -->
-<nav style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;flex-wrap:wrap">
+<nav class="breadcrumb-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;flex-wrap:wrap">
 <a href="{{ url_for('place_detail', slug=place.slug) }}" style="color:rgba(255,255,255,.55);text-decoration:none;display:flex;align-items:center;gap:3px"><span style="font-size:7px;padding:1px 4px;background:rgba(199,107,143,.4);border-radius:50px;font-weight:700">T1</span>{{ place.title }}</a><span style="opacity:.3">›</span>
 <a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=kp.slug) }}" style="color:rgba(255,255,255,.6);text-decoration:none;display:flex;align-items:center;gap:3px"><span style="font-size:7px;padding:1px 4px;background:rgba(46,134,171,.4);border-radius:50px;font-weight:700">T2</span>{{ kp.title }}</a><span style="opacity:.3">›</span>
 <a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=ks.slug) }}" style="color:rgba(255,255,255,.7);text-decoration:none;display:flex;align-items:center;gap:3px"><span style="font-size:7px;padding:1px 4px;background:rgba(231,72,69,.4);border-radius:50px;font-weight:700">T3</span>{{ ks.title }}</a><span style="opacity:.3">›</span>
@@ -26,10 +26,10 @@
 
 <!-- Content -->
 <section style="padding:45px 0">
-<div class="container" style="display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start">
+<div class="container tier-grid" style="display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start">
 <div>
 <!-- Back buttons -->
-<div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+<div class="back-btns" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
 <a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=ks.slug) }}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--cream-dark);border:1px solid var(--border);border-radius:10px;color:var(--text-light);font-size:12px;font-weight:600;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='{{ ks.cat_color or '#E74845' }}'" onmouseout="this.style.borderColor='var(--border)'"><i class="fas fa-arrow-left" style="font-size:9px"></i> {{ ks.title }} (T3)</a>
 <a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=kp.slug) }}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--cream-dark);border:1px solid var(--border);border-radius:10px;color:var(--text-light);font-size:12px;font-weight:600;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='#2E86AB'" onmouseout="this.style.borderColor='var(--border)'"><i class="fas fa-arrow-left" style="font-size:9px"></i> {{ kp.title }} (T2)</a>
 <a href="{{ url_for('place_detail', slug=place.slug) }}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--cream-dark);border:1px solid var(--border);border-radius:10px;color:var(--text-light);font-size:12px;font-weight:600;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='#C76B8F'" onmouseout="this.style.borderColor='var(--border)'"><i class="fas fa-arrow-left" style="font-size:9px"></i> {{ place.title }} (T1)</a>
@@ -44,7 +44,7 @@
 </div>
 </div>
 
-{% if ss.featured_image %}<div style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ ss.featured_image }}" alt="{{ ss.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
+{% if ss.featured_image %}<div class="featured-img-wrap" style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ ss.featured_image }}" alt="{{ ss.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
 
 <!-- Gallery Slider -->
 {% if ss_gallery %}
@@ -135,8 +135,6 @@
 </section>
 
 <style>
-@media(max-width:900px){section .container{grid-template-columns:1fr!important;gap:24px!important}}
-@media(max-width:768px){section .container{padding:0 16px!important}}
 .rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:20px 0 10px;color:var(--text-dark);font-weight:700}
 .rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:18px;margin:16px 0 8px;font-weight:600}
 .rich-content p{margin-bottom:12px}

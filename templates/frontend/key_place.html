@@ -2,11 +2,11 @@
 {% block title %}{{ kp.title }} — {{ place.title }}{% endblock %}
 {% block content %}
 <!-- Hero -->
-<section style="background:linear-gradient(135deg,#1a3a5c 0%,#2E86AB 60%,#3498db 100%);padding:70px 0 50px;color:white;position:relative;overflow:hidden">
+<section class="hero-section" style="background:linear-gradient(135deg,#1a3a5c 0%,#2E86AB 60%,#3498db 100%);padding:70px 0 50px;color:white;position:relative;overflow:hidden">
 <div style="position:absolute;inset:0;background:url('/static/uploads/{{ kp.featured_image or place.featured_image }}') center/cover;opacity:.1"></div>
 <div class="container" style="position:relative;z-index:1">
 <!-- Breadcrumb with tier badges -->
-<nav style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;flex-wrap:wrap">
+<nav class="breadcrumb-nav" style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;flex-wrap:wrap">
 <a href="{{ url_for('home') }}" style="color:rgba(255,255,255,.6);text-decoration:none">Home</a><span style="opacity:.4">›</span>
 <a href="{{ url_for('place_detail', slug=place.slug) }}" style="color:rgba(255,255,255,.7);text-decoration:none;display:flex;align-items:center;gap:4px"><span style="font-size:8px;padding:1px 5px;background:rgba(199,107,143,.4);border-radius:50px;font-weight:700">T1</span>{{ place.title }}</a><span style="opacity:.4">›</span>
 <span style="opacity:.9;display:flex;align-items:center;gap:4px"><span style="font-size:8px;padding:1px 5px;background:rgba(46,134,171,.5);border-radius:50px;font-weight:700">T2</span>{{ kp.title }}</span>
@@ -17,7 +17,7 @@
 </div>
 <h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,4.5vw,48px);font-weight:700;margin-bottom:8px">{{ kp.title }}</h1>
 {% if kp.short_description %}<p style="max-width:650px;font-size:15px;line-height:1.7;opacity:.75;font-family:'Nunito Sans',sans-serif">{{ kp.short_description }}</p>{% endif %}
-{% if key_spots %}<div style="display:flex;gap:20px;margin-top:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px">
+{% if key_spots %}<div class="hero-stats" style="display:flex;gap:20px;margin-top:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px">
 <div style="padding:10px 18px;background:rgba(255,255,255,.1);border-radius:10px"><strong>{{ key_spots|length }}</strong> Key Spots</div>
 {% set total_subs = namespace(val=0) %}{% for ksd in key_spots %}{% set total_subs.val = total_subs.val + ksd.sub_spots|length %}{% endfor %}
 {% if total_subs.val %}<div style="padding:10px 18px;background:rgba(255,255,255,.1);border-radius:10px"><strong>{{ total_subs.val }}</strong> Key Points</div>{% endif %}
@@ -28,7 +28,7 @@
 
 <!-- Content -->
 <section style="padding:45px 0">
-<div class="container" style="display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start">
+<div class="container tier-grid" style="display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start">
 <div>
 <!-- Back to Dham -->
 <div style="margin-bottom:20px"><a href="{{ url_for('place_detail', slug=place.slug) }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--cream-dark);border:1px solid var(--border);border-radius:10px;color:var(--text-light);font-size:13px;font-weight:600;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='var(--rose-deep)';this.style.color='var(--rose-deep)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-light)'"><i class="fas fa-arrow-left" style="font-size:10px"></i> Back to {{ place.title }} (T1)</a></div>
@@ -42,7 +42,7 @@
 </div>
 </div>
 
-{% if kp.featured_image %}<div style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ kp.featured_image }}" alt="{{ kp.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
+{% if kp.featured_image %}<div class="featured-img-wrap" style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ kp.featured_image }}" alt="{{ kp.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
 
 <!-- Gallery Slider -->
 {% if kp_gallery %}
@@ -126,8 +126,6 @@
 </section>
 
 <style>
-@media(max-width:900px){section .container{grid-template-columns:1fr!important;gap:24px!important}}
-@media(max-width:768px){section .container{padding:0 16px!important}}
 .rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:20px 0 10px;color:var(--text-dark);font-weight:700}
 .rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:18px;margin:16px 0 8px;font-weight:600}
 .rich-content p{margin-bottom:12px}
