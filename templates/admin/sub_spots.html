@@ -89,11 +89,13 @@
 <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9C27B0;margin-bottom:10px">🖼️ Images & Gallery</div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
 <div class="form-group"><label>🖼️ Featured Image</label>
-{% if sub.featured_image %}<input type="hidden" name="ss_{{ si }}_featured_image_existing" value="{{ sub.featured_image }}"><div style="margin-bottom:6px"><img src="/static/uploads/{{ sub.featured_image }}" style="width:80px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border)" onerror="this.style.display='none'"></div>{% endif %}
+{% if sub.featured_image %}<input type="hidden" name="ss_{{ si }}_featured_image_existing" value="{{ sub.featured_image }}">
+<div class="gal-section" style="margin-bottom:6px"><div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ sub.featured_image }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t4',{{ sub.id }},'{{ sub.featured_image }}',this)" title="Delete">✕</span></div></div></div>{% endif %}
 <input type="file" class="form-control" name="ss_{{ si }}_featured_image_file" accept="image/*"></div>
-<div class="form-group"><label>📸 Gallery <span style="font-size:10px;color:var(--text-light)">(multiple)</span></label>
+<div class="form-group gal-section"><label>📸 Gallery <span style="font-size:10px;color:var(--text-light)">(multiple)</span>
+{% if sub.gallery_images %}<span class="gal-count">{{ sub.gallery_images.split(',')|length }} image{{ 's' if sub.gallery_images.split(',')|length != 1 }}</span>{% endif %}</label>
 {% if sub.gallery_images %}<input type="hidden" name="ss_{{ si }}_gallery_existing" value="{{ sub.gallery_images }}">
-<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">{% for gi in sub.gallery_images.split(',') %}{% if gi.strip() %}<img src="/static/uploads/{{ gi.strip() }}" style="width:44px;height:44px;border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display='none'">{% endif %}{% endfor %}</div>{% endif %}
+<div class="gal-thumbs">{% for gi in sub.gallery_images.split(',') %}{% if gi.strip() %}<div class="gal-thumb"><img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t4',{{ sub.id }},'{{ gi.strip() }}',this)" title="Delete image">✕</span></div>{% endif %}{% endfor %}</div>{% endif %}
 <input type="file" class="form-control" name="ss_{{ si }}_gallery_files" accept="image/*" multiple>
 <div style="font-size:10px;color:var(--text-light);margin-top:3px">Ctrl/Cmd+click for multiple. Appends to existing.</div></div>
 </div>

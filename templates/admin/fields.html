@@ -24,15 +24,16 @@
 </div>
 </div>
 <div class="form-group" style="margin:0;flex:1;min-width:160px"><label>Label</label><input name="label" class="form-control" required placeholder="e.g. Opening Hours"></div>
-<div class="form-group" style="margin:0;width:150px"><label>Field Type</label><select name="field_type" class="form-control">
-<option value="text">Text</option><option value="textarea">Textarea</option><option value="richtext">Rich Text</option>
-<option value="number">Number</option><option value="url">URL / Link</option>
-<option value="image">Image</option><option value="audio">Audio</option><option value="video">Video</option><option value="images">Multi-Images</option>
+<div class="form-group" style="margin:0;width:150px"><label>Field Type</label><select name="field_type" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="text">📝 Text</option><option value="textarea">📄 Textarea</option><option value="richtext">📰 Rich Text</option>
+<option value="number">🔢 Number</option><option value="url">🔗 URL / Link</option>
+<option value="image">🖼️ Image</option><option value="audio">🎵 Audio</option><option value="video">🎬 Video</option><option value="images">📸 Multi-Images</option>
+<option value="date">📅 Date</option><option value="select">📋 Select/Dropdown</option><option value="boolean">✅ Yes/No</option><option value="color">🎨 Color</option><option value="json">📦 JSON Data</option>
 </select></div>
 <div class="form-group" style="margin:0;width:150px"><label>Placeholder</label><input name="placeholder" class="form-control" placeholder="Hint text"></div>
 <div class="form-group" style="margin:0;width:70px"><label>Order</label><input name="sort_order" class="form-control" type="number" value="0"></div>
-<div class="form-group" style="margin:0;width:120px"><label>Applies To</label><select name="applies_to" class="form-control">
-<option value="both">All Tiers</option><option value="place">T1 Only</option><option value="key_place">T2+ Only</option>
+<div class="form-group" style="margin:0;width:140px"><label>Applies To</label><select name="applies_to" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="both">🌐 All Tiers</option><option value="place">🏛️ T1 Only</option><option value="key_place">📍 T2 Only</option><option value="key_spot">🎯 T3 Only</option><option value="sub_spot">✦ T4 Only</option><option value="t2_plus">📍 T2+ (T2-T4)</option><option value="t3_plus">🎯 T3+ (T3-T4)</option>
 </select></div>
 <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
 </form>
@@ -98,17 +99,18 @@
 <div class="form-group" style="margin:0;flex:1"><label>Label</label><input name="label" id="editLabel" class="form-control" required></div>
 </div>
 <div style="display:flex;gap:12px">
-<div class="form-group" style="margin:0;flex:1"><label>Type</label><select name="field_type" id="editType" class="form-control">
-<option value="text">Text</option><option value="textarea">Textarea</option><option value="richtext">Rich Text</option>
-<option value="number">Number</option><option value="url">URL</option>
-<option value="image">Image</option><option value="audio">Audio</option><option value="video">Video</option><option value="images">Multi-Images</option>
+<div class="form-group" style="margin:0;flex:1"><label>Type</label><select name="field_type" id="editType" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="text">📝 Text</option><option value="textarea">📄 Textarea</option><option value="richtext">📰 Rich Text</option>
+<option value="number">🔢 Number</option><option value="url">🔗 URL</option>
+<option value="image">🖼️ Image</option><option value="audio">🎵 Audio</option><option value="video">🎬 Video</option><option value="images">📸 Multi-Images</option>
+<option value="date">📅 Date</option><option value="select">📋 Select</option><option value="boolean">✅ Yes/No</option><option value="color">🎨 Color</option><option value="json">📦 JSON</option>
 </select></div>
 <div class="form-group" style="margin:0;flex:1"><label>Placeholder</label><input name="placeholder" id="editPH" class="form-control"></div>
 </div>
 <div style="display:flex;gap:12px">
 <div class="form-group" style="margin:0;width:100px"><label>Order</label><input name="sort_order" id="editOrder" type="number" class="form-control"></div>
-<div class="form-group" style="margin:0;flex:1"><label>Scope</label><select name="applies_to" id="editScope" class="form-control">
-<option value="both">All Tiers</option><option value="place">T1 Only</option><option value="key_place">T2+ Only</option>
+<div class="form-group" style="margin:0;flex:1"><label>Scope</label><select name="applies_to" id="editScope" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="both">🌐 All Tiers</option><option value="place">🏛️ T1 Only</option><option value="key_place">📍 T2 Only</option><option value="key_spot">🎯 T3 Only</option><option value="sub_spot">✦ T4 Only</option><option value="t2_plus">📍 T2+</option><option value="t3_plus">🎯 T3+</option>
 </select></div>
 </div>
 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">

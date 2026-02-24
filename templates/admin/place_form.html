@@ -185,8 +185,26 @@
 <input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
 <div class="rich-editor" data-target="full_content" style="background:white;min-height:200px"></div><input type="hidden" name="vis_full_content" value="on"></div>
 <div class="field-row"><div class="field-main"><div class="form-group"><label>Featured Image</label>
-{% if editing and place.featured_image %}<input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><img src="/static/uploads/{{ place.featured_image }}" class="img-preview" onerror="this.style.display='none'"><span style="font-size:12px;color:var(--text-light)">{{ place.featured_image }}</span></div>{% endif %}
+{% if editing and place.featured_image %}<input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}">
+<div class="gal-section" style="margin-bottom:10px">
+<span class="gal-count">📷 1 image uploaded</span>
+<div class="gal-thumbs">
+<div class="gal-thumb">
+<img src="/static/uploads/{{ place.featured_image }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'">
+<span class="gal-del" onclick="deleteGalleryImage('t1',{{ place.id }},'{{ place.featured_image }}',this)" title="Delete image">✕</span>
+</div>
+</div>
+</div>{% endif %}
 <input type="file" name="featured_image_file" class="form-control" accept="image/*"><input type="hidden" name="vis_featured_image" value="on">
+</div></div></div>
+<!-- T1 Gallery Images -->
+<div class="field-row"><div class="field-main"><div class="form-group gal-section"><label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
+{% if editing and gallery_media is defined and gallery_media %}<span class="gal-count">{{ gallery_media|length }} image{{ 's' if gallery_media|length != 1 }}</span>{% endif %}</label>
+{% if editing and gallery_media is defined and gallery_media %}
+<div class="gal-thumbs">{% for gm in gallery_media %}<div class="gal-thumb"><img src="/static/uploads/{{ gm.filename }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t1',{{ place.id }},'{{ gm.filename }}',this)" title="Delete image">✕</span></div>{% endfor %}</div>
+{% endif %}
+<input type="file" name="gallery_files" class="form-control" accept="image/*" multiple>
+<div style="font-size:10px;color:var(--text-light);margin-top:4px">Select multiple images to upload. These appear in the image slider on the frontend.</div>
 </div></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
 <div class="form-group"><label>Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}"><input type="hidden" name="vis_latitude" value="on"></div>
@@ -266,18 +284,25 @@
 <div class="form-group"><label>Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
 <div class="form-group"><label>Long Description</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-<div class="form-group"><label>🖼️ Featured Image</label>{% if kp.featured_image %}<input type="hidden" name="kp_{{ ki }}_featured_image_existing" value="{{ kp.featured_image }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ kp.featured_image }}</div>{% endif %}<input type="file" name="kp_{{ ki }}_featured_image_file" class="form-control" accept="image/*"></div>
+<div class="form-group"><label>🖼️ Featured Image</label>{% if kp.featured_image %}<input type="hidden" name="kp_{{ ki }}_featured_image_existing" value="{{ kp.featured_image }}">
+<div class="gal-section" style="margin-bottom:6px">
+<div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ kp.featured_image }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t2',{{ kp.id }},'{{ kp.featured_image }}',this)" title="Delete">✕</span></div></div>
+</div>{% endif %}<input type="file" name="kp_{{ ki }}_featured_image_file" class="form-control" accept="image/*"></div>
 <div class="form-group"><label>📍 Latitude</label><input name="kp_{{ ki }}_latitude" class="form-control" type="number" step="any" value="{{ kp.latitude or '' }}"></div>
 <div class="form-group"><label>📍 Longitude</label><input name="kp_{{ ki }}_longitude" class="form-control" type="number" step="any" value="{{ kp.longitude or '' }}"></div>
 </div>
 <!-- T2 Gallery Images -->
-<div style="background:#f4f7fa;border-radius:12px;padding:14px;margin:10px 0;border:1px solid #2E86AB15">
-<label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span></label>
+<div class="gal-section" style="background:#f4f7fa;border-radius:12px;padding:14px;margin:10px 0;border:1px solid #2E86AB15">
+<label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
+{% if kp.gallery_images %}<span class="gal-count">{{ kp.gallery_images.split(',')|length }} image{{ 's' if kp.gallery_images.split(',')|length != 1 }}</span>{% endif %}</label>
 {% if kp.gallery_images %}
 <input type="hidden" name="kp_{{ ki }}_gallery_existing" value="{{ kp.gallery_images }}">
-<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+<div class="gal-thumbs">
 {% for gi in kp.gallery_images.split(',') %}{% if gi.strip() %}
-<img src="/static/uploads/{{ gi.strip() }}" style="width:50px;height:50px;border-radius:6px;object-fit:cover;border:1px solid var(--border)" onerror="this.style.display='none'">
+<div class="gal-thumb">
+<img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'">
+<span class="gal-del" onclick="deleteGalleryImage('t2',{{ kp.id }},'{{ gi.strip() }}',this)" title="Delete image">✕</span>
+</div>
 {% endif %}{% endfor %}
 </div>{% endif %}
 <input type="file" class="form-control" name="kp_{{ ki }}_gallery_files" accept="image/*" multiple style="font-size:12px">

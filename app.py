@@ -156,6 +156,47 @@ def seed_db():
     db = get_db()
     if db.execute("SELECT id FROM users LIMIT 1").fetchone(): return
 
+    # ─── Generate seed placeholder images ───
+    def make_seed_image(filename, color1, color2, text, size=(800,500)):
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+            img = Image.new('RGB', size)
+            draw = ImageDraw.Draw(img)
+            r1,g1,b1 = int(color1[1:3],16), int(color1[3:5],16), int(color1[5:7],16)
+            r2,g2,b2 = int(color2[1:3],16), int(color2[3:5],16), int(color2[5:7],16)
+            for y in range(size[1]):
+                f = y / size[1]
+                r = int(r1 + (r2-r1)*f); g = int(g1 + (g2-g1)*f); b = int(b1 + (b2-b1)*f)
+                draw.line([(0,y),(size[0],y)], fill=(r,g,b))
+            # Add text
+            try:
+                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+            except: font = ImageFont.load_default()
+            bbox = draw.textbbox((0,0), text, font=font)
+            tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
+            draw.text(((size[0]-tw)//2, (size[1]-th)//2), text, fill=(255,255,255,200), font=font)
+            fp = os.path.join(app.config['UPLOAD_FOLDER'], 'images', filename)
+            os.makedirs(os.path.dirname(fp), exist_ok=True)
+            img.save(fp, 'JPEG', quality=85)
+            return f'images/{filename}'
+        except Exception as e:
+            print(f'Seed image error: {e}')
+            return None
+
+    seed_images = {
+        'vrindavan': make_seed_image('seed_vrindavan.jpg', '#C76B8F', '#8B4870', '🛕 Vrindavan Dham'),
+        'mayapur': make_seed_image('seed_mayapur.jpg', '#2E86AB', '#1A5276', '🛕 Mayapur Dham'),
+        'kedarnath': make_seed_image('seed_kedarnath.jpg', '#8BAB8A', '#3D6B3D', '⛰️ Kedarnath Dham'),
+        'jagannath': make_seed_image('seed_jagannath.jpg', '#E89B4F', '#B8752F', '🛕 Jagannath Puri'),
+        'vrindavan_town': make_seed_image('seed_vrindavan_town.jpg', '#D4A876', '#A07850', '🏘️ Vrindavan Town'),
+        'barsana': make_seed_image('seed_barsana.jpg', '#E8A0BF', '#C06898', '🌸 Barsana'),
+        'nandgaon': make_seed_image('seed_nandgaon.jpg', '#C8A44E', '#957830', '🐄 Nandgaon'),
+        'govardhan': make_seed_image('seed_govardhan.jpg', '#6B8AB5', '#3D5A7D', '⛰️ Govardhan'),
+        'iskcon': make_seed_image('seed_iskcon.jpg', '#E74845', '#B03030', '🙏 ISKCON Mandir'),
+        'banke_bihari': make_seed_image('seed_banke_bihari.jpg', '#9C27B0', '#6A1B82', '🪔 Banke Bihari'),
+        'kesi_ghat': make_seed_image('seed_kesi_ghat.jpg', '#2196F3', '#1565C0', '🌊 Kesi Ghat'),
+    }
+
     # ─── Seed Tier-3 Spot Categories ───
     for slug,name,desc,icon,color in SPOT_CATEGORIES:
         db.execute("INSERT INTO spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slug,name,desc,icon,color))
@@ -177,10 +218,10 @@ def seed_db():
         db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon) VALUES (?,?,?,?,?,?,?)", (name,label,ftype,ph,order,applies,icon))
 
     # ─── SAMPLE: Vrindavan Dham (Tier 1) ───
-    db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)",
+    db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)",
         ('Vrindavan Dham','vrindavan-dham','The divine land of Radha-Krishna leelas, one of the holiest Dhams in Gaudiya Vaishnavism.',
          '<h2>The Eternal Abode of Krishna</h2><p>Vrindavan is the transcendental land where Lord Krishna performed His childhood and youth pastimes. Located in the Braj region of Uttar Pradesh, it is revered by millions as a place where the spiritual world manifests on earth.</p><h3>Significance</h3><p>Vrindavan is one of the most important pilgrimage destinations in Hinduism, especially in the Gaudiya Vaishnava tradition. Sri Chaitanya Mahaprabhu rediscovered the lost holy places of Vrindavan in the 16th century.</p>',
-         'Uttar Pradesh','Mathura','India',27.5830,77.6950,'published',1))
+         'Uttar Pradesh','Mathura','India',27.5830,77.6950,seed_images.get('vrindavan'),'published',1))
     dham_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
     for tid in [8,4,9,10]: db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)", (dham_id,tid))
 
@@ -191,9 +232,10 @@ def seed_db():
         ('Nandgaon','nandgaon','The village of Nanda Maharaja, Krishna\'s foster father.','<p>Nandgaon is where Krishna spent his childhood. The Nand Bhavan temple stands on the hilltop.</p>',27.6714,77.3817,3),
         ('Govardhan','govardhan','Sacred hill lifted by Krishna to protect Braj.','<p>Govardhan Hill is one of the holiest sites, worshipped as a form of Krishna Himself. The parikrama (circumambulation) is a key pilgrimage practice.</p>',27.4929,77.4583,4),
     ]
+    kp_img_map = {'vrindavan-town':seed_images.get('vrindavan_town'),'barsana':seed_images.get('barsana'),'nandgaon':seed_images.get('nandgaon'),'govardhan':seed_images.get('govardhan')}
     kp_ids = {}
     for t,s,sd,fc,lat,lng,o in kp_data:
-        db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,1)", (dham_id,t,s,sd,fc,lat,lng,o))
+        db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,1)", (dham_id,t,s,sd,fc,kp_img_map.get(s),lat,lng,o))
         kp_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
 
     # ─── Tier 3: Key Spots (with categories) ───
@@ -236,10 +278,11 @@ def seed_db():
         db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,state,city,country,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,'Uttar Pradesh','Vrindavan','India',o))
 
     # More sample dhams
+    other_dham_imgs = {'mayapur-dham': seed_images.get('mayapur'), 'kedarnath-dham': seed_images.get('kedarnath'), 'jagannath-puri-dham': seed_images.get('jagannath')}
     for t,s,sd,fc,st,ci,lat,lng in [('Mayapur Dham','mayapur-dham','The spiritual headquarters of ISKCON and birthplace of Sri Chaitanya Mahaprabhu.','<h2>The Holy Land of Mayapur</h2><p>Mayapur is one of the most important pilgrimage sites for Gaudiya Vaishnavas.</p>','West Bengal','Nadia',23.4231,88.3884),
         ('Kedarnath Dham','kedarnath-dham','One of the twelve Jyotirlingas of Lord Shiva.','<h2>Sacred Abode of Lord Shiva</h2><p>Located in the Garhwal Himalayas near the Mandakini river.</p>','Uttarakhand','Rudraprayag',30.7352,79.0669),
         ('Jagannath Puri Dham','jagannath-puri-dham','The abode of Lord Jagannath, one of the four Dhams.','<h2>The Land of Lord Jagannath</h2><p>Puri is one of the Char Dham pilgrimage sites.</p>','Odisha','Puri',19.8135,85.8312)]:
-        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,'India',?,?,'published',1,1)", (t,s,sd,fc,st,ci,lat,lng))
+        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,status,is_featured,created_by) VALUES (?,?,?,?,?,?,'India',?,?,?,'published',1,1)", (t,s,sd,fc,st,ci,lat,lng,other_dham_imgs.get(s)))
 
     # Module entries
     for mod,pid,t,s,c in [(3,dham_id,'Appearance of Sri Chaitanya','appearance-sri-chaitanya','<p>Sri Chaitanya appeared in Mayapur in 1486 CE amidst ecstatic chanting.</p>'),(3,None,'Legend of Kedarnath','legend-kedarnath','<p>The Pandavas sought Lord Shiva who hid as a bull.</p>'),(4,None,'Gaura Purnima','gaura-purnima','<p>Celebrates the appearance of Sri Chaitanya. Hundreds of thousands visit Mayapur.</p>')]:
@@ -325,6 +368,18 @@ def home():
         (SELECT COUNT(*) FROM sub_spots ss JOIN key_spots ks2 ON ss.key_spot_id=ks2.id JOIN key_places kp3 ON ks2.key_place_id=kp3.id WHERE kp3.parent_place_id=p.id AND ss.is_visible=1) as ss_count
         FROM places p LEFT JOIN place_tags pt ON p.id=pt.place_id LEFT JOIN tags t ON pt.tag_id=t.id
         WHERE p.status='published' GROUP BY p.id ORDER BY p.is_featured DESC,p.updated_at DESC LIMIT 16""").fetchall()
+    # Add all T1 gallery images to each place for random display
+    featured_list = []
+    for f in featured:
+        fd = dict(f)
+        all_imgs = []
+        if fd.get('featured_image'): all_imgs.append(fd['featured_image'])
+        # Also get gallery images from place_media
+        for m in db.execute("SELECT m.filename FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image'",(fd['id'],)).fetchall():
+            if m['filename'] and m['filename'] not in all_imgs: all_imgs.append(m['filename'])
+        fd['all_images'] = ','.join(all_imgs) if all_imgs else ''
+        featured_list.append(fd)
+    featured = featured_list
     # Collect images from ALL tiers — featured_image AND gallery_images
     hero_images=[]
     def add_hero(img_path, row_dict):
@@ -637,7 +692,9 @@ def admin_place_edit(place_id):
     all_spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color,kp.title as kp_title,kp.id as kp_id,kp.slug as kp_slug FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order",(place_id,)).fetchall()
     # Fetch ALL sub_spots (key points) for this dham (for Tier 4 tab)
     all_points=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color,ks.title as ks_title,ks.id as ks_id,ks.slug as ks_slug,sc2.name as ks_cat_name,sc2.icon as ks_cat_icon,kp.title as kp_title,kp.id as kp_id FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id JOIN key_spots ks ON ss.key_spot_id=ks.id LEFT JOIN spot_categories sc2 ON ks.category_id=sc2.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order",(place_id,)).fetchall()
-    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points)
+    # Fetch gallery images from place_media
+    gallery_media=db.execute("SELECT m.id,m.filename,m.original_name,m.file_type FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order",(place_id,)).fetchall()
+    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points,gallery_media=gallery_media)
 
 def _save_place(place_id):
     db=get_db(); f=request.form; title=f['title']; slug=slugify(title)
@@ -658,6 +715,14 @@ def _save_place(place_id):
         place_id=db.execute("SELECT last_insert_rowid()").fetchone()[0]
     db.execute("DELETE FROM place_tags WHERE place_id=?",(place_id,))
     for tid in f.getlist('tags'): db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)",(place_id,tid))
+    # Handle T1 gallery image uploads
+    if 'gallery_files' in request.files:
+        for gf in request.files.getlist('gallery_files'):
+            if gf and gf.filename:
+                rp = save_upload(gf, 'images')
+                if rp:
+                    mid = db.execute("SELECT id FROM media WHERE filename=?",(rp,)).fetchone()
+                    if mid: db.execute("INSERT INTO place_media (place_id,media_id,media_role) VALUES (?,?,?)",(place_id,mid['id'],'gallery'))
     # Custom values
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     for cf in cfs:
@@ -1024,6 +1089,54 @@ def admin_tags():
 @app.route('/admin/tags/<int:tag_id>/delete', methods=['POST'])
 @login_required
 def admin_tag_delete(tag_id): get_db().execute("DELETE FROM tags WHERE id=?",(tag_id,)); get_db().commit(); flash('Deleted.','info'); return redirect(url_for('admin_tags'))
+
+# ─── Admin Help Guide ───
+@app.route('/admin/help')
+@login_required
+def admin_help():
+    return render_template('admin/help_guide.html')
+
+# ─── Gallery Image Delete API ───
+@app.route('/admin/api/delete-gallery-image', methods=['POST'])
+@login_required
+def admin_delete_gallery_image():
+    import json as json_mod
+    data = request.get_json()
+    tier = data.get('tier')
+    parent_id = data.get('parent_id')
+    image = data.get('image','').strip()
+    if not tier or not parent_id or not image:
+        return jsonify({'ok':False,'error':'Missing parameters'})
+    db = get_db()
+    table_map = {'t1':'places','t2':'key_places','t3':'key_spots','t4':'sub_spots'}
+    table = table_map.get(tier)
+    col = 'gallery_images' if tier != 't1' else None
+    if not table:
+        return jsonify({'ok':False,'error':'Invalid tier'})
+    try:
+        if tier == 't1':
+            # T1 uses place_media table
+            media = db.execute("SELECT m.id FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.filename=?",(parent_id,image)).fetchone()
+            if media:
+                db.execute("DELETE FROM place_media WHERE media_id=?",(media['id'],))
+                db.execute("DELETE FROM media WHERE id=?",(media['id'],))
+            # Also clear featured_image if it matches
+            db.execute(f"UPDATE {table} SET featured_image=NULL WHERE id=? AND featured_image=?",(parent_id,image))
+        else:
+            row = db.execute(f"SELECT gallery_images FROM {table} WHERE id=?",(parent_id,)).fetchone()
+            if row and row['gallery_images']:
+                imgs = [x.strip() for x in row['gallery_images'].split(',') if x.strip() and x.strip() != image]
+                db.execute(f"UPDATE {table} SET gallery_images=? WHERE id=?",((','.join(imgs) if imgs else None),parent_id))
+            # Also clear featured_image if it matches
+            db.execute(f"UPDATE {table} SET featured_image=NULL WHERE id=? AND featured_image=?",(parent_id,image))
+        db.commit()
+        # Delete file from disk
+        import os as os_mod
+        fp = os_mod.path.join(app.config['UPLOAD_FOLDER'], image)
+        if os_mod.path.exists(fp): os_mod.remove(fp)
+        return jsonify({'ok':True})
+    except Exception as e:
+        return jsonify({'ok':False,'error':str(e)})
 
 # ─── API ───
 @app.route('/api/v1/places')

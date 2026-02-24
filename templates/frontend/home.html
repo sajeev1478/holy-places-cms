@@ -152,8 +152,8 @@
 <div class="dhams-grid">
 {% for place in featured[:16] %}
 <div class="dham-card" onclick="window.location='{{ url_for('place_detail', slug=place.slug) }}'">
-<div class="dham-card-img">
-{% if place.featured_image %}<img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" loading="lazy">{% else %}<div class="dci-bg" style="background:linear-gradient(135deg,{{ ['#E8D5C4,#D4B896','#D4E5D4,#A8C5A8','#F8E5EE,#D4A8B8','#E5D4E8,#C5A8D4','#D4D8E5,#A8B0C5','#E8E5D4,#C5C0A8'][loop.index0 % 6] }});display:flex;align-items:center;justify-content:center;font-size:36px">🛕</div>{% endif %}
+<div class="dham-card-img" data-images="{{ place.all_images }}">
+{% if place.featured_image %}<img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" loading="lazy">{% elif place.all_images %}<img src="/static/uploads/{{ place.all_images.split(',')[0] }}" alt="{{ place.title }}" loading="lazy">{% else %}<div class="dci-bg" style="background:linear-gradient(135deg,{{ ['#E8D5C4,#D4B896','#D4E5D4,#A8C5A8','#F8E5EE,#D4A8B8','#E5D4E8,#C5A8D4','#D4D8E5,#A8B0C5','#E8E5D4,#C5C0A8'][loop.index0 % 6] }});display:flex;align-items:center;justify-content:center;font-size:36px">🛕</div>{% endif %}
 </div>
 <div class="dham-card-body">
 <div class="dham-card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></div>
@@ -244,6 +244,35 @@
   function re(){clearInterval(tm);au()}
   ds.forEach(function(d){d.addEventListener('click',function(){go(+d.dataset.i);re()})});
   au();
+})();
+
+// Random T1 image cycling on dham cards
+(function(){
+  document.querySelectorAll('.dham-card-img[data-images]').forEach(function(el){
+    var imgs = el.dataset.images;
+    if(!imgs) return;
+    var arr = imgs.split(',').filter(Boolean);
+    if(arr.length < 2) return;
+    var img = el.querySelector('img');
+    if(!img) return;
+    // Start with random image
+    var r = Math.floor(Math.random()*arr.length);
+    img.src = '/static/uploads/' + arr[r];
+    // Cycle every 5 seconds
+    var idx = r;
+    setInterval(function(){
+      idx = (idx + 1) % arr.length;
+      img.style.opacity = '0';
+      setTimeout(function(){
+        img.src = '/static/uploads/' + arr[idx];
+        img.style.opacity = '1';
+      }, 400);
+    }, 5000 + Math.random()*2000);
+  });
+  // Add transition to dham card images
+  document.querySelectorAll('.dham-card-img img').forEach(function(img){
+    img.style.transition = 'opacity .4s, transform .6s';
+  });
 })();
 </script>
 {% endblock %}

@@ -1,0 +1,390 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Help Guide{% endblock %}
+
+{% block extra_css %}
+<style>
+.help-hero{text-align:center;padding:20px 0 30px}
+.help-hero h1{font-size:28px;font-weight:800;margin-bottom:8px}
+.help-hero p{font-size:15px;color:var(--text-mid)}
+.help-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px;padding:16px;background:var(--bg-cream);border-radius:16px;border:1px solid var(--border)}
+.help-nav a{padding:8px 16px;border-radius:50px;font-size:13px;font-weight:600;text-decoration:none;color:var(--text-mid);border:1.5px solid var(--border);transition:all .2s;background:white}
+.help-nav a:hover{border-color:var(--primary);color:var(--primary);background:var(--primary)08}
+.help-section{margin-bottom:40px;background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden}
+.help-section-head{padding:24px;background:linear-gradient(135deg,var(--bg-cream),white);border-bottom:1px solid var(--border);cursor:pointer}
+.help-section-head h2{font-size:20px;font-weight:700;display:flex;align-items:center;gap:10px;margin:0}
+.help-section-head p{font-size:13px;color:var(--text-mid);margin-top:6px}
+.help-body{padding:24px}
+.help-body h3{font-size:16px;font-weight:700;margin:20px 0 8px;color:var(--text-dark)}
+.help-body h3:first-child{margin-top:0}
+.help-body p{font-size:14px;color:var(--text-mid);line-height:1.75;margin-bottom:12px}
+.help-body ul{margin:8px 0 16px 0;padding-left:20px}
+.help-body li{font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:6px}
+.help-body li strong{color:var(--text-dark)}
+.help-example{background:var(--bg-cream);border:1px solid var(--border);border-radius:12px;padding:16px;margin:12px 0;font-size:13px}
+.help-example .ex-title{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:8px}
+.help-tier-flow{display:flex;align-items:center;gap:0;margin:16px 0;flex-wrap:wrap}
+.help-tier-box{padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;text-align:center;color:white;min-width:120px}
+.help-tier-arrow{font-size:18px;color:var(--text-light);margin:0 4px}
+.code-block{background:#1e1e2e;color:#cdd6f4;padding:16px;border-radius:12px;font-family:'Courier New',monospace;font-size:12px;overflow-x:auto;margin:12px 0;line-height:1.6}
+.code-block .key{color:#89b4fa}
+.code-block .val{color:#a6e3a1}
+.code-block .str{color:#f9e2af}
+.help-tip{background:#E8F5E9;border:1px solid #C8E6C9;border-radius:10px;padding:12px 16px;margin:12px 0;font-size:13px;color:#2E7D32}
+.help-tip strong{color:#1B5E20}
+.help-warn{background:#FFF3E0;border:1px solid #FFE0B2;border-radius:10px;padding:12px 16px;margin:12px 0;font-size:13px;color:#E65100}
+.ft-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.ft-table th{background:var(--bg-cream);padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.ft-table td{padding:10px 14px;border-bottom:1px solid var(--border)}
+.ft-table tr:hover{background:var(--bg-cream)}
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="help-hero">
+<h1>📚 Admin Help Guide</h1>
+<p>Everything you need to understand and use the HolyDham CMS effectively.</p>
+</div>
+
+<div class="help-nav">
+<a href="#tiers">🏛️ Tier Structure</a>
+<a href="#modules">📦 Modules</a>
+<a href="#tags-cats">🏷️ Tags & Categories</a>
+<a href="#json">📋 JSON</a>
+<a href="#custom-fields">⚙️ Custom Fields</a>
+<a href="#images">📸 Images & Gallery</a>
+<a href="#tips">💡 Tips</a>
+</div>
+
+<!-- ═══ 1. TIER STRUCTURE ═══ -->
+<div class="help-section" id="tiers">
+<div class="help-section-head">
+<h2>🏛️ 1. Tier Structure (Tier 1 to Tier 4)</h2>
+<p>How the website organizes holy places from broad regions to exact sacred points</p>
+</div>
+<div class="help-body">
+<p>The HolyDham CMS uses a <strong>4-tier hierarchy</strong> to organize spiritual destinations from the broadest level (an entire holy region) down to the most specific level (an exact point where a divine pastime took place). Think of it like zooming into a map:</p>
+
+<div class="help-tier-flow">
+<div class="help-tier-box" style="background:#C76B8F">🏛️ T1<br>Holy Dham</div>
+<span class="help-tier-arrow">→</span>
+<div class="help-tier-box" style="background:#2E86AB">📍 T2<br>Key Places</div>
+<span class="help-tier-arrow">→</span>
+<div class="help-tier-box" style="background:#E74845">🎯 T3<br>Key Spots</div>
+<span class="help-tier-arrow">→</span>
+<div class="help-tier-box" style="background:#9C27B0">✦ T4<br>Key Points</div>
+</div>
+
+<h3>Tier 1 — Holy Dham (Main Sacred Destination)</h3>
+<p>This is the <strong>broadest level</strong> — an entire holy region or city known for its spiritual significance. A Holy Dham is the top-level entry that contains everything else.</p>
+<div class="help-example">
+<div class="ex-title">📌 Examples of Tier 1</div>
+<strong>Vrindavan Dham</strong> — The sacred land of Lord Krishna's childhood pastimes in Uttar Pradesh<br>
+<strong>Mayapur Dham</strong> — The appearance place of Sri Chaitanya Mahaprabhu in West Bengal<br>
+<strong>Kedarnath Dham</strong> — One of the four Char Dhams, abode of Lord Shiva in Uttarakhand<br>
+<strong>Jagannath Puri Dham</strong> — Home of Lord Jagannath, Balabhadra, and Subhadra in Odisha
+</div>
+<div class="help-tip">💡 <strong>Tip:</strong> When creating a T1 entry, always add the city, state, and country. Upload a high-quality featured image — this appears on the homepage cards!</div>
+
+<h3>Tier 2 — Key Places (Important Areas Within the Dham)</h3>
+<p>Key Places are <strong>major zones or important locations</strong> within a Holy Dham. These are the well-known areas a pilgrim would visit.</p>
+<div class="help-example">
+<div class="ex-title">📌 Examples of Tier 2 (within Vrindavan Dham)</div>
+<strong>Vrindavan Town</strong> — The main temple town with hundreds of temples<br>
+<strong>Barsana</strong> — Town of Radha Rani, known for Lathmar Holi<br>
+<strong>Govardhan</strong> — Sacred hill lifted by Lord Krishna<br>
+<strong>Nandgaon</strong> — Krishna's childhood village, home of Nanda Maharaj
+</div>
+
+<h3>Tier 3 — Key Spots (Specific Locations Within a Key Place)</h3>
+<p>Key Spots are <strong>specific temples, ghats, or sacred areas</strong> within a Key Place. These are the individual places a pilgrim actually visits.</p>
+<div class="help-example">
+<div class="ex-title">📌 Examples of Tier 3 (within Vrindavan Town)</div>
+<strong>Banke Bihari Temple</strong> — Most famous temple in Vrindavan<br>
+<strong>ISKCON Krishna Balaram Mandir</strong> — Founded by Srila Prabhupada<br>
+<strong>Kesi Ghat</strong> — Where Krishna killed the Kesi demon<br>
+<strong>Radha Raman Temple</strong> — 500-year-old Goswami temple
+</div>
+
+<h3>Tier 4 — Key Points (Exact Sacred Micro-Points)</h3>
+<p>Key Points are the <strong>most specific level</strong> — exact spots within a Key Spot where a particular divine pastime occurred or where a devotee can meditate on a specific event.</p>
+<div class="help-example">
+<div class="ex-title">📌 Examples of Tier 4 (within Banke Bihari Temple)</div>
+<strong>Jhulan Sthal</strong> — The exact spot where the swing festival deity appears<br>
+<strong>Original Deity Niche</strong> — Where the Bihari Ji deity was first installed<br>
+<strong>Swami Haridas Samadhi</strong> — Meditation point at the founder's memorial<br>
+<strong>Mangala Aarti Corner</strong> — Where devotees gather for the first morning prayer
+</div>
+
+<div class="help-tip">💡 <strong>How to create a complete entry:</strong> Start with T1 (the Dham). Then add T2 Key Places within it. For each T2, add T3 Key Spots. For each T3, add T4 Key Points. This creates a complete spiritual map!</div>
+</div>
+</div>
+
+<!-- ═══ 2. MODULES ═══ -->
+<div class="help-section" id="modules">
+<div class="help-section-head">
+<h2>📦 2. Modules</h2>
+<p>What modules are and how they organize content features</p>
+</div>
+<div class="help-body">
+<h3>What is a Module?</h3>
+<p>A <strong>module</strong> is a category or section of the website that organizes a specific type of content. Think of modules as different "departments" of the website, each dedicated to a particular kind of information.</p>
+<p>Each module has its own page on the frontend where visitors can browse all entries within that module.</p>
+
+<h3>How Modules Work</h3>
+<p>Every module has:</p>
+<ul>
+<li><strong>Name:</strong> What the module is called (e.g., "Sacred Stories")</li>
+<li><strong>Slug:</strong> The URL-friendly name (auto-generated from the name)</li>
+<li><strong>Icon:</strong> An emoji that represents the module visually</li>
+<li><strong>Entries:</strong> Individual pieces of content within the module</li>
+</ul>
+
+<h3>Example Modules</h3>
+<table class="ft-table">
+<tr><th>Module</th><th>Purpose</th><th>Example Entries</th></tr>
+<tr><td>🛕 <strong>Holy Dhams</strong></td><td>Information about sacred destinations</td><td>Vrindavan overview, Puri history</td></tr>
+<tr><td>🏛️ <strong>Temples</strong></td><td>Detailed temple guides</td><td>Banke Bihari guide, ISKCON history</td></tr>
+<tr><td>📖 <strong>Sacred Stories</strong></td><td>Devotional stories and pastimes</td><td>Krishna Leela, Ramayana episodes</td></tr>
+<tr><td>🎉 <strong>Festivals</strong></td><td>Festival guides and calendars</td><td>Holi in Barsana, Ratha Yatra</td></tr>
+<tr><td>🗺️ <strong>Pilgrimage Guides</strong></td><td>Travel and pilgrimage planning</td><td>Char Dham route, Vrindavan 3-day itinerary</td></tr>
+<tr><td>🎵 <strong>Bhajans & Kirtans</strong></td><td>Devotional music collection</td><td>Hare Krishna Maha Mantra, Aarti songs</td></tr>
+</table>
+
+<div class="help-tip">💡 <strong>Tip:</strong> You can create new modules from the Modules page. Each module appears as a navigation link on the frontend. Set the <code>sort_order</code> to control which modules appear first.</div>
+</div>
+</div>
+
+<!-- ═══ 3. TAGS & CATEGORIES ═══ -->
+<div class="help-section" id="tags-cats">
+<div class="help-section-head">
+<h2>🏷️ 3. Tags and Categories</h2>
+<p>How to organize and filter content effectively</p>
+</div>
+<div class="help-body">
+<h3>What are Categories?</h3>
+<p><strong>Categories</strong> are used to classify T3 Key Spots and T4 Key Points into specific types. Each spot/point can belong to ONE category. Categories help visitors understand what kind of place they're looking at.</p>
+
+<table class="ft-table">
+<tr><th>Category (T3)</th><th>Example Spots</th></tr>
+<tr><td>🛕 Temple</td><td>Banke Bihari Temple, Radha Raman Temple</td></tr>
+<tr><td>🌊 Ghat / Water Body</td><td>Kesi Ghat, Yamuna Banks</td></tr>
+<tr><td>🌳 Sacred Grove / Forest</td><td>Nidhivan, Seva Kunj</td></tr>
+<tr><td>🏛️ Historical Monument</td><td>Prabhupada's Bhajan Kutir</td></tr>
+<tr><td>🎵 Kirtan / Aarti Spot</td><td>Evening Aarti location</td></tr>
+</table>
+
+<h3>What are Tags?</h3>
+<p><strong>Tags</strong> are labels applied to T1 Holy Dhams. Unlike categories, a dham can have MULTIPLE tags. Tags help with filtering and searching. They are more flexible than categories.</p>
+
+<div class="help-example">
+<div class="ex-title">📌 Example Tags</div>
+<strong>🏷️ Char Dham</strong> — Part of the four sacred pilgrimage sites<br>
+<strong>🏷️ Krishna Leela</strong> — Associated with Lord Krishna's pastimes<br>
+<strong>🏷️ Shiva Temples</strong> — Dedicated to Lord Shiva<br>
+<strong>🏷️ River Ganga</strong> — Located near the Ganges<br>
+<strong>🏷️ UNESCO Heritage</strong> — A heritage site
+</div>
+
+<h3>Categories vs Tags — What's the Difference?</h3>
+<table class="ft-table">
+<tr><th>Feature</th><th>Categories</th><th>Tags</th></tr>
+<tr><td>Applied to</td><td>T3 (Key Spots) & T4 (Key Points)</td><td>T1 (Holy Dhams)</td></tr>
+<tr><td>How many?</td><td>ONE per item</td><td>MULTIPLE per item</td></tr>
+<tr><td>Purpose</td><td>Classify the TYPE of place</td><td>Label with attributes/features</td></tr>
+<tr><td>Example</td><td>"Temple" or "Ghat"</td><td>"Krishna Leela" + "Char Dham"</td></tr>
+</table>
+
+<div class="help-tip">💡 <strong>Tip:</strong> Use categories to answer "What TYPE of place is this?" and tags to answer "What FEATURES does this dham have?"</div>
+</div>
+</div>
+
+<!-- ═══ 4. JSON ═══ -->
+<div class="help-section" id="json">
+<div class="help-section-head">
+<h2>📋 4. JSON (JavaScript Object Notation)</h2>
+<p>What JSON is and how it's used in the system</p>
+</div>
+<div class="help-body">
+<h3>What is JSON?</h3>
+<p>JSON is a simple way to store structured data as text. Think of it like a very organized list. The system uses JSON internally to store things like custom field values, field visibility settings, and more.</p>
+<p><strong>You don't need to write JSON manually!</strong> The admin panel handles it for you. But understanding what it looks like helps if you ever need to troubleshoot.</p>
+
+<h3>What JSON Looks Like</h3>
+<div class="code-block">
+{<br>
+&nbsp;&nbsp;<span class="key">"opening_time"</span>: <span class="str">"5:00 AM"</span>,<br>
+&nbsp;&nbsp;<span class="key">"closing_time"</span>: <span class="str">"9:00 PM"</span>,<br>
+&nbsp;&nbsp;<span class="key">"entry_fee"</span>: <span class="val">0</span>,<br>
+&nbsp;&nbsp;<span class="key">"has_darshan"</span>: <span class="val">true</span>,<br>
+&nbsp;&nbsp;<span class="key">"importance_level"</span>: <span class="val">5</span><br>
+}
+</div>
+
+<h3>How JSON is Used Here</h3>
+<ul>
+<li><strong>Field Visibility:</strong> When you toggle which fields are visible on the frontend, the on/off state is saved as JSON</li>
+<li><strong>Custom Field Values:</strong> When you fill in custom fields (like opening time, entry fee), these are stored as JSON</li>
+<li><strong>Gallery Image Paths:</strong> Multiple image paths are stored as comma-separated text (similar concept)</li>
+</ul>
+
+<div class="help-example">
+<div class="ex-title">📌 Real Example: Field Visibility JSON</div>
+<div class="code-block" style="font-size:11px">
+{<span class="key">"title"</span>: <span class="val">1</span>, <span class="key">"description"</span>: <span class="val">1</span>, <span class="key">"featured_image"</span>: <span class="val">1</span>, <span class="key">"latitude"</span>: <span class="val">0</span>}
+</div>
+<p style="margin-top:8px;font-size:12px;color:var(--text-light)">Here, 1 means "show on frontend" and 0 means "hide". Title, description, and image are shown; latitude is hidden.</p>
+</div>
+
+<div class="help-tip">💡 <strong>Key takeaway:</strong> You never need to write JSON yourself. The admin forms handle everything. JSON is just how the system stores your data behind the scenes.</div>
+</div>
+</div>
+
+<!-- ═══ 5. CUSTOM FIELDS ═══ -->
+<div class="help-section" id="custom-fields">
+<div class="help-section-head">
+<h2>⚙️ 5. Custom Fields</h2>
+<p>Adding extra information to any tier with custom fields</p>
+</div>
+<div class="help-body">
+<h3>What are Custom Fields?</h3>
+<p>Custom Fields let you add <strong>extra pieces of information</strong> to any tier that go beyond the built-in fields (title, description, image, etc.). They're like adding extra rows to a form.</p>
+<p>For example, a temple (T3) might need fields for "Opening Time", "Entry Fee", "Aarti Schedule", or "Audio Guide URL" — these are all custom fields.</p>
+
+<h3>How to Create a Custom Field</h3>
+<p>Go to <strong>Custom Fields</strong> in the admin sidebar and click <strong>Add New Field</strong>. Fill in:</p>
+<table class="ft-table">
+<tr><th>Setting</th><th>What it means</th><th>Example</th></tr>
+<tr><td><strong>Label</strong></td><td>The display name shown in forms</td><td>"Opening Time"</td></tr>
+<tr><td><strong>Icon</strong></td><td>An emoji shown next to the field</td><td>🕐</td></tr>
+<tr><td><strong>Field Type</strong></td><td>What kind of data this field holds</td><td>Text, Number, Image, etc.</td></tr>
+<tr><td><strong>Placeholder</strong></td><td>Hint text shown when field is empty</td><td>"e.g., 5:00 AM – 9:00 PM"</td></tr>
+<tr><td><strong>Applies To</strong></td><td>Which tiers see this field</td><td>All Tiers, T1 Only, T3+, etc.</td></tr>
+<tr><td><strong>Order</strong></td><td>Sort position (lower = appears first)</td><td>1, 2, 3...</td></tr>
+</table>
+
+<h3>Available Field Types</h3>
+<table class="ft-table">
+<tr><th>Type</th><th>Use For</th><th>Example</th></tr>
+<tr><td>📝 <strong>Text</strong></td><td>Short text (one line)</td><td>Opening time, Phone number</td></tr>
+<tr><td>📄 <strong>Textarea</strong></td><td>Long text (multiple lines)</td><td>Detailed description, History</td></tr>
+<tr><td>📰 <strong>Rich Text</strong></td><td>Formatted text with bold, links</td><td>Detailed guide content</td></tr>
+<tr><td>🔢 <strong>Number</strong></td><td>Numeric values</td><td>Entry fee (₹), Elevation (m)</td></tr>
+<tr><td>🔗 <strong>URL</strong></td><td>Web links</td><td>Official website, Google Maps link</td></tr>
+<tr><td>🖼️ <strong>Image</strong></td><td>Single image upload</td><td>Map image, Floor plan</td></tr>
+<tr><td>🎵 <strong>Audio</strong></td><td>Audio file upload</td><td>Aarti recording, Bhajan</td></tr>
+<tr><td>🎬 <strong>Video</strong></td><td>Video file upload</td><td>Virtual tour, Festival video</td></tr>
+<tr><td>📸 <strong>Multi-Images</strong></td><td>Multiple image uploads</td><td>Photo gallery, Inside views</td></tr>
+<tr><td>📅 <strong>Date</strong></td><td>Date value</td><td>Festival date, Founded date</td></tr>
+<tr><td>📋 <strong>Select</strong></td><td>Dropdown choice</td><td>Difficulty level, Status</td></tr>
+<tr><td>✅ <strong>Yes/No</strong></td><td>Boolean toggle</td><td>Has parking?, Wheelchair access?</td></tr>
+<tr><td>🎨 <strong>Color</strong></td><td>Color picker</td><td>Theme color for the page</td></tr>
+<tr><td>📦 <strong>JSON</strong></td><td>Structured data</td><td>Schedule array, Price tiers</td></tr>
+</table>
+
+<h3>"Applies To" Options</h3>
+<ul>
+<li><strong>🌐 All Tiers:</strong> This field appears in T1, T2, T3, and T4 forms</li>
+<li><strong>🏛️ T1 Only:</strong> Only appears when editing a Holy Dham</li>
+<li><strong>📍 T2 Only:</strong> Only appears when editing a Key Place</li>
+<li><strong>🎯 T3 Only:</strong> Only appears when editing a Key Spot</li>
+<li><strong>✦ T4 Only:</strong> Only appears when editing a Key Point</li>
+<li><strong>📍 T2+:</strong> Appears in T2, T3, and T4 (not T1)</li>
+<li><strong>🎯 T3+:</strong> Appears in T3 and T4 (not T1 or T2)</li>
+</ul>
+
+<div class="help-example">
+<div class="ex-title">📌 Example: Creating a "Temple Timings" Custom Field</div>
+<strong>Label:</strong> Temple Timings<br>
+<strong>Icon:</strong> 🕐<br>
+<strong>Field Type:</strong> Text<br>
+<strong>Placeholder:</strong> e.g., 5:00 AM – 12:00 PM, 4:00 PM – 9:00 PM<br>
+<strong>Applies To:</strong> T3 Only (since timings are for specific temples/spots)<br>
+<strong>Order:</strong> 1 (appears first)
+</div>
+<div class="help-tip">💡 <strong>Tip:</strong> Create fields strategically! "Entry Fee" makes sense for T3 (specific places). "Total Temples" makes sense for T1 (the whole dham). "GPS Accuracy Note" might make sense for T4 (exact points).</div>
+</div>
+</div>
+
+<!-- ═══ 6. IMAGES & GALLERY ═══ -->
+<div class="help-section" id="images">
+<div class="help-section-head">
+<h2>📸 6. Images & Gallery</h2>
+<p>How to manage images across all tiers</p>
+</div>
+<div class="help-body">
+<h3>Image Types</h3>
+<ul>
+<li><strong>Featured Image:</strong> The main image for any tier. This appears as the primary image on the frontend page and in cards/listings. Each item has ONE featured image.</li>
+<li><strong>Gallery Images:</strong> Additional images shown in a slider on the frontend. Items can have MULTIPLE gallery images. Available for T1 (via Gallery upload), T2, T3, and T4.</li>
+</ul>
+
+<h3>How Images Work</h3>
+<p>When you upload an image:</p>
+<ul>
+<li>It's saved to the server's <code>static/uploads/images/</code> folder</li>
+<li>A unique filename is generated to prevent conflicts</li>
+<li>A thumbnail appears in the form so you can see what's uploaded</li>
+<li>Click any thumbnail to see the full-size image (lightbox)</li>
+<li>Click the red ✕ on a thumbnail to delete it (with double confirmation)</li>
+</ul>
+
+<h3>Image Best Practices</h3>
+<ul>
+<li><strong>Featured Image:</strong> Use a high-quality landscape photo (recommended: 1200×800 or larger)</li>
+<li><strong>Gallery Images:</strong> Upload 3-10 images showing different aspects of the place</li>
+<li><strong>File formats:</strong> JPG, PNG, GIF, and WebP are supported</li>
+<li><strong>File size:</strong> Keep images under 5MB for best performance</li>
+<li><strong>Naming:</strong> The system auto-renames files, so original names don't matter</li>
+</ul>
+
+<h3>Hero Slider on Homepage</h3>
+<p>The homepage hero slider automatically pulls images from ALL tiers that have uploaded images. It picks featured images and gallery images randomly and shows them in an auto-rotating slideshow with tier labels and "View" buttons.</p>
+
+<div class="help-tip">💡 <strong>Tip:</strong> Upload at least one image per Tier 1 dham to ensure the homepage looks beautiful. The more images across all tiers, the more diverse the hero slider becomes!</div>
+</div>
+</div>
+
+<!-- ═══ 7. TIPS ═══ -->
+<div class="help-section" id="tips">
+<div class="help-section-head">
+<h2>💡 7. Tips & Best Practices</h2>
+<p>Helpful advice for managing content effectively</p>
+</div>
+<div class="help-body">
+<h3>Content Creation Order</h3>
+<p>Always create content top-down:</p>
+<ul>
+<li>First create a <strong>T1 Holy Dham</strong> (e.g., Vrindavan)</li>
+<li>Then add <strong>T2 Key Places</strong> within it (e.g., Vrindavan Town, Barsana)</li>
+<li>Then add <strong>T3 Key Spots</strong> within each Key Place (e.g., Banke Bihari Temple)</li>
+<li>Finally add <strong>T4 Key Points</strong> within each Key Spot (e.g., Jhulan Sthal)</li>
+</ul>
+
+<h3>Publishing Workflow</h3>
+<ul>
+<li><strong>Draft:</strong> Content is saved but not visible to visitors</li>
+<li><strong>Published:</strong> Content is live and visible on the frontend</li>
+<li>Start with Draft to prepare content, then switch to Published when ready</li>
+</ul>
+
+<h3>Search & Discovery</h3>
+<p>The frontend has a live search that searches across ALL 4 tiers simultaneously. Make sure to use descriptive titles and add location data (city, state) so visitors can find places easily.</p>
+
+<h3>Deleting Content</h3>
+<div class="help-warn">⚠️ <strong>Important:</strong> All delete operations require TWO confirmations (double confirmation). The first asks "Are you sure?" and the second asks "This is irreversible. Are you absolutely sure?" This is to prevent accidental deletion.</div>
+
+<h3>Quick Reference</h3>
+<table class="ft-table">
+<tr><th>Action</th><th>Where</th></tr>
+<tr><td>Add a new Holy Dham</td><td>Dashboard → Create New → Fill form → Save</td></tr>
+<tr><td>Add Key Places to a Dham</td><td>Edit the Dham → Scroll to "Tier 2" section → Add</td></tr>
+<tr><td>Add Key Spots</td><td>Click "T3 Key Spots" button on any Key Place</td></tr>
+<tr><td>Add Key Points</td><td>Click "T4 Key Points" button on any Key Spot</td></tr>
+<tr><td>Add tags</td><td>Tags page → Create tags → Check them when editing a Dham</td></tr>
+<tr><td>Create custom fields</td><td>Custom Fields → Add New Field → Set type & scope</td></tr>
+<tr><td>Upload gallery images</td><td>Edit any tier → Gallery Images section → Select files</td></tr>
+<tr><td>Manage media files</td><td>Media Library → Browse/delete uploaded files</td></tr>
+</table>
+</div>
+</div>
+{% endblock %}
