@@ -8,10 +8,10 @@
 <a href="{{ url_for('module_page', slug=module.slug) }}">{{ module.name }}</a> <span>›</span>
 <span>{{ entry.title }}</span>
 </div>
-<div style="font-family:'DM Sans',sans-serif;font-size:11px;color:var(--rose-deep);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">{{ module.icon }} {{ module.name }}</div>
-<h1 style="font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);margin-bottom:12px">{{ entry.title }}</h1>
+<div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:var(--rose-deep);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">{{ module.icon }} {{ module.name }}</div>
+<h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,4vw,44px);margin-bottom:12px">{{ entry.title }}</h1>
 {% if entry.place_title %}
-<a href="{{ url_for('place_detail', slug=entry.place_slug) }}" style="font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text-mid);display:inline-flex;align-items:center;gap:6px">
+<a href="{{ url_for('place_detail', slug=entry.place_slug) }}" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text-mid);display:inline-flex;align-items:center;gap:6px">
 <i class="fas fa-map-marker-alt" style="color:var(--rose-deep)"></i> {{ entry.place_title }}
 </a>
 {% endif %}
@@ -31,7 +31,7 @@
 </div>
 {% endif %}
 <div class="share-btns">
-<span style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-light);margin-right:8px;align-self:center">Share:</span>
+<span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text-light);margin-right:8px;align-self:center">Share:</span>
 <button class="share-btn" onclick="window.open('https://wa.me/?text='+encodeURIComponent(document.title+' '+window.location.href))"><i class="fab fa-whatsapp"></i></button>
 <button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href)"><i class="fas fa-link"></i></button>
 </div>

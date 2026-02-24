@@ -77,7 +77,7 @@ def seed_db():
         db.execute("INSERT INTO modules (name,slug,description,icon,sort_order,is_active,created_by) VALUES (?,?,?,?,?,1,1)", (name,slug,desc,icon,order))
     for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843')]:
         db.execute("INSERT INTO tags (name,slug,color) VALUES (?,?,?)", (name,slug,color))
-    for name,label,ftype,ph,order,applies in [('audio_narration','Audio Narration','audio','Upload audio',1,'both'),('video_tour','Video Tour','video','Upload or paste URL',2,'both'),('gallery_images','Gallery Images','images','Upload photos',3,'both'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both'),('how_to_reach','How to Reach','textarea','Directions',6,'place'),('accommodation','Accommodation','textarea','Stay options',7,'place'),('history','History & Significance','richtext','Detailed history',8,'both'),('dress_code','Dress Code','text','If any',9,'both'),('entry_fee','Entry Fee','text','e.g. Free',10,'both'),('external_audio_url','External Audio Link','url','Audio URL',11,'both'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both')]:
+    for name,label,ftype,ph,order,applies in [('audio_narration','Audio Narration','audio','Upload audio',1,'both'),('video_tour','Video Tour','video','Upload or paste URL',2,'both'),('gallery_images','Gallery Images','images','Upload photos',3,'both'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both'),('how_to_reach','How to Reach','textarea','Directions',6,'place'),('accommodation','Accommodation','textarea','Stay options',7,'place'),('history','History & Significance','richtext','Detailed history',8,'both'),('dress_code','Dress Code','text','If any',9,'both'),('external_audio_url','External Audio Link','url','Audio URL',11,'both'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both')]:
         db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to) VALUES (?,?,?,?,?,?)", (name,label,ftype,ph,order,applies))
     # Sample: Mayapur
     db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)",
@@ -177,6 +177,17 @@ def place_detail(slug):
     related_entries=db.execute("SELECT me.*,m.name as module_name,m.icon as module_icon,m.slug as module_slug FROM module_entries me JOIN modules m ON me.module_id=m.id WHERE me.place_id=? AND me.status='published' ORDER BY m.sort_order",(place['id'],)).fetchall()
     related=db.execute("SELECT DISTINCT p.* FROM places p JOIN place_tags pt ON p.id=pt.place_id WHERE pt.tag_id IN (SELECT tag_id FROM place_tags WHERE place_id=?) AND p.id!=? AND p.status='published' LIMIT 3",(place['id'],place['id'])).fetchall()
     return render_template('frontend/place.html',place=place,tags=tags,visibility=visibility,custom_values=custom_values,key_places_data=key_places_data,media=media_items,nearby=nearby,related_entries=related_entries,related=related)
+
+@app.route('/place/<slug>/key/<kp_slug>')
+def key_place_detail(slug, kp_slug):
+    db=get_db(); place=db.execute("SELECT * FROM places WHERE slug=? AND status='published'",(slug,)).fetchone()
+    if not place: abort(404)
+    kp=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND slug=? AND is_visible=1",(place['id'],kp_slug)).fetchone()
+    if not kp: abort(404)
+    kp_customs=db.execute("SELECT kpcv.*,cfd.name,cfd.label,cfd.field_type FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
+    siblings=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 AND id!=? ORDER BY sort_order",(place['id'],kp['id'])).fetchall()
+    tags=db.execute("SELECT t.* FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?",(place['id'],)).fetchall()
+    return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,siblings=siblings,tags=tags)
 
 @app.route('/explore')
 def explore():

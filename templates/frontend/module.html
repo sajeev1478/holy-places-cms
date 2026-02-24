@@ -4,7 +4,7 @@
 <section style="padding:120px 0 40px;background:linear-gradient(135deg,var(--rose-pale),var(--cream))">
 <div class="container" style="text-align:center">
 <div style="font-size:48px;margin-bottom:16px">{{ module.icon }}</div>
-<h1 style="font-family:'Playfair Display',serif;font-size:clamp(32px,4vw,48px);margin-bottom:8px">{{ module.name }}</h1>
+<h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(32px,4vw,48px);margin-bottom:8px">{{ module.name }}</h1>
 <p style="color:var(--text-mid);font-size:16px;max-width:500px;margin:0 auto">{{ module.description }}</p>
 </div>
 </section>
@@ -14,7 +14,7 @@
 {% for entry in entries %}
 <div class="card" style="cursor:pointer" onclick="window.location='{{ url_for('entry_detail', mod_slug=module.slug, entry_slug=entry.slug) }}'">
 <div style="padding:24px">
-<div style="font-family:'DM Sans',sans-serif;font-size:11px;color:var(--rose-deep);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">{{ module.icon }} {{ module.name }}</div>
+<div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:var(--rose-deep);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">{{ module.icon }} {{ module.name }}</div>
 <h3 class="card-title"><a href="{{ url_for('entry_detail', mod_slug=module.slug, entry_slug=entry.slug) }}">{{ entry.title }}</a></h3>
 {% if entry.place_title %}
 <div class="card-loc"><i class="fas fa-link"></i> {{ entry.place_title }}</div>

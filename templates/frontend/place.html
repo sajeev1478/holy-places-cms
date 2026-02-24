@@ -3,16 +3,18 @@
 
 {% set vis = visibility or {} %}
 
+{% set kp_colors = ['#2E86AB','#A23B72','#F18F01','#3B7A57','#6C5CE7','#E84855','#2AB7CA','#8B5E3C','#5C6BC0','#00897B','#E67E22','#8E44AD'] %}
+
 {% block content %}
 <!-- Hero -->
 <section style="background:linear-gradient(135deg,#2D1F2E,#4A2D4E);padding:60px 0 50px;color:white;position:relative;overflow:hidden">
 <div style="position:absolute;inset:0;background:url('/static/uploads/{{ place.featured_image }}') center/cover;opacity:.15"></div>
 <div class="container" style="position:relative;z-index:1">
-{% if vis.get('tags',1) and tags %}<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">{% for tag in tags %}<span style="background:{{ tag.color }}22;border:1px solid {{ tag.color }}55;color:{{ tag.color }};padding:4px 14px;border-radius:50px;font-size:12px;font-weight:600">{{ tag.name }}</span>{% endfor %}</div>{% endif %}
-<h1 style="font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,52px);margin-bottom:12px">{{ place.title }}</h1>
-{% if vis.get('city',1) or vis.get('state',1) %}<p style="font-size:18px;opacity:.85;display:flex;align-items:center;gap:8px"><span>📍</span>{% if vis.get('city',1) and place.city %}{{ place.city }}{% endif %}{% if vis.get('city',1) and place.city and vis.get('state',1) and place.state %}, {% endif %}{% if vis.get('state',1) and place.state %}{{ place.state }}{% endif %}{% if vis.get('country',1) and place.country %}, {{ place.country }}{% endif %}</p>{% endif %}
-{% if vis.get('short_description',1) and place.short_description %}<p style="max-width:700px;font-size:16px;line-height:1.7;opacity:.8;margin-top:12px">{{ place.short_description }}</p>{% endif %}
-<div style="display:flex;gap:20px;margin-top:20px;font-size:14px;opacity:.7">
+{% if vis.get('tags',1) and tags %}<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">{% for tag in tags %}<span style="background:{{ tag.color }}22;border:1px solid {{ tag.color }}55;color:{{ tag.color }};padding:4px 14px;border-radius:50px;font-size:12px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif">{{ tag.name }}</span>{% endfor %}</div>{% endif %}
+<h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,5vw,52px);font-weight:700;margin-bottom:12px">{{ place.title }}</h1>
+{% if vis.get('city',1) or vis.get('state',1) %}<p style="font-size:18px;opacity:.85;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif"><span>📍</span>{% if vis.get('city',1) and place.city %}{{ place.city }}{% endif %}{% if vis.get('city',1) and place.city and vis.get('state',1) and place.state %}, {% endif %}{% if vis.get('state',1) and place.state %}{{ place.state }}{% endif %}{% if vis.get('country',1) and place.country %}, {{ place.country }}{% endif %}</p>{% endif %}
+{% if vis.get('short_description',1) and place.short_description %}<p style="max-width:700px;font-size:15px;line-height:1.7;opacity:.75;margin-top:12px;font-family:'Josefin Sans',sans-serif;font-weight:300;font-style:italic">{{ place.short_description }}</p>{% endif %}
+<div style="display:flex;gap:20px;margin-top:20px;font-size:14px;opacity:.7;font-family:'Plus Jakarta Sans',sans-serif">
 <span>👁️ {{ place.view_count or 0 }} views</span>
 </div>
 </div>
@@ -34,7 +36,7 @@
 
 <!-- Full Content -->
 {% if vis.get('full_content',1) and place.full_content %}
-<div class="rich-content" style="margin-bottom:40px;line-height:1.8;font-size:16px;color:var(--text-mid)">
+<div class="rich-content" style="margin-bottom:40px;line-height:1.85;font-size:15.5px;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">
 {{ place.full_content|safe }}
 </div>
 {% endif %}
@@ -45,7 +47,7 @@
 {% for cv in custom_values %}
 {% if cv.value %}
 <div style="background:var(--bg);border-radius:14px;padding:20px;margin-bottom:12px">
-<h4 style="font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+<h4 style="font-size:14px;font-weight:700;color:var(--text-dark);margin-bottom:10px;display:flex;align-items:center;gap:8px;font-family:'Plus Jakarta Sans',sans-serif">
 {% if cv.field_type == 'audio' %}🎵{% elif cv.field_type == 'video' %}🎬{% elif cv.field_type == 'image' or cv.field_type == 'images' %}📸{% elif cv.field_type == 'url' %}🔗{% else %}📋{% endif %}
 {{ cv.label }}
 </h4>
@@ -65,11 +67,35 @@
 {% for img in cv.value.split(',') %}{% if img.strip() %}<img src="/static/uploads/{{ img.strip() }}" style="width:100%;height:160px;object-fit:cover;border-radius:8px" alt="Gallery">{% endif %}{% endfor %}
 </div>
 {% elif cv.field_type == 'url' %}
-<a href="{{ cv.value }}" target="_blank" style="color:var(--primary);text-decoration:underline">{{ cv.value }}</a>
+  {% if cv.name in ('external_audio_url',) and cv.value %}
+  <div style="background:linear-gradient(135deg,#1a1228,#2d1f3e);border-radius:16px;padding:24px;color:white">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--rose-deep),#E89B4F);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎵</div>
+      <div><div style="font-family:'Josefin Sans',sans-serif;font-weight:600;font-size:15px">{{ cv.label }}</div><div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;opacity:.5">{{ place.title }}</div></div>
+    </div>
+    <audio controls style="width:100%;height:40px;border-radius:8px;filter:hue-rotate(300deg) saturate(1.2)"><source src="{{ cv.value }}">Your browser doesn't support audio.</audio>
+  </div>
+  {% elif cv.name in ('external_video_url',) and cv.value %}
+    {% if 'youtube.com' in cv.value or 'youtu.be' in cv.value %}
+    <div style="border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      <div style="position:relative;padding-bottom:56.25%"><iframe src="{{ cv.value.replace('watch?v=','embed/').replace('youtu.be/','youtube.com/embed/') }}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>
+    </div>
+    {% elif 'vimeo.com' in cv.value %}
+    <div style="border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      <div style="position:relative;padding-bottom:56.25%"><iframe src="https://player.vimeo.com/video/{{ cv.value.split('/')[-1] }}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>
+    </div>
+    {% else %}
+    <div style="border-radius:14px;overflow:hidden;background:#000">
+      <video controls style="width:100%;border-radius:14px"><source src="{{ cv.value }}">Your browser doesn't support video.</video>
+    </div>
+    {% endif %}
+  {% else %}
+  <a href="{{ cv.value }}" target="_blank" style="color:var(--rose-deep);text-decoration:underline;font-family:'Plus Jakarta Sans',sans-serif">{{ cv.value }}</a>
+  {% endif %}
 {% elif cv.field_type == 'richtext' %}
-<div style="line-height:1.7;color:var(--text-mid)">{{ cv.value|safe }}</div>
+<div style="line-height:1.7;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ cv.value|safe }}</div>
 {% else %}
-<p style="color:var(--text-mid);line-height:1.6">{{ cv.value }}</p>
+<p style="color:var(--text-mid);line-height:1.6;font-family:'Nunito Sans',sans-serif">{{ cv.value }}</p>
 {% endif %}
 </div>
 {% endif %}
@@ -77,46 +103,62 @@
 </div>
 {% endif %}
 
-<!-- Key Places to Visit -->
+<!-- Key Places to Visit (Single Column Accordion with Colors) -->
 {% if key_places_data %}
 <div style="margin-bottom:40px">
-<h2 style="font-family:'Playfair Display',serif;font-size:28px;margin-bottom:8px;color:var(--text-dark)">🗺️ Key Places to Visit</h2>
-<p style="color:var(--text-light);margin-bottom:24px">Explore the sacred spots within {{ place.title }}</p>
+<h2 style="font-family:'Josefin Sans',sans-serif;font-size:28px;font-weight:700;margin-bottom:8px;color:var(--text-dark)">🗺️ Key Places to Visit</h2>
+<p style="color:var(--text-light);margin-bottom:24px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px">Explore the sacred spots within {{ place.title }}</p>
 
 {% for kpd in key_places_data %}
 {% set kp = kpd.place %}
 {% set kp_customs = kpd.customs %}
-<div style="background:white;border:2px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px;transition:box-shadow .3s" onmouseover="this.style.boxShadow='0 8px 30px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+{% set ci = loop.index0 % kp_colors|length %}
+{% set accent = kp_colors[ci] %}
 
-<!-- Key Place Header -->
-<div style="padding:24px;{% if kp.featured_image %}display:grid;grid-template-columns:1fr 200px;gap:20px;align-items:start{% endif %}">
-<div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-<span style="width:32px;height:32px;background:var(--primary);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">{{ loop.index }}</span>
-<h3 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--text-dark)">{{ kp.title }}</h3>
+<div class="kp-card" style="border-radius:16px;overflow:hidden;margin-bottom:16px;border:2px solid {{ accent }}25;background:white;transition:all .3s" onmouseover="this.style.boxShadow='0 8px 30px {{ accent }}15'" onmouseout="this.style.boxShadow='none'">
+
+<!-- Accordion Header -->
+<div class="kp-toggle" onclick="this.parentElement.classList.toggle('kp-open')" style="padding:20px 24px;cursor:pointer;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg, {{ accent }}08, {{ accent }}04);transition:background .3s;user-select:none">
+  <span style="width:36px;height:36px;background:{{ accent }};color:white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;flex-shrink:0">{{ loop.index }}</span>
+  <div style="flex:1;min-width:0">
+    <h3 style="font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:600;color:var(--text-dark);margin:0">{{ kp.title }}</h3>
+    {% if kp.short_description %}<p style="font-family:'Nunito Sans',sans-serif;font-size:13px;color:var(--text-light);margin:4px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ kp.short_description }}</p>{% endif %}
+  </div>
+  {% if kp.featured_image %}
+  <img src="/static/uploads/{{ kp.featured_image }}" style="width:60px;height:60px;object-fit:cover;border-radius:10px;flex-shrink:0" alt="{{ kp.title }}" onerror="this.style.display='none'">
+  {% endif %}
+  <svg class="kp-chevron" style="width:20px;height:20px;flex-shrink:0;color:{{ accent }};transition:transform .3s" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
 </div>
-{% if kp.short_description %}<p style="color:var(--text-mid);line-height:1.6;margin-bottom:12px">{{ kp.short_description }}</p>{% endif %}
-{% if kp.latitude and kp.longitude %}<span style="font-size:12px;color:var(--text-light)">📍 {{ kp.latitude }}, {{ kp.longitude }}</span>{% endif %}
-</div>
+
+<!-- Accordion Body -->
+<div class="kp-body" style="max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(0.23,1,0.32,1)">
+<div style="padding:0 24px 24px;border-top:2px solid {{ accent }}15">
+
 {% if kp.featured_image %}
-<img src="/static/uploads/{{ kp.featured_image }}" style="width:200px;height:140px;object-fit:cover;border-radius:12px" alt="{{ kp.title }}" onerror="this.style.display='none'">
-{% endif %}
+<div style="margin:20px 0;border-radius:12px;overflow:hidden">
+<img src="/static/uploads/{{ kp.featured_image }}" style="width:100%;max-height:300px;object-fit:cover;display:block" alt="{{ kp.title }}" onerror="this.parentElement.style.display='none'">
 </div>
+{% endif %}
 
-<!-- Key Place Content -->
+{% if kp.short_description %}<p style="color:var(--text-mid);line-height:1.7;margin:16px 0;font-family:'Nunito Sans',sans-serif;font-size:15px">{{ kp.short_description }}</p>{% endif %}
+
 {% if kp.full_content %}
-<div style="padding:0 24px 20px;line-height:1.7;color:var(--text-mid);border-top:1px solid var(--border);margin-top:0;padding-top:16px">
+<div style="line-height:1.75;color:var(--text-mid);font-family:'Nunito Sans',sans-serif;font-size:15px;margin-bottom:16px">
 {{ kp.full_content|safe }}
 </div>
 {% endif %}
 
+{% if kp.latitude and kp.longitude %}
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:12px">📍 {{ kp.latitude }}, {{ kp.longitude }}</div>
+{% endif %}
+
 <!-- Key Place Custom Fields -->
 {% if kp_customs %}
-<div style="padding:0 24px 24px">
+<div style="margin-top:12px">
 {% for kcv in kp_customs %}
 {% if kcv.value %}
-<div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:8px">
-<h5 style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-dark);display:flex;align-items:center;gap:6px">
+<div style="background:{{ accent }}08;border-radius:10px;padding:14px;margin-bottom:8px;border-left:3px solid {{ accent }}40">
+<h5 style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text-dark);display:flex;align-items:center;gap:6px;font-family:'Plus Jakarta Sans',sans-serif">
 {% if kcv.field_type == 'audio' %}🎵{% elif kcv.field_type == 'video' %}🎬{% elif kcv.field_type in ('image','images') %}📸{% elif kcv.field_type == 'url' %}🔗{% else %}📋{% endif %}
 {{ kcv.label }}
 </h5>
@@ -131,17 +173,39 @@
 {% elif kcv.field_type == 'image' %}
 <img src="/static/uploads/{{ kcv.value }}" style="width:100%;border-radius:8px" alt="{{ kcv.label }}">
 {% elif kcv.field_type == 'url' %}
-<a href="{{ kcv.value }}" target="_blank" style="color:var(--primary)">{{ kcv.value }}</a>
+  {% if kcv.name in ('external_audio_url',) %}
+  <div style="background:linear-gradient(135deg,#1a1228,#2d1f3e);border-radius:12px;padding:18px;color:white">
+    <audio controls style="width:100%;height:36px;filter:hue-rotate(300deg) saturate(1.2)"><source src="{{ kcv.value }}"></audio>
+  </div>
+  {% elif kcv.name in ('external_video_url',) %}
+    {% if 'youtube' in kcv.value or 'youtu.be' in kcv.value %}
+    <div style="border-radius:10px;overflow:hidden"><div style="position:relative;padding-bottom:56.25%"><iframe src="{{ kcv.value.replace('watch?v=','embed/').replace('youtu.be/','youtube.com/embed/') }}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div></div>
+    {% elif 'vimeo' in kcv.value %}
+    <div style="border-radius:10px;overflow:hidden"><div style="position:relative;padding-bottom:56.25%"><iframe src="https://player.vimeo.com/video/{{ kcv.value.split('/')[-1] }}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div></div>
+    {% else %}
+    <video controls style="width:100%;border-radius:10px"><source src="{{ kcv.value }}"></video>
+    {% endif %}
+  {% else %}
+  <a href="{{ kcv.value }}" target="_blank" style="color:{{ accent }};font-family:'Plus Jakarta Sans',sans-serif">{{ kcv.value }}</a>
+  {% endif %}
 {% elif kcv.field_type == 'richtext' %}
-<div style="line-height:1.6;color:var(--text-mid)">{{ kcv.value|safe }}</div>
+<div style="line-height:1.6;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ kcv.value|safe }}</div>
 {% else %}
-<p style="color:var(--text-mid)">{{ kcv.value }}</p>
+<p style="color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ kcv.value }}</p>
 {% endif %}
 </div>
 {% endif %}
 {% endfor %}
 </div>
 {% endif %}
+
+<!-- View Full Detail Link -->
+<a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=kp.slug) }}" style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:10px 20px;background:{{ accent }};color:white;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:none;transition:all .3s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+  View Full Details <span style="font-size:16px">→</span>
+</a>
+
+</div>
+</div>
 
 </div>
 {% endfor %}
@@ -151,12 +215,12 @@
 <!-- Related Module Entries -->
 {% if related_entries %}
 <div style="margin-bottom:40px">
-<h2 style="font-family:'Playfair Display',serif;font-size:24px;margin-bottom:20px">📖 Related Content</h2>
+<h2 style="font-family:'Josefin Sans',sans-serif;font-size:24px;font-weight:700;margin-bottom:20px">📖 Related Content</h2>
 <div style="display:grid;gap:12px">
 {% for entry in related_entries %}
-<a href="{{ url_for('entry_detail', mod_slug=entry.module_slug, entry_slug=entry.slug) }}" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg);border-radius:12px;text-decoration:none;color:inherit;transition:all .2s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+<a href="{{ url_for('entry_detail', mod_slug=entry.module_slug, entry_slug=entry.slug) }}" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg);border-radius:12px;text-decoration:none;color:inherit;transition:all .2s;font-family:'Nunito Sans',sans-serif" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
 <span style="font-size:24px">{{ entry.module_icon }}</span>
-<div><strong style="color:var(--text-dark)">{{ entry.title }}</strong><br><span style="font-size:12px;color:var(--text-light)">{{ entry.module_name }}</span></div>
+<div><strong style="color:var(--text-dark)">{{ entry.title }}</strong><br><span style="font-size:12px;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">{{ entry.module_name }}</span></div>
 </a>
 {% endfor %}
 </div>
@@ -165,7 +229,7 @@
 
 <!-- Share -->
 <div style="padding:20px 0;border-top:2px solid var(--border)">
-<h4 style="font-size:14px;color:var(--text-light);margin-bottom:12px">Share this holy place</h4>
+<h4 style="font-size:14px;color:var(--text-light);margin-bottom:12px;font-family:'Plus Jakarta Sans',sans-serif">Share this holy place</h4>
 <div style="display:flex;gap:10px">
 <a href="https://wa.me/?text={{ place.title }} {{ request.url }}" target="_blank" style="width:40px;height:40px;border-radius:10px;background:#25D366;display:flex;align-items:center;justify-content:center;color:white;text-decoration:none;font-size:18px">💬</a>
 <a href="https://twitter.com/intent/tweet?text={{ place.title }}&url={{ request.url }}" target="_blank" style="width:40px;height:40px;border-radius:10px;background:#1DA1F2;display:flex;align-items:center;justify-content:center;color:white;text-decoration:none;font-size:18px">🐦</a>
@@ -176,34 +240,38 @@
 
 <!-- Right Sidebar -->
 <div>
-<!-- Quick Info Card -->
-<div style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px;position:sticky;top:90px">
-<h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:16px">Quick Info</h3>
+<!-- Quick Info Card — NO sticky, fixes overlap with map below (#9) -->
+<div style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Quick Info</h3>
 <div style="display:flex;flex-direction:column;gap:12px">
-{% if vis.get('city',1) and place.city %}<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--text-light)">City</span><strong>{{ place.city }}</strong></div>{% endif %}
-{% if vis.get('state',1) and place.state %}<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--text-light)">State</span><strong>{{ place.state }}</strong></div>{% endif %}
-{% if vis.get('country',1) and place.country %}<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--text-light)">Country</span><strong>{{ place.country }}</strong></div>{% endif %}
+{% if vis.get('city',1) and place.city %}<div style="display:flex;justify-content:space-between;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif"><span style="color:var(--text-light)">City</span><strong>{{ place.city }}</strong></div>{% endif %}
+{% if vis.get('state',1) and place.state %}<div style="display:flex;justify-content:space-between;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif"><span style="color:var(--text-light)">State</span><strong>{{ place.state }}</strong></div>{% endif %}
+{% if vis.get('country',1) and place.country %}<div style="display:flex;justify-content:space-between;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif"><span style="color:var(--text-light)">Country</span><strong>{{ place.country }}</strong></div>{% endif %}
 
 <!-- Custom fields in sidebar (text/url types) -->
 {% for cv in custom_values %}
 {% if cv.value and cv.field_type in ('text','number','url') %}
-<div style="display:flex;justify-content:space-between;font-size:14px;gap:12px">
+<div style="display:flex;justify-content:space-between;font-size:14px;gap:12px;font-family:'Plus Jakarta Sans',sans-serif">
 <span style="color:var(--text-light);white-space:nowrap">{{ cv.label }}</span>
-{% if cv.field_type == 'url' %}<a href="{{ cv.value }}" target="_blank" style="color:var(--primary);font-weight:600;text-align:right">Link ↗</a>
+{% if cv.field_type == 'url' %}<a href="{{ cv.value }}" target="_blank" style="color:var(--rose-deep);font-weight:600;text-align:right">Link ↗</a>
 {% else %}<strong style="text-align:right">{{ cv.value }}</strong>{% endif %}
 </div>
 {% endif %}
 {% endfor %}
 </div>
 
+<!-- Key Places — Linkable (#10) -->
 {% if key_places_data %}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-<h4 style="font-size:14px;margin-bottom:10px;color:var(--text-light)">Key Places ({{ key_places_data|length }})</h4>
+<h4 style="font-size:14px;margin-bottom:10px;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">Key Places ({{ key_places_data|length }})</h4>
 {% for kpd in key_places_data %}
-<div style="font-size:13px;padding:6px 0;display:flex;gap:8px;align-items:center">
-<span style="width:20px;height:20px;background:var(--primary-light);color:var(--primary);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">{{ loop.index }}</span>
-{{ kpd.place.title }}
-</div>
+{% set ci = loop.index0 % kp_colors|length %}
+{% set accent = kp_colors[ci] %}
+<a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=kpd.place.slug) }}" style="font-size:13px;padding:8px 0;display:flex;gap:8px;align-items:center;text-decoration:none;color:inherit;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;border-bottom:1px solid var(--border)" onmouseover="this.querySelector('.kp-link-name').style.color='{{ accent }}'" onmouseout="this.querySelector('.kp-link-name').style.color='var(--text-dark)'">
+<span style="width:22px;height:22px;background:{{ accent }}18;color:{{ accent }};border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">{{ loop.index }}</span>
+<span class="kp-link-name" style="flex:1;color:var(--text-dark);transition:color .2s">{{ kpd.place.title }}</span>
+<span style="font-size:10px;color:var(--text-light)">→</span>
+</a>
 {% endfor %}
 </div>
 {% endif %}
@@ -219,11 +287,11 @@
 <!-- Nearby Places -->
 {% if nearby %}
 <div style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
-<h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:16px">Nearby Places</h3>
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Nearby Places</h3>
 {% for np in nearby %}
-<a href="{{ url_for('place_detail', slug=np.slug) }}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit">
+<a href="{{ url_for('place_detail', slug=np.slug) }}" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;font-family:'Nunito Sans',sans-serif">
 <span style="font-weight:600;color:var(--text-dark);font-size:14px">{{ np.title }}</span>
-<span style="font-size:12px;color:var(--text-light)">{{ '%.0f'|format(np.distance_km) }} km</span>
+<span style="font-size:12px;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">{{ '%.0f'|format(np.distance_km) }} km</span>
 </a>
 {% endfor %}
 </div>
@@ -232,11 +300,11 @@
 <!-- Related Places -->
 {% if related %}
 <div style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px">
-<h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:16px">Similar Places</h3>
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Similar Places</h3>
 {% for rp in related %}
 <a href="{{ url_for('place_detail', slug=rp.slug) }}" style="display:block;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit">
-<strong style="color:var(--text-dark);font-size:14px">{{ rp.title }}</strong>
-<p style="font-size:12px;color:var(--text-light);margin:4px 0 0">{{ rp.city }}{{ ', ' + rp.state if rp.state else '' }}</p>
+<strong style="color:var(--text-dark);font-size:14px;font-family:'Nunito Sans',sans-serif">{{ rp.title }}</strong>
+<p style="font-size:12px;color:var(--text-light);margin:4px 0 0;font-family:'Plus Jakarta Sans',sans-serif">{{ rp.city }}{{ ', ' + rp.state if rp.state else '' }}</p>
 </a>
 {% endfor %}
 </div>
@@ -246,15 +314,17 @@
 </div>
 </section>
 
-<!-- Responsive -->
 <style>
 @media(max-width:900px){
 .container > div:first-child{grid-column:1/-1}
 section .container{grid-template-columns:1fr!important}
 }
-.rich-content h2{font-family:'Playfair Display',serif;font-size:24px;margin:24px 0 12px;color:var(--text-dark)}
-.rich-content h3{font-family:'Playfair Display',serif;font-size:20px;margin:20px 0 10px;color:var(--text-dark)}
+.rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:24px;margin:24px 0 12px;color:var(--text-dark);font-weight:700}
+.rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:20px;margin:20px 0 10px;color:var(--text-dark);font-weight:600}
 .rich-content p{margin-bottom:12px}
 .rich-content img{max-width:100%;border-radius:10px;margin:16px 0}
+.kp-card .kp-body{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(0.23,1,0.32,1)}
+.kp-card.kp-open .kp-body{max-height:5000px}
+.kp-card.kp-open .kp-chevron{transform:rotate(180deg)}
 </style>
 {% endblock %}

@@ -18,18 +18,24 @@
 .field-row .field-main{flex:1}
 .field-row .field-toggle{padding-top:28px;display:flex;align-items:center}
 
-/* Key Places Accordion */
-.kp-accordion{border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;background:#F8F4F0}
+/* Two Column Layout */
+.place-two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch}
+.place-two-col .admin-card{display:flex;flex-direction:column}
+.place-two-col .admin-card-body{flex:1}
+
+/* Key Places Accordion — Single Column */
+.kp-accordion{border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;background:#F8F4F0;transition:border-color .3s}
+.kp-accordion:hover{border-color:#C76B8F40}
 .kp-accordion-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;user-select:none;transition:background .2s}
 .kp-accordion-header:hover{background:#F0EAE3}
 .kp-accordion-header h4{font-size:15px;display:flex;align-items:center;gap:10px;margin:0}
 .kp-accordion-header .kp-actions{display:flex;gap:8px;align-items:center}
-.kp-accordion-body{display:none;padding:20px;border-top:1px solid var(--border);background:white}
-.kp-accordion.open .kp-accordion-body{display:block}
-.kp-accordion-header .chevron{transition:transform .2s;font-size:12px;color:var(--text-light)}
+.kp-accordion-body{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(0.23,1,0.32,1)}
+.kp-accordion.open .kp-accordion-body{max-height:3000px}
+.kp-accordion-body-inner{padding:20px;border-top:1px solid var(--border);background:white}
+.kp-accordion-header .chevron{transition:transform .3s;font-size:12px;color:var(--text-light)}
 .kp-accordion.open .kp-accordion-header .chevron{transform:rotate(180deg)}
 .kp-num{width:28px;height:28px;background:var(--primary);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
-.kp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 .add-kp-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed var(--border);border-radius:14px;cursor:pointer;color:var(--text-light);font-weight:600;transition:all .2s;background:none;width:100%;font-size:14px;font-family:'DM Sans'}
 .add-kp-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
@@ -39,7 +45,16 @@
 .img-preview{width:60px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
 .section-save{display:flex;justify-content:flex-end;padding:16px 0 0;border-top:1px solid var(--border);margin-top:16px}
 .section-save .btn{min-width:160px}
-@media(max-width:768px){.kp-grid{grid-template-columns:1fr}}
+
+/* Key Places color accents */
+.kp-accordion[data-color="blue"] .kp-num{background:#2E86AB}
+.kp-accordion[data-color="purple"] .kp-num{background:#A23B72}
+.kp-accordion[data-color="orange"] .kp-num{background:#F18F01}
+.kp-accordion[data-color="green"] .kp-num{background:#3B7A57}
+.kp-accordion[data-color="indigo"] .kp-num{background:#6C5CE7}
+.kp-accordion[data-color="red"] .kp-num{background:#E84855}
+
+@media(max-width:1024px){.place-two-col{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
@@ -48,10 +63,15 @@
 
 {% set indian_states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'] %}
 
+{% set kp_accent_colors = ['blue','purple','orange','green','indigo','red'] %}
+
 <form method="POST" enctype="multipart/form-data" id="mainPlaceForm">
 
-<!-- ═══ HOLY PLACE INFORMATION ═══ -->
-<div class="admin-card" style="margin-bottom:20px">
+<!-- ═══ TWO COLUMN LAYOUT ═══ -->
+<div class="place-two-col" style="margin-bottom:20px">
+
+<!-- LEFT COLUMN: Core Fields -->
+<div class="admin-card">
 <div class="admin-card-header"><h3>🛕 Holy Place Information</h3></div>
 <div class="admin-card-body">
 
@@ -79,14 +99,12 @@
 <input type="hidden" name="vis_short_description" value="on">
 </div>
 
-<!-- Full Content -->
-<div class="form-group"><label>Full Content (Rich Editor) <span class="red-star">*</span></label>
+<!-- Full Content — RENAMED (#6) -->
+<div class="form-group"><label>Long Description [History, Significance etc] <span class="red-star">*</span></label>
 <input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
-<div class="rich-editor" data-target="full_content" style="background:white;min-height:250px"></div>
+<div class="rich-editor" data-target="full_content" style="background:white;min-height:200px"></div>
 <input type="hidden" name="vis_full_content" value="on">
 </div>
-
-<hr class="section-divider" data-label="Optional Fields">
 
 <!-- Featured Image -->
 <div class="field-row">
@@ -113,12 +131,18 @@
 <div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="vis_tags" {{ 'checked' if not editing or vis.get('tags',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if not editing or vis.get('tags',1) else 'off' }}">{{ 'Enabled' if not editing or vis.get('tags',1) else 'Disabled' }}</span></label></div>
 </div>
 
-<!-- ═══ CUSTOM FIELDS (inside the main card) ═══ -->
+</div>
+</div>
+
+<!-- RIGHT COLUMN: Custom Fields + Publishing -->
+<div class="admin-card">
+<div class="admin-card-header"><h3>⚙️ Custom Fields & Publishing</h3></div>
+<div class="admin-card-body">
+
 {% if custom_fields %}
-<hr class="section-divider" data-label="Custom Fields">
-<div class="cf-section">
 <p style="font-size:12px;color:var(--text-light);margin-bottom:16px">Manage fields in <a href="{{ url_for('admin_fields') }}">Custom Fields Settings</a></p>
 {% for cf in custom_fields %}
+{% if cf.name != 'entry_fee' %}
 <div class="field-row">
 <div class="field-main"><div class="form-group">
 <label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light);background:var(--bg);padding:2px 8px;border-radius:4px">{{ cf.field_type }}</span></label>
@@ -142,11 +166,17 @@
 </div></div>
 <div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}">{{ 'Enabled' if cv.get('is_visible',1) else 'Disabled' }}</span></label></div>
 </div>
+{% endif %}
 {% endfor %}
+{% else %}
+<div class="empty" style="padding:24px">
+<span class="icon">⚙️</span>
+<h3>No Custom Fields</h3>
+<p style="font-size:13px">Add fields in <a href="{{ url_for('admin_fields') }}">Custom Fields Settings</a></p>
 </div>
 {% endif %}
 
-<!-- Status & Featured (at bottom) -->
+<!-- Status & Featured -->
 <hr class="section-divider" data-label="Publishing">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
 <div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if editing and place.status=='draft' }}>Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>Published</option></select>
@@ -163,15 +193,19 @@
 </div>
 </div>
 
-<!-- ═══ KEY PLACES TO VISIT ═══ -->
+</div>
+<!-- END TWO COLUMN -->
+
+<!-- ═══ KEY PLACES TO VISIT (Single Column) ═══ -->
 <div class="admin-card" style="margin-bottom:20px">
 <div class="admin-card-header"><h3>🗺️ Key Places to Visit</h3><span style="font-size:12px;color:var(--text-light)">Sub-places within this holy place</span></div>
 <div class="admin-card-body">
 
-<div id="keyPlacesContainer" class="kp-grid">
+<div id="keyPlacesContainer">
 {% for kp in key_places %}
 {% set ki = loop.index0 %}
-<div class="kp-accordion" data-index="{{ ki }}">
+{% set accent_class = kp_accent_colors[ki % kp_accent_colors|length] %}
+<div class="kp-accordion" data-index="{{ ki }}" data-color="{{ accent_class }}">
 <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
 <h4><span class="kp-num">{{ ki + 1 }}</span> <span class="kp-title-display">{{ kp.title }}</span></h4>
 <div class="kp-actions">
@@ -183,10 +217,11 @@
 </div>
 </div>
 <div class="kp-accordion-body">
+<div class="kp-accordion-body-inner">
 <input type="hidden" name="kp_{{ ki }}_id" value="{{ kp.id }}">
 <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_{{ ki }}_title" class="form-control" value="{{ kp.title }}" required onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value"></div>
 <div class="form-group"><label>Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
-<div class="form-group"><label>Full Content</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
+<div class="form-group"><label>Long Description [History, Significance etc]</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
 <div class="form-group"><label>Featured Image</label>{% if kp.featured_image %}<input type="hidden" name="kp_{{ ki }}_featured_image_existing" value="{{ kp.featured_image }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ kp.featured_image }}</div>{% endif %}<input type="file" name="kp_{{ ki }}_featured_image_file" class="form-control" accept="image/*"></div>
 <div class="form-group"><label>Latitude</label><input name="kp_{{ ki }}_latitude" class="form-control" type="number" step="any" value="{{ kp.latitude or '' }}"></div>
@@ -198,7 +233,7 @@
 <div style="padding:12px 0">
 {% set kpc = key_place_customs.get(kp.id, {}) %}
 {% for cf in custom_fields %}
-{% if cf.applies_to in ('both','key_place') %}
+{% if cf.applies_to in ('both','key_place') and cf.name != 'entry_fee' %}
 <div class="field-row">
 <div class="field-main"><div class="form-group"><label style="font-size:12px">{{ cf.label }} <span style="font-size:9px;color:var(--text-light)">{{ cf.field_type }}</span></label>
 {% set kcv = kpc.get(cf.id, {}) %}
@@ -217,6 +252,7 @@
 
 <div class="section-save">
 <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Update {{ kp.title }}</button>
+</div>
 </div>
 </div>
 </div>
@@ -249,12 +285,15 @@ function updateToggleText(cb) {
     st.className = 'status-text ' + (cb.checked ? 'on' : 'off');
 }
 
+const kpColors = ['blue','purple','orange','green','indigo','red'];
 let kpIndex = {{ key_places|length }};
 function addKeyPlace() {
     const container = document.getElementById('keyPlacesContainer');
+    const colorClass = kpColors[kpIndex % kpColors.length];
     const div = document.createElement('div');
     div.className = 'kp-accordion open';
     div.dataset.index = kpIndex;
+    div.dataset.color = colorClass;
     div.innerHTML = `
         <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
             <h4><span class="kp-num">${kpIndex+1}</span> <span class="kp-title-display">New Key Place</span></h4>
@@ -266,16 +305,18 @@ function addKeyPlace() {
                 <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()" title="Remove"><i class="fas fa-trash"></i></button>
             </div>
         </div>
-        <div class="kp-accordion-body">
+        <div class="kp-accordion-body" style="max-height:3000px">
+            <div class="kp-accordion-body-inner">
             <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Navadvipa" onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
             <div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2"></textarea></div>
-            <div class="form-group"><label>Full Content</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Content..."></textarea></div>
+            <div class="form-group"><label>Long Description [History, Significance etc]</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Content..."></textarea></div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
                 <div class="form-group"><label>Featured Image</label><input type="file" name="kp_${kpIndex}_featured_image_file" class="form-control" accept="image/*"></div>
                 <div class="form-group"><label>Latitude</label><input name="kp_${kpIndex}_latitude" class="form-control" type="number" step="any"></div>
                 <div class="form-group"><label>Longitude</label><input name="kp_${kpIndex}_longitude" class="form-control" type="number" step="any"></div>
             </div>
             <div class="section-save"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save Key Place</button></div>
+            </div>
         </div>`;
     container.appendChild(div);
     kpIndex++;
