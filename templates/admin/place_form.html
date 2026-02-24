@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
-{% block title %}{{ 'Edit' if editing else 'New' }} Place{% endblock %}
-{% block page_title %}{{ 'Edit' if editing else 'New' }} Holy Place{% endblock %}
+{% block title %}{{ 'Edit' if editing else 'New' }} Holy Dham{% endblock %}
+{% block page_title %}{{ 'Edit' if editing else 'Create New' }} Holy Dham{% endblock %}
 {% block topbar_actions %}{% if editing %}<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary"><i class="fas fa-eye"></i> View Live</a>{% endif %}{% endblock %}
 
 {% block extra_css %}
@@ -18,14 +18,43 @@
 .field-row .field-main{flex:1}
 .field-row .field-toggle{padding-top:28px;display:flex;align-items:center}
 
+/* ═══ HIERARCHY ROADMAP ═══ */
+.hierarchy-roadmap{background:linear-gradient(135deg,#2D1F2E,#3D2B4E);border-radius:16px;padding:24px 28px;margin-bottom:24px;color:white;position:relative;overflow:hidden}
+.hierarchy-roadmap::before{content:'';position:absolute;right:-40px;top:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(199,107,143,.2),transparent);pointer-events:none}
+.roadmap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.roadmap-tier{padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.08);position:relative;transition:all .3s}
+.roadmap-tier.active{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.06)}
+.roadmap-tier .tier-num{font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.5;font-weight:700;margin-bottom:6px}
+.roadmap-tier .tier-icon{font-size:24px;margin-bottom:6px}
+.roadmap-tier .tier-name{font-size:14px;font-weight:700}
+.roadmap-tier .tier-desc{font-size:11px;opacity:.5;margin-top:4px;line-height:1.4}
+.roadmap-tier .tier-badge{position:absolute;top:8px;right:8px;font-size:9px;padding:2px 8px;border-radius:50px;font-weight:700;letter-spacing:.5px}
+.roadmap-arrow{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);font-size:18px;position:absolute;right:-18px;top:50%;transform:translateY(-50%);z-index:1}
+
+/* Tier Colors */
+.tier-1-accent{color:#C76B8F;border-color:#C76B8F40}
+.tier-2-accent{color:#2E86AB;border-color:#2E86AB40}
+.tier-3-accent{color:#E74845;border-color:#E7484540}
+.tier-4-accent{color:#9C27B0;border-color:#9C27B040}
+.tier-1-bg{background:#C76B8F10;border:2px solid #C76B8F25}
+.tier-2-bg{background:#2E86AB10;border:2px solid #2E86AB25}
+.tier-3-bg{background:#E7484510;border:2px solid #E7484525}
+.tier-4-bg{background:#9C27B010;border:2px solid #9C27B025}
+
+/* Section Headers */
+.tier-section-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-radius:14px;margin-bottom:16px}
+.tier-section-header .tier-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:50px;display:inline-block}
+.tier-section-header h3{margin:0;font-size:17px;font-weight:700}
+.tier-section-header .tier-count{font-size:12px;opacity:.6;margin-left:auto}
+
 /* Two Column Layout */
 .place-two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch}
 .place-two-col .admin-card{display:flex;flex-direction:column}
 .place-two-col .admin-card-body{flex:1}
 
-/* Key Places Accordion — Single Column */
+/* Key Places Accordion */
 .kp-accordion{border:2px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;background:#F8F4F0;transition:border-color .3s}
-.kp-accordion:hover{border-color:#C76B8F40}
+.kp-accordion:hover{border-color:#2E86AB40}
 .kp-accordion-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;user-select:none;transition:background .2s}
 .kp-accordion-header:hover{background:#F0EAE3}
 .kp-accordion-header h4{font-size:15px;display:flex;align-items:center;gap:10px;margin:0}
@@ -35,71 +64,131 @@
 .kp-accordion-body-inner{padding:20px;border-top:1px solid var(--border);background:white}
 .kp-accordion-header .chevron{transition:transform .3s;font-size:12px;color:var(--text-light)}
 .kp-accordion.open .kp-accordion-header .chevron{transform:rotate(180deg)}
-.kp-num{width:28px;height:28px;background:var(--primary);color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.kp-num{width:28px;height:28px;background:#2E86AB;color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.kp-tier-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:50px;font-weight:700;background:#2E86AB15;color:#2E86AB;border:1px solid #2E86AB30;white-space:nowrap}
 
-.add-kp-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed var(--border);border-radius:14px;cursor:pointer;color:var(--text-light);font-weight:600;transition:all .2s;background:none;width:100%;font-size:14px;font-family:'DM Sans'}
-.add-kp-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
-.section-divider{border:none;border-top:2px solid var(--border);margin:28px 0;position:relative}
-.section-divider::after{content:attr(data-label);position:absolute;top:-10px;left:20px;background:white;padding:0 12px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--primary)}
+.add-kp-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed #2E86AB40;border-radius:14px;cursor:pointer;color:#2E86AB;font-weight:600;transition:all .2s;background:none;width:100%;font-size:14px}
+.add-kp-btn:hover{border-color:#2E86AB;background:#2E86AB08}
+
+/* Key Spots Link Button */
+.manage-spots-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#E7484508;color:#E74845;border:1.5px solid #E7484530;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;transition:all .2s}
+.manage-spots-btn:hover{background:#E7484515;border-color:#E74845;color:#E74845;transform:translateY(-1px);box-shadow:0 4px 12px #E7484515}
+.manage-spots-btn .spot-count{background:#E74845;color:white;padding:1px 8px;border-radius:50px;font-size:10px}
+
 .cf-section{background:#FAFAF5;border-radius:12px;padding:20px;margin-top:12px}
 .img-preview{width:60px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
 .section-save{display:flex;justify-content:flex-end;padding:16px 0 0;border-top:1px solid var(--border);margin-top:16px}
 .section-save .btn{min-width:160px}
 
-/* Key Places color accents */
-.kp-accordion[data-color="blue"] .kp-num{background:#2E86AB}
-.kp-accordion[data-color="purple"] .kp-num{background:#A23B72}
-.kp-accordion[data-color="orange"] .kp-num{background:#F18F01}
-.kp-accordion[data-color="green"] .kp-num{background:#3B7A57}
-.kp-accordion[data-color="indigo"] .kp-num{background:#6C5CE7}
-.kp-accordion[data-color="red"] .kp-num{background:#E84855}
-
-@media(max-width:1024px){.place-two-col{grid-template-columns:1fr}}
+/* Responsive */
+@media(max-width:1024px){.place-two-col{grid-template-columns:1fr}.roadmap-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.roadmap-grid{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
 {% block admin_content %}
 {% set vis = json.loads(place.field_visibility) if editing and place.field_visibility else {} %}
-
 {% set indian_states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'] %}
 
-{% set kp_accent_colors = ['blue','purple','orange','green','indigo','red'] %}
+<!-- ═══════════════════════════════════════════════ -->
+<!-- 4-TIER HIERARCHY ROADMAP -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="hierarchy-roadmap">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+<div>
+<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.4;font-weight:700;margin-bottom:4px">Holy Dham Hierarchy Framework</div>
+<div style="font-size:18px;font-weight:700;font-family:'Josefin Sans',sans-serif">{{ place.title if editing else 'New Holy Dham' }}</div>
+</div>
+<div style="font-size:11px;opacity:.4;text-align:right">
+{% if editing %}Editing existing Dham · ID #{{ place.id }}{% else %}Creating new Tier 1 entry{% endif %}
+</div>
+</div>
+
+<div class="roadmap-grid">
+<!-- Tier 1 -->
+<div class="roadmap-tier active" style="background:rgba(199,107,143,.12);border-color:rgba(199,107,143,.3)">
+<div style="position:relative">
+<div class="tier-num" style="color:#C76B8F">Tier 1</div>
+<div class="tier-icon">🙏</div>
+<div class="tier-name">Holy Dham</div>
+<div class="tier-desc">Divine spiritual region</div>
+<span class="tier-badge" style="background:rgba(199,107,143,.3);color:#F0C0D4">{% if editing %}✏️ Editing{% else %}✨ Creating{% endif %}</span>
+</div>
+</div>
+<!-- Tier 2 -->
+<div class="roadmap-tier" style="background:rgba(46,134,171,.06);border-color:rgba(46,134,171,.15)">
+<div class="tier-num" style="color:#2E86AB">Tier 2</div>
+<div class="tier-icon">📍</div>
+<div class="tier-name">Key Places</div>
+<div class="tier-desc">Major zones within Dham</div>
+{% if editing %}<span class="tier-badge" style="background:rgba(46,134,171,.2);color:#7CC0DE">↓ Below</span>{% endif %}
+</div>
+<!-- Tier 3 -->
+<div class="roadmap-tier" style="background:rgba(231,72,69,.04);border-color:rgba(231,72,69,.1)">
+<div class="tier-num" style="color:#E74845">Tier 3</div>
+<div class="tier-icon">🔸</div>
+<div class="tier-name">Key Spots</div>
+<div class="tier-desc">Pilgrimage locations with categories</div>
+{% if editing %}<span class="tier-badge" style="background:rgba(231,72,69,.15);color:#F09190">🔗 Separate page</span>{% endif %}
+</div>
+<!-- Tier 4 -->
+<div class="roadmap-tier" style="background:rgba(156,39,176,.04);border-color:rgba(156,39,176,.1)">
+<div class="tier-num" style="color:#9C27B0">Tier 4</div>
+<div class="tier-icon">✦</div>
+<div class="tier-name">Sub-Spots</div>
+<div class="tier-desc">Sacred points for deeper engagement</div>
+{% if editing %}<span class="tier-badge" style="background:rgba(156,39,176,.12);color:#CE93D8">🔗 Separate page</span>{% endif %}
+</div>
+</div>
+</div>
 
 <form method="POST" enctype="multipart/form-data" id="mainPlaceForm">
 
+<!-- ═══════════════════════════════════════════════ -->
+<!-- TIER 1 SECTION HEADER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="tier-section-header tier-1-bg" style="margin-bottom:20px">
+<span style="width:44px;height:44px;background:#C76B8F20;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🙏</span>
+<div>
+<span class="tier-label" style="background:#C76B8F;color:white;margin-bottom:4px">Tier 1</span>
+<h3 style="color:#A04870">Holy Dham Information</h3>
+</div>
+<span class="tier-count">Divine spiritual region where the Lord performs eternal pastimes</span>
+</div>
+
 <!-- ═══ TWO COLUMN LAYOUT ═══ -->
-<div class="place-two-col" style="margin-bottom:20px">
+<div class="place-two-col" style="margin-bottom:28px">
 
 <!-- LEFT COLUMN: Core Fields -->
-<div class="admin-card">
-<div class="admin-card-header"><h3>🛕 Holy Place Information</h3></div>
+<div class="admin-card" style="border-top:3px solid #C76B8F">
+<div class="admin-card-header"><h3>🛕 Core Details</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px;letter-spacing:1px">TIER 1</span></div>
 <div class="admin-card-body">
 
 <!-- Title -->
-<div class="form-group"><label>Title <span class="red-star">*</span></label>
-<input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Mayapur">
+<div class="form-group"><label>Dham Title <span class="red-star">*</span></label>
+<input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Vrindavan Dham, Mayapur Dham">
 <input type="hidden" name="vis_title" value="on">
 </div>
 
 <!-- City / State / Country -->
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-<div class="form-group"><label>City <span class="red-star">*</span></label><input name="city" class="form-control" value="{{ place.city if editing else '' }}" placeholder="e.g. Nadia"><input type="hidden" name="vis_city" value="on"></div>
+<div class="form-group"><label>City <span class="red-star">*</span></label><input name="city" class="form-control" value="{{ place.city if editing else '' }}" placeholder="e.g. Mathura"><input type="hidden" name="vis_city" value="on"></div>
 <div class="form-group"><label>State <span class="red-star">*</span></label>
 <select name="state" class="form-control">
 <option value="">Select State</option>
 {% for st in indian_states %}<option value="{{ st }}" {{ 'selected' if editing and place.state == st }}>{{ st }}</option>{% endfor %}
 </select>
 <input type="hidden" name="vis_state" value="on"></div>
-<div class="form-group"><label>Country <span class="red-star">*</span></label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"><input type="hidden" name="vis_country" value="on"></div>
+<div class="form-group"><label>Country</label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"><input type="hidden" name="vis_country" value="on"></div>
 </div>
 
 <!-- Short Description -->
 <div class="form-group"><label>Short Description <span class="red-star">*</span></label>
-<textarea name="short_description" class="form-control" rows="3">{{ place.short_description if editing else '' }}</textarea>
+<textarea name="short_description" class="form-control" rows="3" placeholder="Brief overview of this Holy Dham...">{{ place.short_description if editing else '' }}</textarea>
 <input type="hidden" name="vis_short_description" value="on">
 </div>
 
-<!-- Full Content — RENAMED (#6) -->
+<!-- Full Content -->
 <div class="form-group"><label>Long Description [History, Significance etc] <span class="red-star">*</span></label>
 <input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
 <div class="rich-editor" data-target="full_content" style="background:white;min-height:200px"></div>
@@ -109,108 +198,138 @@
 <!-- Featured Image -->
 <div class="field-row">
 <div class="field-main"><div class="form-group"><label>Featured Image</label>
-{% if editing and place.featured_image %}<div style="margin-bottom:8px"><img src="/static/uploads/{{ place.featured_image }}" class="img-preview" onerror="this.style.display='none'"> <span style="font-size:12px;color:var(--text-light)">{{ place.featured_image }}</span><input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}"></div>{% endif %}
+{% if editing and place.featured_image %}
+<input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><img src="/static/uploads/{{ place.featured_image }}" class="img-preview" onerror="this.style.display='none'"><span style="font-size:12px;color:var(--text-light)">{{ place.featured_image }}</span></div>
+{% endif %}
 <input type="file" name="featured_image_file" class="form-control" accept="image/*">
+<input type="hidden" name="vis_featured_image" value="on">
 </div></div>
-<div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="vis_featured_image" {{ 'checked' if not editing or vis.get('featured_image',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if not editing or vis.get('featured_image',1) else 'off' }}">{{ 'Enabled' if not editing or vis.get('featured_image',1) else 'Disabled' }}</span></label></div>
 </div>
 
-<!-- Lat / Lng -->
+<!-- Lat / Long -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-<div class="field-row"><div class="field-main"><div class="form-group"><label>Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}"></div></div>
-<div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="vis_latitude" {{ 'checked' if not editing or vis.get('latitude',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if not editing or vis.get('latitude',1) else 'off' }}">{{ 'Enabled' if not editing or vis.get('latitude',1) else 'Disabled' }}</span></label></div></div>
-<div class="field-row"><div class="field-main"><div class="form-group"><label>Longitude</label><input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}"></div></div>
-<div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="vis_longitude" {{ 'checked' if not editing or vis.get('longitude',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if not editing or vis.get('longitude',1) else 'off' }}">{{ 'Enabled' if not editing or vis.get('longitude',1) else 'Disabled' }}</span></label></div></div>
+<div class="form-group"><label>Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}" placeholder="e.g. 27.5830"><input type="hidden" name="vis_latitude" value="on"></div>
+<div class="form-group"><label>Longitude</label><input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}" placeholder="e.g. 77.6950"><input type="hidden" name="vis_longitude" value="on"></div>
 </div>
 
 <!-- Tags -->
-<div class="field-row">
-<div class="field-main"><div class="form-group"><label>Tags</label><div class="tag-select">
-{% for tag in tags %}<label><input type="checkbox" name="tags" value="{{ tag.id }}" {{ 'checked' if editing and tag.id in place_tags }}><span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span> {{ tag.name }}</label>{% endfor %}
-</div></div></div>
-<div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="vis_tags" {{ 'checked' if not editing or vis.get('tags',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if not editing or vis.get('tags',1) else 'off' }}">{{ 'Enabled' if not editing or vis.get('tags',1) else 'Disabled' }}</span></label></div>
+<div class="form-group"><label>Tags</label>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+{% for tag in tags %}
+<label style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;border:2px solid {{ tag.color }}30;background:{{ tag.color }}08;font-size:13px;cursor:pointer;transition:all .2s;user-select:none" onmouseover="this.style.background='{{ tag.color }}15'" onmouseout="this.style.background='{{ tag.color }}08'">
+<input type="checkbox" name="tags" value="{{ tag.id }}" {{ 'checked' if tag.id in place_tags }} style="accent-color:{{ tag.color }}">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span>
+<span style="font-weight:500;color:var(--text-dark)">{{ tag.name }}</span></label>
+{% endfor %}</div>
+<input type="hidden" name="vis_tags" value="on">
 </div>
 
-</div>
-</div>
+</div></div>
 
 <!-- RIGHT COLUMN: Custom Fields + Publishing -->
-<div class="admin-card">
-<div class="admin-card-header"><h3>⚙️ Custom Fields & Publishing</h3></div>
+<div class="admin-card" style="border-top:3px solid #C76B8F">
+<div class="admin-card-header"><h3>⚙️ Custom Fields & Publishing</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px;letter-spacing:1px">TIER 1</span></div>
 <div class="admin-card-body">
 
+<!-- Custom Fields -->
 {% if custom_fields %}
-<p style="font-size:12px;color:var(--text-light);margin-bottom:16px">Manage fields in <a href="{{ url_for('admin_fields') }}">Custom Fields Settings</a></p>
+<div style="margin-bottom:20px">
+<h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Custom Fields</h4>
 {% for cf in custom_fields %}
 {% if cf.name != 'entry_fee' %}
-<div class="field-row">
-<div class="field-main"><div class="form-group">
-<label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light);background:var(--bg);padding:2px 8px;border-radius:4px">{{ cf.field_type }}</span></label>
 {% set cv = custom_values.get(cf.id, {}) %}
-{% if cf.field_type == 'text' or cf.field_type == 'url' %}
-<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
-{% elif cf.field_type == 'textarea' %}
-<textarea name="cf_{{ cf.id }}" class="form-control" rows="3" placeholder="{{ cf.placeholder }}">{{ cv.get('value','') }}</textarea>
-{% elif cf.field_type == 'richtext' %}
-<input type="hidden" name="cf_{{ cf.id }}" id="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
-<div class="rich-editor" data-target="cf_{{ cf.id }}" style="background:white;min-height:150px"></div>
-{% elif cf.field_type == 'number' %}
-<input name="cf_{{ cf.id }}" class="form-control" type="number" step="any" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
+<div class="field-row">
+<div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
+{% if cf.field_type in ('text','url','number') %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
+{% elif cf.field_type in ('textarea','richtext') %}<textarea name="cf_{{ cf.id }}" class="form-control" rows="3">{{ cv.get('value','') }}</textarea>
 {% elif cf.field_type in ('image','audio','video') %}
-{% if cv.get('value') %}<div style="margin-bottom:6px;font-size:12px;color:var(--text-light)">Current: {{ cv.get('value','') }}</div><input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">{% endif %}
+{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ cv.get('value','') }}</div>{% endif %}
 <input type="file" name="cf_file_{{ cf.id }}" class="form-control" accept="{{ 'image/*' if cf.field_type=='image' else 'audio/*' if cf.field_type=='audio' else 'video/*' }}">
 {% elif cf.field_type == 'images' %}
-{% if cv.get('value') %}<div style="margin-bottom:6px;font-size:12px;color:var(--text-light)">Current: {{ cv.get('value','').split(',')|length }} files</div><input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">{% endif %}
+{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ cv.get('value','').split(',')|length }} files</div>{% endif %}
 <input type="file" name="cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple>
+{% else %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}">
 {% endif %}
 </div></div>
-<div class="field-toggle"><label class="toggle-label"><label class="toggle-switch"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}">{{ 'Enabled' if cv.get('is_visible',1) else 'Disabled' }}</span></label></div>
+<div class="field-toggle" style="padding-top:28px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if cv.get('is_visible',1) else 'Off' }}</span></label></div>
 </div>
 {% endif %}
 {% endfor %}
-{% else %}
-<div class="empty" style="padding:24px">
-<span class="icon">⚙️</span>
-<h3>No Custom Fields</h3>
-<p style="font-size:13px">Add fields in <a href="{{ url_for('admin_fields') }}">Custom Fields Settings</a></p>
-</div>
-{% endif %}
+</div>{% endif %}
 
-<!-- Status & Featured -->
-<hr class="section-divider" data-label="Publishing">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-<div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if editing and place.status=='draft' }}>Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>Published</option></select>
-<input type="hidden" name="vis_status" value="on"></div>
-<div class="form-group" style="display:flex;align-items:end;padding-bottom:12px"><label class="form-check"><input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }}> Featured on Homepage</label>
-<input type="hidden" name="vis_is_featured" value="on"></div>
-</div>
+<!-- Publishing -->
+<div style="border-top:2px solid var(--border);padding-top:16px;margin-top:auto">
+<h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Publishing</h4>
 
-<!-- SAVE BUTTON for Main Place -->
-<div class="section-save">
-<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} Holy Place</button>
+<div class="form-group"><label>Status</label>
+<select name="status" class="form-control">
+<option value="draft" {{ 'selected' if not editing or place.status=='draft' }}>📝 Draft</option>
+<option value="published" {{ 'selected' if editing and place.status=='published' }}>✅ Published</option>
+<option value="archived" {{ 'selected' if editing and place.status=='archived' }}>📦 Archived</option>
+</select></div>
+
+<div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+<input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }} style="accent-color:var(--warning)">
+<span>⭐ Featured on Homepage</span></label></div>
+
+<button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px"><i class="fas fa-save"></i> {{ 'Update Holy Dham' if editing else 'Create Holy Dham' }}</button>
 </div>
 
+</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- TIER 2 SECTION: KEY PLACES -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="tier-section-header tier-2-bg">
+<span style="width:44px;height:44px;background:#2E86AB20;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📍</span>
+<div>
+<span class="tier-label" style="background:#2E86AB;color:white;margin-bottom:4px">Tier 2</span>
+<h3 style="color:#1A6B8A">Key Places</h3>
+</div>
+<span class="tier-count">Major zones within this Holy Dham for geographical and leela-based grouping</span>
+</div>
+
+<!-- Tier 2 → 3 → 4 Flow Explanation -->
+<div style="background:linear-gradient(135deg,#f7f9fc,#eef4f8);border:1px solid #2E86AB20;border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#2E86AB">
+<span style="width:26px;height:26px;background:#2E86AB;color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">T2</span>
+Key Place
+</div>
+<i class="fas fa-arrow-right" style="color:#ccc;font-size:11px"></i>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#E74845">
+<span style="width:26px;height:26px;background:#E74845;color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">T3</span>
+Key Spots <span style="font-size:10px;font-weight:400;color:var(--text-light)">(managed separately)</span>
+</div>
+<i class="fas fa-arrow-right" style="color:#ccc;font-size:11px"></i>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#9C27B0">
+<span style="width:26px;height:26px;background:#9C27B0;color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">T4</span>
+Sub-Spots <span style="font-size:10px;font-weight:400;color:var(--text-light)">(managed separately)</span>
+</div>
+<div style="margin-left:auto;font-size:11px;color:var(--text-light)">
+<i class="fas fa-info-circle"></i> Save the dham first, then manage deeper tiers via buttons below
 </div>
 </div>
 
-</div>
-<!-- END TWO COLUMN -->
+<div class="admin-card" style="border-top:3px solid #2E86AB">
+<div class="admin-card-header"><h3>📍 Key Places (Tier 2)</h3><span style="font-size:12px;color:var(--text-light)">{{ key_places|length }} key place{{ 's' if key_places|length != 1 }}</span></div>
+<div class="admin-card-body" id="keyPlacesContainer">
 
-<!-- ═══ KEY PLACES TO VISIT (Single Column) ═══ -->
-<div class="admin-card" style="margin-bottom:20px">
-<div class="admin-card-header"><h3>🗺️ Key Places to Visit</h3><span style="font-size:12px;color:var(--text-light)">Sub-places within this holy place</span></div>
-<div class="admin-card-body">
-
-<div id="keyPlacesContainer">
 {% for kp in key_places %}
 {% set ki = loop.index0 %}
-{% set accent_class = kp_accent_colors[ki % kp_accent_colors|length] %}
-<div class="kp-accordion" data-index="{{ ki }}" data-color="{{ accent_class }}">
+{% set accent_colors = ['blue','purple','orange','green','indigo','red'] %}
+<div class="kp-accordion" data-index="{{ ki }}" data-color="{{ accent_colors[ki % 6] }}">
 <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
-<h4><span class="kp-num">{{ ki + 1 }}</span> <span class="kp-title-display">{{ kp.title }}</span></h4>
+<h4>
+<span class="kp-num">{{ loop.index }}</span>
+<span class="kp-tier-badge">Tier 2</span>
+<span class="kp-title-display">{{ kp.title }}</span>
+</h4>
 <div class="kp-actions">
 <label class="toggle-label" onclick="event.stopPropagation()" style="font-size:11px">
 <label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_is_visible" {{ 'checked' if kp.is_visible }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label>
+<span class="status-text {{ 'on' if kp.is_visible else 'off' }}" style="font-size:11px">{{ 'On' if kp.is_visible else 'Off' }}</span>
 </label>
 <span class="chevron"><i class="fas fa-chevron-down"></i></span>
 <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()" title="Remove"><i class="fas fa-trash"></i></button>
@@ -250,24 +369,50 @@
 </div></details>
 {% endif %}
 
-<div class="section-save">
-<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Update {{ kp.title }}</button>
+<!-- Manage Deeper Tiers -->
+<div style="margin-top:14px;padding:14px 16px;background:linear-gradient(135deg,#fdf5f5,#f8f0f8);border:1px solid #E7484520;border-radius:12px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<div style="flex:1;min-width:200px">
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Deeper Tiers for {{ kp.title }}</div>
+<div style="font-size:13px;color:var(--text-mid)">Manage the Key Spots (Tier 3) and Sub-Spots (Tier 4) within this Key Place</div>
+</div>
+{% if kp.id %}
+<a href="{{ url_for('admin_key_place_spots', kp_id=kp.id) }}" class="manage-spots-btn" onclick="event.stopPropagation()">
+<i class="fas fa-layer-group"></i>
+<span>Manage Key Spots</span>
+<span style="background:#E74845;color:white;padding:2px 8px;border-radius:50px;font-size:9px;font-weight:700;letter-spacing:.5px">TIER 3</span>
+{% if kp_spot_counts and kp_spot_counts.get(kp.id, 0) > 0 %}<span class="spot-count">{{ kp_spot_counts[kp.id] }}</span>{% endif %}
+</a>
+{% else %}
+<span style="font-size:12px;color:var(--text-light);font-style:italic"><i class="fas fa-info-circle"></i> Save this dham first to manage Key Spots</span>
+{% endif %}
+</div>
+</div>
+
+<div class="section-save" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save All Changes</button>
 </div>
 </div>
 </div>
 </div>
 {% endfor %}
+
+{% if not key_places %}
+<div style="padding:32px;text-align:center;color:var(--text-light)">
+<div style="font-size:36px;margin-bottom:8px;opacity:.3">📍</div>
+<p style="font-size:14px;margin-bottom:4px">No Key Places added yet</p>
+<p style="font-size:12px;opacity:.7">Add major zones within this Holy Dham (e.g., Vrindavan Town, Barsana, Govardhan)</p>
 </div>
+{% endif %}
+
+</div></div>
 
 <div style="margin-top:16px">
-<button type="button" class="add-kp-btn" onclick="addKeyPlace()"><i class="fas fa-plus-circle"></i> Add Key Place to Visit</button>
+<button type="button" class="add-kp-btn" onclick="addKeyPlace()"><i class="fas fa-plus-circle"></i> Add Key Place (Tier 2)</button>
 </div>
 
-<div class="section-save" style="margin-top:16px">
-<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update All & Save' if editing else 'Create Place' }}</button>
-</div>
-
-</div>
+<div class="section-save" style="margin-top:20px">
+<button type="submit" class="btn btn-primary" style="min-width:240px"><i class="fas fa-save"></i> {{ 'Update All & Save' if editing else 'Create Holy Dham' }}</button>
 </div>
 
 </form>
@@ -280,26 +425,26 @@ function updateToggleText(cb) {
     if (!lbl) return;
     const st = lbl.querySelector('.status-text');
     if (!st) return;
-    const short = st.textContent.trim().length <= 3;
-    st.textContent = cb.checked ? (short ? 'On' : 'Enabled') : (short ? 'Off' : 'Disabled');
+    st.textContent = cb.checked ? 'On' : 'Off';
     st.className = 'status-text ' + (cb.checked ? 'on' : 'off');
 }
 
-const kpColors = ['blue','purple','orange','green','indigo','red'];
 let kpIndex = {{ key_places|length }};
 function addKeyPlace() {
     const container = document.getElementById('keyPlacesContainer');
-    const colorClass = kpColors[kpIndex % kpColors.length];
+    const colors = ['blue','purple','orange','green','indigo','red'];
+    const colorClass = colors[kpIndex % colors.length];
     const div = document.createElement('div');
     div.className = 'kp-accordion open';
     div.dataset.index = kpIndex;
     div.dataset.color = colorClass;
     div.innerHTML = `
         <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
-            <h4><span class="kp-num">${kpIndex+1}</span> <span class="kp-title-display">New Key Place</span></h4>
+            <h4><span class="kp-num">${kpIndex+1}</span> <span class="kp-tier-badge">Tier 2</span> <span class="kp-title-display">New Key Place</span></h4>
             <div class="kp-actions">
                 <label class="toggle-label" onclick="event.stopPropagation()" style="font-size:11px">
                     <label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_${kpIndex}_is_visible" checked onchange="updateToggleText(this)"><span class="toggle-slider"></span></label>
+                    <span class="status-text on" style="font-size:11px">On</span>
                 </label>
                 <span class="chevron"><i class="fas fa-chevron-down"></i></span>
                 <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()" title="Remove"><i class="fas fa-trash"></i></button>
@@ -307,15 +452,18 @@ function addKeyPlace() {
         </div>
         <div class="kp-accordion-body" style="max-height:3000px">
             <div class="kp-accordion-body-inner">
-            <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Navadvipa" onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
-            <div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2"></textarea></div>
-            <div class="form-group"><label>Long Description [History, Significance etc]</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Content..."></textarea></div>
+            <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Vrindavan Town, Barsana, Govardhan" onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
+            <div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2" placeholder="Brief description of this zone..."></textarea></div>
+            <div class="form-group"><label>Long Description [History, Significance etc]</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Detailed content..."></textarea></div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
                 <div class="form-group"><label>Featured Image</label><input type="file" name="kp_${kpIndex}_featured_image_file" class="form-control" accept="image/*"></div>
                 <div class="form-group"><label>Latitude</label><input name="kp_${kpIndex}_latitude" class="form-control" type="number" step="any"></div>
                 <div class="form-group"><label>Longitude</label><input name="kp_${kpIndex}_longitude" class="form-control" type="number" step="any"></div>
             </div>
-            <div class="section-save"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save Key Place</button></div>
+            <div style="margin-top:14px;padding:12px 16px;background:#f7f7f2;border-radius:10px;font-size:12px;color:var(--text-light)">
+                <i class="fas fa-info-circle" style="color:#2E86AB"></i> <strong>Tip:</strong> Save this dham first. Then you'll see a "Manage Key Spots (Tier 3)" button appear here to add Tier 3 and Tier 4 entries.
+            </div>
+            <div class="section-save"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save All Changes</button></div>
             </div>
         </div>`;
     container.appendChild(div);

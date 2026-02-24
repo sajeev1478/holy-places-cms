@@ -1,0 +1,128 @@
+{% extends "admin/base.html" %}
+{% block title %}Key Spots (Tier 3) — {{ kp.title }}{% endblock %}
+{% block page_title %}
+<div style="display:flex;align-items:center;gap:12px">
+<span style="width:36px;height:36px;background:#E7484515;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🔸</span>
+<div>
+<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#E74845">Tier 3 · Key Spots</div>
+<div>{{ kp.title }}</div>
+</div>
+</div>
+{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_place_edit', place_id=kp.dham_id) }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to {{ kp.dham_title }}</a>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Hierarchy Breadcrumb with Tier labels -->
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;font-size:13px">
+<a href="{{ url_for('admin_places') }}" style="display:flex;align-items:center;gap:4px;text-decoration:none;color:var(--text-light)"><span style="width:18px;height:18px;background:#C76B8F;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T1</span> Holy Dhams</a>
+<span style="color:var(--text-light)">›</span>
+<a href="{{ url_for('admin_place_edit', place_id=kp.dham_id) }}" style="display:flex;align-items:center;gap:4px;text-decoration:none;color:var(--text-light)"><span style="width:18px;height:18px;background:#C76B8F;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T1</span> {{ kp.dham_title }}</a>
+<span style="color:var(--text-light)">›</span>
+<span style="display:flex;align-items:center;gap:4px;color:#2E86AB;font-weight:600"><span style="width:18px;height:18px;background:#2E86AB;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T2</span> {{ kp.title }}</span>
+<span style="color:var(--text-light)">›</span>
+<span style="display:flex;align-items:center;gap:4px;color:#E74845;font-weight:700"><span style="width:18px;height:18px;background:#E74845;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T3</span> Key Spots</span>
+</div>
+
+<!-- Tier Info Banner -->
+<div style="background:linear-gradient(135deg,#fdf5f5,#f8f0f0);border:1.5px solid #E7484520;border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+<span style="width:44px;height:44px;background:#E7484515;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🔸</span>
+<div style="flex:1;min-width:200px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+<span style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;background:#E74845;color:white;border-radius:50px">Tier 3</span>
+<span style="font-size:14px;font-weight:700;color:#E74845">Key Spots</span>
+</div>
+<div style="font-size:13px;color:var(--text-mid)">Primary pilgrimage locations within <strong>{{ kp.title }}</strong> — each with a category (Temple, Kund, Ghat, etc.)</div>
+</div>
+<div style="text-align:center;padding:8px 16px;background:white;border-radius:10px;border:1px solid var(--border)">
+<div style="font-size:24px;font-weight:700;color:#E74845">{{ spots|length }}</div>
+<div style="font-size:11px;color:var(--text-light)">Key Spots</div>
+</div>
+</div>
+
+<form method="POST" action="{{ url_for('admin_key_spots_save', kp_id=kp.id) }}" enctype="multipart/form-data" id="spotsForm">
+<div id="spots-container">
+{% for spot in spots %}
+<div class="ks-item admin-card" style="margin-bottom:16px;border-left:4px solid {{ spot.cat_color or '#E74C3C' }}" data-index="{{ loop.index0 }}">
+<input type="hidden" name="ks_{{ loop.index0 }}_id" value="{{ spot.id }}">
+<div class="admin-card-header" style="cursor:pointer;user-select:none" onclick="this.parentElement.classList.toggle('ks-collapsed')">
+<div style="display:flex;align-items:center;gap:10px">
+<span style="font-size:18px">{{ spot.cat_icon or '📍' }}</span>
+<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#E7484510;color:#E74845;border-radius:50px;border:1px solid #E7484520">Tier 3</span>
+<h3 class="ks-title-display" style="margin:0">{{ spot.title }}</h3>
+<span class="badge" style="background:{{ spot.cat_color or '#E74C3C' }}15;color:{{ spot.cat_color or '#E74C3C' }};font-size:11px;border:1px solid {{ spot.cat_color or '#E74C3C' }}25">{{ spot.cat_name or 'No Category' }}</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px">
+<a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-secondary btn-sm" onclick="event.stopPropagation()" style="background:#9C27B008;color:#9C27B0;border:1px solid #9C27B030;font-size:11px;font-weight:700"><i class="fas fa-layer-group"></i> Sub-Spots <span style="font-size:9px;padding:1px 6px;background:#9C27B0;color:white;border-radius:50px;letter-spacing:.5px">T4</span></a>
+<i class="fas fa-chevron-down ks-chevron" style="transition:transform .3s;color:var(--text-light)"></i>
+</div>
+</div>
+<div class="ks-body" style="padding:20px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="form-group"><label>Title *</label><input type="text" class="form-control" name="ks_{{ loop.index0 }}_title" value="{{ spot.title }}" required></div>
+<div class="form-group"><label>Category <span style="font-size:10px;color:var(--text-light)">(15 types from framework)</span></label>
+<select class="form-control" name="ks_{{ loop.index0 }}_category">
+<option value="">— Select Category —</option>
+{% for cat in spot_categories %}<option value="{{ cat.id }}" {{ 'selected' if spot.category_id == cat.id }}>{{ cat.icon }} {{ cat.name }} — {{ cat.description }}</option>{% endfor %}
+</select></div>
+</div>
+<div class="form-group"><label>Short Description</label><textarea class="form-control" name="ks_{{ loop.index0 }}_short_description" rows="2">{{ spot.short_description or '' }}</textarea></div>
+<div class="form-group"><label>Full Content</label><textarea class="form-control" name="ks_{{ loop.index0 }}_full_content" rows="4" style="min-height:100px">{{ spot.full_content or '' }}</textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+<div class="form-group"><label>Latitude</label><input type="number" class="form-control" name="ks_{{ loop.index0 }}_latitude" value="{{ spot.latitude or '' }}" step="any"></div>
+<div class="form-group"><label>Longitude</label><input type="number" class="form-control" name="ks_{{ loop.index0 }}_longitude" value="{{ spot.longitude or '' }}" step="any"></div>
+<div class="form-group"><label>Featured Image</label>
+{% if spot.featured_image %}<input type="hidden" name="ks_{{ loop.index0 }}_featured_image_existing" value="{{ spot.featured_image }}"><div style="font-size:12px;color:var(--text-light);margin-bottom:4px">Current: {{ spot.featured_image }}</div>{% endif %}
+<input type="file" class="form-control" name="ks_{{ loop.index0 }}_featured_image_file" accept="image/*">
+</div>
+</div>
+<div class="form-group"><label><input type="checkbox" name="ks_{{ loop.index0 }}_is_visible" {{ 'checked' if spot.is_visible }}> Visible on frontend</label></div>
+<div style="display:flex;gap:12px;margin-top:8px;align-items:center">
+<button type="button" class="btn btn-sm" style="background:#e74c3c15;color:#e74c3c;border:1px solid #e74c3c30" onclick="this.closest('.ks-item').remove()"><i class="fas fa-trash"></i> Remove</button>
+<a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-sm" style="background:#9C27B008;color:#9C27B0;border:1px solid #9C27B030" onclick="event.stopPropagation()"><i class="fas fa-sitemap"></i> Manage Tier 4 Sub-Spots →</a>
+</div>
+</div>
+</div>
+{% endfor %}
+</div>
+
+<div style="display:flex;gap:12px;margin-top:20px">
+<button type="button" class="btn btn-secondary" id="addSpotBtn" style="border-color:#E7484540;color:#E74845"><i class="fas fa-plus"></i> Add Key Spot (Tier 3)</button>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save All Key Spots</button>
+</div>
+</form>
+
+<style>
+.ks-item.ks-collapsed .ks-body{display:none}
+.ks-item.ks-collapsed .ks-chevron{transform:rotate(-90deg)}
+</style>
+<script>
+let spotIdx = {{ spots|length }};
+document.getElementById('addSpotBtn').addEventListener('click', function(){
+    const c = document.getElementById('spots-container');
+    const html = `<div class="ks-item admin-card" style="margin-bottom:16px;border-left:4px solid #E74C3C" data-index="${spotIdx}">
+    <div class="admin-card-header" onclick="this.parentElement.classList.toggle('ks-collapsed')" style="cursor:pointer;user-select:none">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">📍</span><span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#E7484510;color:#E74845;border-radius:50px;border:1px solid #E7484520">Tier 3</span><h3>New Key Spot</h3></div>
+    <i class="fas fa-chevron-down ks-chevron" style="transition:transform .3s;color:var(--text-light)"></i>
+    </div>
+    <div class="ks-body" style="padding:20px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="form-group"><label>Title *</label><input type="text" class="form-control" name="ks_${spotIdx}_title" required></div>
+    <div class="form-group"><label>Category</label><select class="form-control" name="ks_${spotIdx}_category"><option value="">— Select Category —</option>{% for cat in spot_categories %}<option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }} — {{ cat.description }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="form-group"><label>Short Description</label><textarea class="form-control" name="ks_${spotIdx}_short_description" rows="2"></textarea></div>
+    <div class="form-group"><label>Full Content</label><textarea class="form-control" name="ks_${spotIdx}_full_content" rows="4" style="min-height:100px"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div class="form-group"><label>Latitude</label><input type="number" class="form-control" name="ks_${spotIdx}_latitude" step="any"></div>
+    <div class="form-group"><label>Longitude</label><input type="number" class="form-control" name="ks_${spotIdx}_longitude" step="any"></div>
+    <div class="form-group"><label>Featured Image</label><input type="file" class="form-control" name="ks_${spotIdx}_featured_image_file" accept="image/*"></div>
+    </div>
+    <div class="form-group"><label><input type="checkbox" name="ks_${spotIdx}_is_visible" checked> Visible on frontend</label></div>
+    <button type="button" class="btn btn-sm" style="background:#e74c3c15;color:#e74c3c;border:1px solid #e74c3c30;margin-top:8px" onclick="this.closest('.ks-item').remove()"><i class="fas fa-trash"></i> Remove</button>
+    </div></div>`;
+    c.insertAdjacentHTML('beforeend', html);
+    spotIdx++;
+});
+</script>
+{% endblock %}

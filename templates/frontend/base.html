@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}Holy Places{% endblock %} – Sacred India</title>
-<meta name="description" content="{% block meta_desc %}Discover India's most sacred temples, holy places, spiritual stories, and devotional content.{% endblock %}">
+<title>{% block title %}Holy Dham{% endblock %} – Sacred India</title>
+<meta name="description" content="{% block meta_desc %}Discover India's most sacred dhams, temples, spiritual stories, and devotional content.{% endblock %}">
 <link rel="manifest" href="/static/manifest.json">
 <meta name="theme-color" content="#C76B8F">
 <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&family=Nunito+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
@@ -164,7 +164,7 @@ nav{display:none}
 <!-- Header -->
 <header id="header">
 <div class="header-inner">
-<a class="logo" href="{{ url_for('home') }}"><span class="logo-flower">🪷</span><span class="logo-text">Holy<span>Places</span></span></a>
+<a class="logo" href="{{ url_for('home') }}"><span class="logo-flower">🪷</span><span class="logo-text">Holy<span>Dham</span></span></a>
 <nav>
 <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' }}">Home</a>
 <a href="{{ url_for('explore') }}" class="{{ 'active' if request.endpoint == 'explore' }}">Explore</a>
@@ -192,7 +192,7 @@ nav{display:none}
 <div id="searchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-start;justify-content:center;padding-top:120px" onclick="if(event.target===this)this.style.display='none'">
 <div style="background:white;border-radius:20px;padding:32px;width:90%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
 <form action="{{ url_for('search') }}" method="GET" style="display:flex;gap:12px">
-<input name="q" type="text" placeholder="Search holy places, temples, stories..." autofocus
+<input name="q" type="text" placeholder="Search holy dhams, temples, stories..." autofocus
  style="flex:1;padding:14px 20px;border:2px solid var(--border);border-radius:50px;font-family:'Nunito Sans',sans-serif;font-size:16px;outline:none">
 <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Search</button>
 </form>
@@ -220,7 +220,7 @@ nav{display:none}
 <footer>
 <div class="footer-inner">
 <div class="footer-brand">
-<div class="flogo">🪷 HolyPlaces</div>
+<div class="flogo">🪷 HolyDham</div>
 <p>A spiritual knowledge hub curating India's holiest destinations with love and devotion.</p>
 </div>
 <div class="footer-col">
@@ -245,7 +245,7 @@ nav{display:none}
 </div>
 </div>
 <div class="footer-bottom">
-<span>© {{ current_year }} Holy Places. Made with 🙏</span>
+<span>© {{ current_year }} Holy Dham CMS. Made with 🙏</span>
 <span>Privacy · Terms · Sitemap</span>
 </div>
 </footer>

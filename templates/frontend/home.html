@@ -93,11 +93,11 @@
 <div class="container">
 <div class="hero-inner">
 <div class="hero-content">
-<div class="hero-badge"><span class="pulse"></span> Explore {{ stats.places }}+ Sacred Sites</div>
+<div class="hero-badge"><span class="pulse"></span> Explore {{ stats.places }}+ Holy Dhams</div>
 <h1 class="hero-title">Your Journey to<br><em>Sacred India</em><br>Starts Here</h1>
 <p class="hero-desc">Discover temples, sacred stories, festivals, and spiritual practices through a beautifully curated devotional experience.</p>
 <div class="hero-btns">
-<a href="{{ url_for('explore') }}" class="btn btn-primary">Explore Holy Places</a>
+<a href="{{ url_for('explore') }}" class="btn btn-primary">Explore Holy Dhams</a>
 <a href="#featured" class="btn btn-secondary">▶ Watch & Listen</a>
 </div>
 </div>
@@ -110,7 +110,7 @@
 </div>
 <div class="hero-float">
 <div class="float-icon">🙏</div>
-<div><div class="float-num">{{ stats.places }}+</div><div class="float-label">Sacred Sites</div></div>
+<div><div class="float-num">{{ stats.places }}+</div><div class="float-label">Holy Dhams</div></div>
 </div>
 </div>
 </div>
@@ -121,7 +121,7 @@
 <section class="cat-ribbon">
 <div class="container">
 <div class="cat-scroll">
-<a class="pill active" href="{{ url_for('explore') }}"><span class="icon">✨</span> All Places</a>
+<a class="pill active" href="{{ url_for('explore') }}"><span class="icon">✨</span> All Dhams</a>
 {% for mod in modules %}
 <a class="pill" href="{{ url_for('module_page', slug=mod.slug) }}"><span class="icon">{{ mod.icon }}</span> {{ mod.name }}</a>
 {% endfor %}
@@ -136,9 +136,9 @@
 <div class="section-header-row">
 <div>
 <div class="section-tag">Featured Destinations</div>
-<h2 class="section-title">Most Visited Sacred Places</h2>
+<h2 class="section-title">Most Visited Holy Dhams</h2>
 </div>
-<a href="{{ url_for('explore') }}" class="section-link">View all places →</a>
+<a href="{{ url_for('explore') }}" class="section-link">View all dhams →</a>
 </div>
 </div>
 <div class="places-grid">
@@ -240,7 +240,7 @@ display:flex;align-items:center;justify-content:center;font-size:48px;height:100
 <div class="container">
 <div class="newsletter">
 <h2>Stay Connected to the Divine</h2>
-<p>Receive weekly stories, festival reminders, and new holy place discoveries.</p>
+<p>Receive weekly stories, festival reminders, and new holy dham discoveries.</p>
 <div class="newsletter-form">
 <input class="newsletter-input" placeholder="Enter your email..." type="email">
 <button class="btn btn-primary">Subscribe</button>

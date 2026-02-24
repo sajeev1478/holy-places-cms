@@ -1,5 +1,5 @@
 {% extends "frontend/base.html" %}
-{% block title %}Explore Holy Places{% endblock %}
+{% block title %}Explore Holy Dhams{% endblock %}
 {% block extra_css %}
 <style>
 .explore-hero{padding:120px 0 40px;background:linear-gradient(135deg,var(--rose-pale),var(--cream),var(--sage-light));position:relative}
@@ -20,7 +20,7 @@
 {% block content %}
 <section class="explore-hero">
 <div class="container">
-<h1 class="explore-title">{% if query %}Results for "{{ query }}"{% else %}Explore Sacred Places{% endif %}</h1>
+<h1 class="explore-title">{% if query %}Results for "{{ query }}"{% else %}Explore Holy Dhams{% endif %}</h1>
 <form class="search-bar" action="{{ url_for('search') }}" method="GET">
 <input name="q" value="{{ query }}" placeholder="Search temples, cities, stories..." type="text">
 <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Search</button>
@@ -82,9 +82,9 @@
 {% else %}
 <div class="empty-state">
 <span class="icon">🔍</span>
-<h3>No places found</h3>
+<h3>No dhams found</h3>
 <p>Try different search terms or filters.</p>
-<a href="{{ url_for('explore') }}" class="btn btn-primary" style="margin-top:16px">View All Places</a>
+<a href="{{ url_for('explore') }}" class="btn btn-primary" style="margin-top:16px">View All Dhams</a>
 </div>
 {% endif %}
 </div>

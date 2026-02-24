@@ -1,0 +1,93 @@
+{% extends "frontend/base.html" %}
+{% block title %}{{ ss.title }} — {{ ks.title }} — {{ place.title }}{% endblock %}
+{% block content %}
+{% set accent = ss.cat_color or '#9C27B0' %}
+<!-- Hero -->
+<section style="background:linear-gradient(135deg,{{ accent }}cc 0%,{{ accent }}88 50%,{{ accent }}aa 100%);padding:70px 0 50px;color:white;position:relative;overflow:hidden">
+<div style="position:absolute;inset:0;background:url('/static/uploads/{{ ss.featured_image or place.featured_image }}') center/cover;opacity:.1"></div>
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.05))"></div>
+<div class="container" style="position:relative;z-index:1">
+<!-- Breadcrumb -->
+<nav style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;flex-wrap:wrap">
+<a href="{{ url_for('place_detail', slug=place.slug) }}" style="color:rgba(255,255,255,.55);text-decoration:none">{{ place.title }}</a><span style="opacity:.3">›</span>
+<a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=kp.slug) }}" style="color:rgba(255,255,255,.6);text-decoration:none">{{ kp.title }}</a><span style="opacity:.3">›</span>
+<a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=ks.slug) }}" style="color:rgba(255,255,255,.7);text-decoration:none">{{ ks.title }}</a><span style="opacity:.3">›</span>
+<span style="opacity:.9">{{ ss.title }}</span>
+</nav>
+<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:6px 16px;margin-bottom:14px">
+<span style="font-size:18px">{{ ss.cat_icon or '📍' }}</span>
+<span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;opacity:.9">Tier 4 · {{ ss.cat_name or 'Sub-Spot' }}</span>
+</div>
+<h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(26px,4vw,44px);font-weight:700;margin-bottom:8px">{{ ss.title }}</h1>
+{% if ss.short_description %}<p style="max-width:620px;font-size:15px;line-height:1.7;opacity:.8;font-family:'Nunito Sans',sans-serif">{{ ss.short_description }}</p>{% endif %}
+</div>
+</section>
+
+<!-- Content -->
+<section style="padding:45px 0">
+<div class="container" style="display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start">
+<div>
+{% if ss.featured_image %}<div style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ ss.featured_image }}" alt="{{ ss.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
+
+{% if ss.full_content %}<div class="rich-content" style="margin-bottom:36px;line-height:1.85;font-size:15.5px;color:var(--text-mid)">{{ ss.full_content|safe }}</div>{% endif %}
+
+<!-- Context Card: Where this sub-spot sits -->
+<div style="background:linear-gradient(135deg,var(--cream-dark),var(--cream));border-radius:16px;padding:28px;border:1px solid var(--border)">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">📍 Location Context</h3>
+<div style="display:grid;gap:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:white;border-radius:12px;border:1px solid var(--border)">
+<span style="width:36px;height:36px;background:#2D1F2E15;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🙏</span>
+<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);font-weight:700">Tier 1 · Holy Dham</div>
+<a href="{{ url_for('place_detail', slug=place.slug) }}" style="font-weight:600;color:var(--text-dark);text-decoration:none">{{ place.title }}</a></div></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:white;border-radius:12px;border:1px solid var(--border)">
+<span style="width:36px;height:36px;background:#2E86AB15;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">📍</span>
+<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#2E86AB;font-weight:700">Tier 2 · Key Place</div>
+<a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=kp.slug) }}" style="font-weight:600;color:var(--text-dark);text-decoration:none">{{ kp.title }}</a></div></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:white;border-radius:12px;border:1px solid var(--border)">
+<span style="width:36px;height:36px;background:{{ ks.cat_color or '#E74C3C' }}15;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">{{ ks.cat_icon or '🔸' }}</span>
+<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:{{ ks.cat_color or '#E74C3C' }};font-weight:700">Tier 3 · {{ ks.cat_name or 'Key Spot' }}</div>
+<a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=ks.slug) }}" style="font-weight:600;color:var(--text-dark);text-decoration:none">{{ ks.title }}</a></div></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:{{ accent }}08;border-radius:12px;border:2px solid {{ accent }}25">
+<span style="width:36px;height:36px;background:{{ accent }}15;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">{{ ss.cat_icon or '✦' }}</span>
+<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:{{ accent }};font-weight:700">Tier 4 · {{ ss.cat_name or 'Sub-Spot' }}</div>
+<strong style="color:var(--text-dark)">{{ ss.title }}</strong> <span style="font-size:10px;color:{{ accent }};font-weight:700">← You are here</span></div></div>
+</div>
+</div>
+</div>
+
+<!-- Sidebar -->
+<div>
+<!-- Category Card -->
+<div style="background:white;border:2px solid {{ accent }}20;border-radius:16px;padding:22px;margin-bottom:20px">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="width:48px;height:48px;background:{{ accent }}12;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px">{{ ss.cat_icon or '✦' }}</span>
+<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:{{ accent }};font-family:'Plus Jakarta Sans',sans-serif">Category</div><div style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:600">{{ ss.cat_name or 'Sub-Spot' }}</div></div>
+</div>
+<p style="font-size:13px;color:var(--text-light);line-height:1.5;font-family:'Plus Jakarta Sans',sans-serif">Within <strong style="color:var(--text-dark)">{{ ks.title }}</strong></p>
+</div>
+
+{% if ss.latitude and ss.longitude %}<div style="background:white;border:2px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px"><iframe src="https://maps.google.com/maps?q={{ ss.latitude }},{{ ss.longitude }}&z=17&output=embed" style="width:100%;height:200px;border:0"></iframe></div>
+{% elif ks.latitude and ks.longitude %}<div style="background:white;border:2px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px"><iframe src="https://maps.google.com/maps?q={{ ks.latitude }},{{ ks.longitude }}&z=16&output=embed" style="width:100%;height:200px;border:0"></iframe></div>{% endif %}
+
+<!-- Sibling Sub-Spots -->
+{% if siblings %}
+<div style="background:white;border:2px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px">Other Sub-Spots</h3>
+{% for sib in siblings %}
+<a href="{{ url_for('sub_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=ks.slug, ss_slug=sib.slug) }}" style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;font-size:13px;transition:color .2s" onmouseover="this.style.color='{{ sib.cat_color or accent }}'" onmouseout="this.style.color='inherit'">
+<span style="font-size:14px">{{ sib.cat_icon or '✦' }}</span><strong>{{ sib.title }}</strong></a>
+{% endfor %}
+</div>{% endif %}
+
+<a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=ks.slug) }}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:{{ ks.cat_color or '#E74C3C' }};color:white;border-radius:10px;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;margin-bottom:8px">← Back to {{ ks.title }}</a>
+<a href="{{ url_for('place_detail', slug=place.slug) }}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:var(--rose-deep);color:white;border-radius:10px;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600">🙏 {{ place.title }}</a>
+</div>
+</div>
+</section>
+<style>
+@media(max-width:900px){section .container{grid-template-columns:1fr!important}}
+.rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:20px 0 10px;color:var(--text-dark);font-weight:700}
+.rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:18px;margin:16px 0 8px;font-weight:600}
+.rich-content p{margin-bottom:12px}
+</style>
+{% endblock %}

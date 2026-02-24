@@ -1,6 +1,7 @@
 """
-Holy Places CMS - Main Application (v2)
-Enhanced with: Custom Fields, Field Visibility, Key Places, File Uploads
+Holy Dham CMS - Main Application (v3)
+4-Tier Hierarchy: Holy Dham > Key Places > Key Spots > Sub-Spots
+With Category Framework for Tier 3 & Tier 4
 """
 
 import os, json, uuid, hashlib, sqlite3, functools
@@ -34,6 +35,39 @@ BUILTIN_FIELDS = [
     {'key':'is_featured','label':'Featured on Homepage','type':'checkbox'},
 ]
 
+# ─── Tier-3 Key Spot Categories ───
+SPOT_CATEGORIES = [
+    ('temple','Temple (Mandir)','Consecrated place of deity worship','🛕','#E74C3C'),
+    ('kund','Kund / Sarovar','Sacred water body for rituals and purification','💧','#3498DB'),
+    ('ghat','Ghat','Steps leading to water for rituals','🪜','#1ABC9C'),
+    ('leela_sthali','Leela Sthali','Place of divine pastimes','✨','#9B59B6'),
+    ('van','Van (Forest)','Sacred forest area','🌳','#27AE60'),
+    ('hill','Hill / Parvat','Sacred elevated formation','⛰️','#8B6914'),
+    ('village','Village','Sacred settlement','🏘️','#E67E22'),
+    ('ashram','Ashram / Math','Spiritual residence','🏠','#F39C12'),
+    ('samadhi','Samadhi Sthal','Resting place of saints','🙏','#C76B8F'),
+    ('bhajan_kutir','Bhajan Kutir','Place of meditation','📿','#8E44AD'),
+    ('baithak','Baithak','Teaching place of acharya','📖','#2C3E50'),
+    ('parikrama','Parikrama Path','Sacred circumambulation route','🔄','#16A085'),
+    ('garden','Garden / Nikunj','Sacred grove','🌺','#E91E63'),
+    ('cave','Cave / Guha','Meditation or leela cave','🕳️','#795548'),
+    ('river','River','Sacred flowing water','🏞️','#0097A7'),
+]
+
+# ─── Tier-4 Sub-Spot Categories ───
+SUB_SPOT_CATEGORIES = [
+    ('altar','Altar / Darshan Area','Main deity viewing area','🪔','#E74C3C'),
+    ('samadhi_internal','Samadhi (Internal)','Shrine within complex','🕉️','#C76B8F'),
+    ('quarters','Quarters / Residence','Living space of saint','🚪','#8D6E63'),
+    ('courtyard','Courtyard','Open gathering area','🏛️','#FF9800'),
+    ('ghat_section','Ghat Section','Specific part of ghat','🏊','#00BCD4'),
+    ('leela_point','Leela Point','Exact pastime location','📍','#9C27B0'),
+    ('shrine','Shrine','Secondary deity area','⛩️','#F44336'),
+    ('pathway','Pathway','Internal walking path','🚶','#4CAF50'),
+    ('sacred_tree','Sacred Tree','Tree linked to leela','🌲','#2E7D32'),
+    ('meditation_spot','Meditation Spot','Place for remembrance','🧘','#673AB7'),
+]
+
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(app.config['DATABASE'])
@@ -56,6 +90,17 @@ def init_db():
     CREATE TABLE IF NOT EXISTS place_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, place_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(place_id, field_def_id));
     CREATE TABLE IF NOT EXISTS key_places (id INTEGER PRIMARY KEY AUTOINCREMENT, parent_place_id INTEGER NOT NULL, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (parent_place_id) REFERENCES places(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS key_place_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(key_place_id, field_def_id));
+
+    /* ─── NEW: Tier 3 & 4 Category Tables ─── */
+    CREATE TABLE IF NOT EXISTS spot_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT UNIQUE NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT DEFAULT '📍', color TEXT DEFAULT '#666');
+    CREATE TABLE IF NOT EXISTS sub_spot_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT UNIQUE NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT DEFAULT '📍', color TEXT DEFAULT '#666');
+
+    /* ─── NEW: Tier 3 Key Spots ─── */
+    CREATE TABLE IF NOT EXISTS key_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES spot_categories(id) ON DELETE SET NULL);
+
+    /* ─── NEW: Tier 4 Sub-Spots ─── */
+    CREATE TABLE IF NOT EXISTS sub_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES sub_spot_categories(id) ON DELETE SET NULL);
+
     CREATE TABLE IF NOT EXISTS module_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, module_id INTEGER NOT NULL, place_id INTEGER, title TEXT NOT NULL, slug TEXT NOT NULL, content TEXT, custom_fields TEXT DEFAULT '{}', featured_image TEXT, status TEXT DEFAULT 'draft', sort_order INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS media (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, original_name TEXT NOT NULL, file_type TEXT NOT NULL, mime_type TEXT, file_size INTEGER, folder TEXT DEFAULT 'general', alt_text TEXT, caption TEXT, uploaded_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS place_media (id INTEGER PRIMARY KEY AUTOINCREMENT, place_id INTEGER NOT NULL, media_id INTEGER NOT NULL, media_role TEXT DEFAULT 'gallery', sort_order INTEGER DEFAULT 0, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE);
@@ -71,38 +116,101 @@ def init_db():
 def seed_db():
     db = get_db()
     if db.execute("SELECT id FROM users LIMIT 1").fetchone(): return
+
+    # ─── Seed Tier-3 Spot Categories ───
+    for slug,name,desc,icon,color in SPOT_CATEGORIES:
+        db.execute("INSERT INTO spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slug,name,desc,icon,color))
+    # ─── Seed Tier-4 Sub-Spot Categories ───
+    for slug,name,desc,icon,color in SUB_SPOT_CATEGORIES:
+        db.execute("INSERT INTO sub_spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slug,name,desc,icon,color))
+
+    # Users
     db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions) VALUES (?,?,?,?,?,?)", ('admin','admin@holyplaces.com',hashlib.sha256(b'admin123').hexdigest(),'Super Admin','super_admin','{"all":true}'))
     db.execute("INSERT INTO users (username,email,password_hash,display_name,role,created_by) VALUES (?,?,?,?,?,?)", ('editor','editor@holyplaces.com',hashlib.sha256(b'editor123').hexdigest(),'Content Editor','editor',1))
-    for name,slug,desc,icon,order in [('Holy Places','holy-places','Sacred destinations','🛕',1),('Temples','temples','Temple profiles','🏛️',2),('Sacred Stories','sacred-stories','Mythological tales','📖',3),('Festivals','festivals','Religious events','🎪',4),('Pilgrimage Guides','pilgrimage-guides','Travel guides','🚶',5),('Events','events','Spiritual events','📅',6),('Bhajans & Kirtans','bhajans-kirtans','Devotional music','🎵',7),('Spiritual Articles','spiritual-articles','Spiritual writings','📝',8)]:
+    # Modules
+    for name,slug,desc,icon,order in [('Holy Dhams','holy-dhams','Sacred destinations','🛕',1),('Temples','temples','Temple profiles','🏛️',2),('Sacred Stories','sacred-stories','Mythological tales','📖',3),('Festivals','festivals','Religious events','🎪',4),('Pilgrimage Guides','pilgrimage-guides','Travel guides','🚶',5),('Events','events','Spiritual events','📅',6),('Bhajans & Kirtans','bhajans-kirtans','Devotional music','🎵',7),('Spiritual Articles','spiritual-articles','Spiritual writings','📝',8)]:
         db.execute("INSERT INTO modules (name,slug,description,icon,sort_order,is_active,created_by) VALUES (?,?,?,?,?,1,1)", (name,slug,desc,icon,order))
-    for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843')]:
+    # Tags
+    for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843'),('Braj Dham','braj-dham','#E84855'),('Gaudiya Vaishnava','gaudiya-vaishnava','#6C5CE7')]:
         db.execute("INSERT INTO tags (name,slug,color) VALUES (?,?,?)", (name,slug,color))
+    # Custom Fields (no entry_fee)
     for name,label,ftype,ph,order,applies in [('audio_narration','Audio Narration','audio','Upload audio',1,'both'),('video_tour','Video Tour','video','Upload or paste URL',2,'both'),('gallery_images','Gallery Images','images','Upload photos',3,'both'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both'),('how_to_reach','How to Reach','textarea','Directions',6,'place'),('accommodation','Accommodation','textarea','Stay options',7,'place'),('history','History & Significance','richtext','Detailed history',8,'both'),('dress_code','Dress Code','text','If any',9,'both'),('external_audio_url','External Audio Link','url','Audio URL',11,'both'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both')]:
         db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to) VALUES (?,?,?,?,?,?)", (name,label,ftype,ph,order,applies))
-    # Sample: Mayapur
+
+    # ─── SAMPLE: Vrindavan Dham (Tier 1) ───
     db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)",
-        ('Mayapur','mayapur','The spiritual headquarters of ISKCON and birthplace of Sri Chaitanya Mahaprabhu.',
-         '<h2>The Holy Land of Mayapur</h2><p>Mayapur, in Nadia district of West Bengal, is one of the most important pilgrimage sites for Gaudiya Vaishnavas. It is the birthplace of Sri Chaitanya Mahaprabhu (1486 CE).</p><h3>ISKCON World Headquarters</h3><p>Mayapur serves as the international headquarters of ISKCON. The Temple of the Vedic Planetarium (TOVP) is being built here.</p>',
-         'West Bengal','Nadia','India',23.4231,88.3884,'published',1))
-    mid = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-    for tid in [8,4]: db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)", (mid,tid))
-    for t,s,sd,fc,lat,lng,o in [('Navadvipa','navadvipa','Nine islands representing nine processes of devotional service.','<p>Navadvipa consists of nine islands, each representing one limb of bhakti. Pilgrims walk all nine during Navadvipa Parikrama.</p>',23.4145,88.3750,1),
-        ('Antardvipa','antardvipa','Central island where Sri Chaitanya appeared, representing self-surrender.','<p>Antardvipa is the central and most sacred island — birthplace of Sri Chaitanya Mahaprabhu. The Yogapitha temple marks the exact spot.</p>',23.4231,88.3884,2),
-        ('Yogapitha','yogapitha','The exact birthplace of Sri Chaitanya Mahaprabhu.','<p>Yogapitha marks the exact location where Sri Chaitanya appeared on the full moon evening of Phalguna 1486 CE.</p>',23.4248,88.3891,3),
-        ('ISKCON Chandrodaya Mandir','iskcon-chandrodaya-mandir','Main ISKCON temple with beautiful deity worship.','<p>Houses Sri Sri Radha Madhava, Krishna Balarama, Jagannath Baladeva Subhadra, and Pancha Tattva deities.</p>',23.4227,88.3894,4)]:
-        db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,1)", (mid,t,s,sd,fc,lat,lng,o))
-    for t,s,sd,fc,st,ci,lat,lng in [('Kedarnath Temple','kedarnath-temple','One of the twelve Jyotirlingas of Lord Shiva.','<h2>Sacred Abode of Lord Shiva</h2><p>Located in the Garhwal Himalayas near the Mandakini river.</p>','Uttarakhand','Rudraprayag',30.7352,79.0669),
-        ('Somnath Temple','somnath-temple','First among twelve Jyotirlinga shrines.','<h2>The Eternal Shrine</h2><p>Located at the shore of the Arabian Sea in Gujarat.</p>','Gujarat','Veraval',20.8880,70.4012),
-        ('Varanasi Ghats','varanasi-ghats','The oldest living city on the Ganges.','<h2>City of Light</h2><p>Spiritual capital of India with 88 ghats.</p>','Uttar Pradesh','Varanasi',25.3176,83.0078),
-        ('Golden Temple','golden-temple','Holiest Gurdwara of Sikhism.','<h2>Harmandir Sahib</h2><p>Most visited religious site in the world.</p>','Punjab','Amritsar',31.6200,74.8765)]:
+        ('Vrindavan Dham','vrindavan-dham','The divine land of Radha-Krishna leelas, one of the holiest Dhams in Gaudiya Vaishnavism.',
+         '<h2>The Eternal Abode of Krishna</h2><p>Vrindavan is the transcendental land where Lord Krishna performed His childhood and youth pastimes. Located in the Braj region of Uttar Pradesh, it is revered by millions as a place where the spiritual world manifests on earth.</p><h3>Significance</h3><p>Vrindavan is one of the most important pilgrimage destinations in Hinduism, especially in the Gaudiya Vaishnava tradition. Sri Chaitanya Mahaprabhu rediscovered the lost holy places of Vrindavan in the 16th century.</p>',
+         'Uttar Pradesh','Mathura','India',27.5830,77.6950,'published',1))
+    dham_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    for tid in [8,4,9,10]: db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)", (dham_id,tid))
+
+    # ─── Tier 2: Key Places ───
+    kp_data = [
+        ('Vrindavan Town','vrindavan-town','The heart of Braj, dense with temples and sacred kunds.','<p>Vrindavan town is the epicenter of Krishna devotion with over 5,000 temples.</p>',27.5830,77.6950,1),
+        ('Barsana','barsana','The eternal abode of Srimati Radharani.','<p>Barsana is a hilltop town revered as the birthplace of Radha. It hosts the famous Lathmar Holi.</p>',27.6474,77.3833,2),
+        ('Nandgaon','nandgaon','The village of Nanda Maharaja, Krishna\'s foster father.','<p>Nandgaon is where Krishna spent his childhood. The Nand Bhavan temple stands on the hilltop.</p>',27.6714,77.3817,3),
+        ('Govardhan','govardhan','Sacred hill lifted by Krishna to protect Braj.','<p>Govardhan Hill is one of the holiest sites, worshipped as a form of Krishna Himself. The parikrama (circumambulation) is a key pilgrimage practice.</p>',27.4929,77.4583,4),
+    ]
+    kp_ids = {}
+    for t,s,sd,fc,lat,lng,o in kp_data:
+        db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,1)", (dham_id,t,s,sd,fc,lat,lng,o))
+        kp_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+    # ─── Tier 3: Key Spots (with categories) ───
+    temple_cat = db.execute("SELECT id FROM spot_categories WHERE slug='temple'").fetchone()[0]
+    kund_cat = db.execute("SELECT id FROM spot_categories WHERE slug='kund'").fetchone()[0]
+    ghat_cat = db.execute("SELECT id FROM spot_categories WHERE slug='ghat'").fetchone()[0]
+    van_cat = db.execute("SELECT id FROM spot_categories WHERE slug='van'").fetchone()[0]
+    hill_cat = db.execute("SELECT id FROM spot_categories WHERE slug='hill'").fetchone()[0]
+    parikrama_cat = db.execute("SELECT id FROM spot_categories WHERE slug='parikrama'").fetchone()[0]
+
+    ks_data = [
+        (kp_ids['vrindavan-town'],temple_cat,'ISKCON Krishna Balaram Mandir','iskcon-krishna-balaram','The international headquarters temple of ISKCON in Vrindavan.','<p>Founded by Srila Prabhupada in 1975, this temple features beautiful deities of Krishna-Balaram, Radha-Shyamasundar, and Gaura-Nitai.</p>',27.5815,77.6983,1),
+        (kp_ids['vrindavan-town'],temple_cat,'Banke Bihari Temple','banke-bihari','One of the most visited temples in Vrindavan.','<p>Built in 1864, the temple houses the deity of Banke Bihari, an enchanting form of Krishna.</p>',27.5833,77.6954,2),
+        (kp_ids['vrindavan-town'],temple_cat,'Radha Raman Temple','radha-raman','A 500-year-old temple with a self-manifested deity.','<p>Established by Gopal Bhatta Goswami, the deity of Radha Raman appeared from a shaligrama shila.</p>',27.5820,77.6940,3),
+        (kp_ids['vrindavan-town'],ghat_cat,'Kesi Ghat','kesi-ghat','The most prominent ghat on the Yamuna in Vrindavan.','<p>Where Krishna killed the demon Kesi. A key spot for evening aarti and Yamuna worship.</p>',27.5802,77.6960,4),
+        (kp_ids['vrindavan-town'],van_cat,'Nidhivan','nidhivan','Mysterious forest where Radha-Krishna are said to dance every night.','<p>The trees of Nidhivan form natural bowers (kunjas). It is believed that Radha and Krishna perform their Raas Leela here every night.</p>',27.5810,77.6930,5),
+        (kp_ids['govardhan'],hill_cat,'Govardhan Hill','govardhan-hill','The sacred hill lifted by Krishna.','<p>Govardhan Hill is worshipped as Govardhan Maharaj. Devotees perform parikrama and worship the shila (stones).</p>',27.4929,77.4583,1),
+        (kp_ids['govardhan'],kund_cat,'Radha Kund','radha-kund','The most sacred kund in all of Braj.','<p>Radha Kund is considered the most sacred body of water, representing the mercy of Srimati Radharani.</p>',27.5062,77.4629,2),
+        (kp_ids['govardhan'],kund_cat,'Kusum Sarovar','kusum-sarovar','Beautiful lake with stunning architecture.','<p>A historically significant sarovar with Mughal-era architecture, linked to the love pastimes of Radha-Krishna.</p>',27.5010,77.4600,3),
+        (kp_ids['govardhan'],parikrama_cat,'Govardhan Parikrama','govardhan-parikrama','21 km circumambulation of the sacred hill.','<p>The parikrama path encircles Govardhan Hill and is walked barefoot by millions of devotees annually.</p>',27.4930,77.4580,4),
+    ]
+    ks_ids = {}
+    for kpid,catid,t,s,sd,fc,lat,lng,o in ks_data:
+        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,lat,lng,o))
+        ks_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+    # ─── Tier 4: Sub-Spots (with categories) ───
+    altar_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='altar'").fetchone()[0]
+    samadhi_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='samadhi_internal'").fetchone()[0]
+    quarters_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='quarters'").fetchone()[0]
+    courtyard_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='courtyard'").fetchone()[0]
+
+    ss_data = [
+        (ks_ids['iskcon-krishna-balaram'],samadhi_cat,'Srila Prabhupada Samadhi','prabhupada-samadhi','The sacred samadhi shrine of ISKCON founder-acharya.','<p>An ornate marble memorial housing the sacred remains of His Divine Grace A.C. Bhaktivedanta Swami Prabhupada.</p>',1),
+        (ks_ids['iskcon-krishna-balaram'],quarters_cat,"Srila Prabhupada's Quarters",'prabhupada-quarters','The preserved living quarters of Srila Prabhupada.','<p>The rooms where Srila Prabhupada lived, wrote, and translated. Maintained exactly as they were during his stay.</p>',2),
+        (ks_ids['iskcon-krishna-balaram'],altar_cat,'Krishna-Balaram Altar','krishna-balaram-altar','The main altar with the presiding deities.','<p>The central altar features the beautiful deities of Sri Sri Krishna-Balaram, Radha-Shyamasundar, and Gaura-Nitai.</p>',3),
+        (ks_ids['iskcon-krishna-balaram'],courtyard_cat,'Temple Courtyard','temple-courtyard','Open gathering space for kirtans.','<p>The spacious courtyard hosts daily kirtans, festivals, and spiritual programs.</p>',4),
+    ]
+    for ksid,catid,t,s,sd,fc,o in ss_data:
+        db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,o))
+
+    # More sample dhams
+    for t,s,sd,fc,st,ci,lat,lng in [('Mayapur Dham','mayapur-dham','The spiritual headquarters of ISKCON and birthplace of Sri Chaitanya Mahaprabhu.','<h2>The Holy Land of Mayapur</h2><p>Mayapur is one of the most important pilgrimage sites for Gaudiya Vaishnavas.</p>','West Bengal','Nadia',23.4231,88.3884),
+        ('Kedarnath Dham','kedarnath-dham','One of the twelve Jyotirlingas of Lord Shiva.','<h2>Sacred Abode of Lord Shiva</h2><p>Located in the Garhwal Himalayas near the Mandakini river.</p>','Uttarakhand','Rudraprayag',30.7352,79.0669),
+        ('Jagannath Puri Dham','jagannath-puri-dham','The abode of Lord Jagannath, one of the four Dhams.','<h2>The Land of Lord Jagannath</h2><p>Puri is one of the Char Dham pilgrimage sites.</p>','Odisha','Puri',19.8135,85.8312)]:
         db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,'India',?,?,'published',1,1)", (t,s,sd,fc,st,ci,lat,lng))
-    for mod,pid,t,s,c in [(3,mid,'Appearance of Sri Chaitanya','appearance-sri-chaitanya','<p>Sri Chaitanya appeared in Mayapur in 1486 CE amidst ecstatic chanting.</p>'),(3,None,'Legend of Kedarnath','legend-kedarnath','<p>The Pandavas sought Lord Shiva who hid as a bull. His hump remained at Kedarnath.</p>'),(4,None,'Gaura Purnima','gaura-purnima','<p>Celebrates the appearance of Sri Chaitanya. Hundreds of thousands visit Mayapur.</p>')]:
+
+    # Module entries
+    for mod,pid,t,s,c in [(3,dham_id,'Appearance of Sri Chaitanya','appearance-sri-chaitanya','<p>Sri Chaitanya appeared in Mayapur in 1486 CE amidst ecstatic chanting.</p>'),(3,None,'Legend of Kedarnath','legend-kedarnath','<p>The Pandavas sought Lord Shiva who hid as a bull.</p>'),(4,None,'Gaura Purnima','gaura-purnima','<p>Celebrates the appearance of Sri Chaitanya. Hundreds of thousands visit Mayapur.</p>')]:
         db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,status,created_by) VALUES (?,?,?,?,?,'published',1)", (mod,pid,t,s,c))
-    for k,l,d,cat in [('manage_places','Manage Holy Places','Create/edit/delete places','content'),('manage_modules','Manage Modules','Configure modules','system'),('manage_entries','Manage Entries','Create/edit entries','content'),('manage_media','Manage Media','Upload media','media'),('publish_content','Publish Content','Publish/unpublish','content'),('manage_users','Manage Users','Manage accounts','system'),('manage_tags','Manage Tags','Manage categories','content'),('manage_fields','Manage Fields','Configure custom fields','system')]:
+    # Permissions
+    for k,l,d,cat in [('manage_places','Manage Holy Dhams','Create/edit/delete dhams','content'),('manage_modules','Manage Modules','Configure modules','system'),('manage_entries','Manage Entries','Create/edit entries','content'),('manage_media','Manage Media','Upload media','media'),('publish_content','Publish Content','Publish/unpublish','content'),('manage_users','Manage Users','Manage accounts','system'),('manage_tags','Manage Tags','Manage categories','content'),('manage_fields','Manage Fields','Configure custom fields','system')]:
         db.execute("INSERT OR IGNORE INTO permission_definitions (permission_key,label,description,category) VALUES (?,?,?,?)", (k,l,d,cat))
     db.commit()
 
-# Helpers
+# ─── Helpers ───
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
 def slugify(text):
     import re; s=text.lower().strip(); s=re.sub(r'[^\w\s-]','',s); s=re.sub(r'[\s_]+','-',s); return re.sub(r'-+','-',s).strip('-')
@@ -144,12 +252,30 @@ def save_upload(file, subfolder='images'):
 def log_action(uid,action,etype=None,eid=None,details=None):
     get_db().execute("INSERT INTO audit_log (user_id,action,entity_type,entity_id,details) VALUES (?,?,?,?,?)",(uid,action,etype,eid,details)); get_db().commit()
 
+# Helper: get full hierarchy for a dham
+def get_dham_hierarchy(place_id):
+    db=get_db()
+    key_places=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 ORDER BY sort_order",(place_id,)).fetchall()
+    hierarchy=[]
+    for kp in key_places:
+        kp_customs=db.execute("SELECT pcv.*,cfd.name,cfd.label,cfd.field_type FROM key_place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.key_place_id=? AND pcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
+        key_spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color,sc.slug as cat_slug FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.is_visible=1 ORDER BY ks.sort_order",(kp['id'],)).fetchall()
+        spots_with_subs=[]
+        for ks in key_spots:
+            subs=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color,ssc.slug as cat_slug FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.is_visible=1 ORDER BY ss.sort_order",(ks['id'],)).fetchall()
+            spots_with_subs.append({'spot':ks,'sub_spots':subs})
+        hierarchy.append({'place':kp,'customs':kp_customs,'key_spots':spots_with_subs})
+    return hierarchy
+
 @app.context_processor
 def inject_globals():
     db=get_db(); modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
     return {'current_user':get_current_user(),'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'builtin_fields':BUILTIN_FIELDS,'json':json}
 
-# ═══ FRONTEND ═══
+# ═══════════════════════════════════════════
+# FRONTEND ROUTES
+# ═══════════════════════════════════════════
+
 @app.route('/')
 def home():
     db=get_db()
@@ -167,16 +293,13 @@ def place_detail(slug):
     tags=db.execute("SELECT t.* FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?",(place['id'],)).fetchall()
     visibility=json.loads(place['field_visibility'] or '{}')
     custom_values=db.execute("SELECT pcv.*,cfd.name,cfd.label,cfd.field_type FROM place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.place_id=? AND pcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(place['id'],)).fetchall()
-    key_places=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 ORDER BY sort_order",(place['id'],)).fetchall()
-    key_places_data=[]
-    for kp in key_places:
-        kpc=db.execute("SELECT kpcv.*,cfd.name,cfd.label,cfd.field_type FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
-        key_places_data.append({'place':kp,'customs':kpc})
+    hierarchy=get_dham_hierarchy(place['id'])
     media_items=db.execute("SELECT m.*,pm.media_role FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? ORDER BY pm.sort_order",(place['id'],)).fetchall()
     nearby=db.execute("SELECT p.*,np.distance_km FROM places p JOIN nearby_places np ON p.id=np.nearby_place_id WHERE np.place_id=? AND p.status='published'",(place['id'],)).fetchall()
     related_entries=db.execute("SELECT me.*,m.name as module_name,m.icon as module_icon,m.slug as module_slug FROM module_entries me JOIN modules m ON me.module_id=m.id WHERE me.place_id=? AND me.status='published' ORDER BY m.sort_order",(place['id'],)).fetchall()
     related=db.execute("SELECT DISTINCT p.* FROM places p JOIN place_tags pt ON p.id=pt.place_id WHERE pt.tag_id IN (SELECT tag_id FROM place_tags WHERE place_id=?) AND p.id!=? AND p.status='published' LIMIT 3",(place['id'],place['id'])).fetchall()
-    return render_template('frontend/place.html',place=place,tags=tags,visibility=visibility,custom_values=custom_values,key_places_data=key_places_data,media=media_items,nearby=nearby,related_entries=related_entries,related=related)
+    spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall()
+    return render_template('frontend/place.html',place=place,tags=tags,visibility=visibility,custom_values=custom_values,hierarchy=hierarchy,media=media_items,nearby=nearby,related_entries=related_entries,related=related,spot_categories=spot_categories)
 
 @app.route('/place/<slug>/key/<kp_slug>')
 def key_place_detail(slug, kp_slug):
@@ -185,9 +308,39 @@ def key_place_detail(slug, kp_slug):
     kp=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND slug=? AND is_visible=1",(place['id'],kp_slug)).fetchone()
     if not kp: abort(404)
     kp_customs=db.execute("SELECT kpcv.*,cfd.name,cfd.label,cfd.field_type FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
+    key_spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.is_visible=1 ORDER BY ks.sort_order",(kp['id'],)).fetchall()
+    spots_with_subs=[]
+    for ks in key_spots:
+        subs=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.is_visible=1 ORDER BY ss.sort_order",(ks['id'],)).fetchall()
+        spots_with_subs.append({'spot':ks,'sub_spots':subs})
     siblings=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 AND id!=? ORDER BY sort_order",(place['id'],kp['id'])).fetchall()
     tags=db.execute("SELECT t.* FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?",(place['id'],)).fetchall()
-    return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,siblings=siblings,tags=tags)
+    return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,key_spots=spots_with_subs,siblings=siblings,tags=tags)
+
+@app.route('/place/<slug>/key/<kp_slug>/spot/<ks_slug>')
+def key_spot_detail(slug, kp_slug, ks_slug):
+    db=get_db(); place=db.execute("SELECT * FROM places WHERE slug=? AND status='published'",(slug,)).fetchone()
+    if not place: abort(404)
+    kp=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND slug=?",(place['id'],kp_slug)).fetchone()
+    if not kp: abort(404)
+    ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.slug=? AND ks.is_visible=1",(kp['id'],ks_slug)).fetchone()
+    if not ks: abort(404)
+    sub_spots=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.is_visible=1 ORDER BY ss.sort_order",(ks['id'],)).fetchall()
+    siblings=db.execute("SELECT ks2.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks2 LEFT JOIN spot_categories sc ON ks2.category_id=sc.id WHERE ks2.key_place_id=? AND ks2.is_visible=1 AND ks2.id!=? ORDER BY ks2.sort_order",(kp['id'],ks['id'])).fetchall()
+    return render_template('frontend/key_spot.html',place=place,kp=kp,ks=ks,sub_spots=sub_spots,siblings=siblings)
+
+@app.route('/place/<slug>/key/<kp_slug>/spot/<ks_slug>/sub/<ss_slug>')
+def sub_spot_detail(slug, kp_slug, ks_slug, ss_slug):
+    db=get_db(); place=db.execute("SELECT * FROM places WHERE slug=? AND status='published'",(slug,)).fetchone()
+    if not place: abort(404)
+    kp=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND slug=?",(place['id'],kp_slug)).fetchone()
+    if not kp: abort(404)
+    ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.slug=?",(kp['id'],ks_slug)).fetchone()
+    if not ks: abort(404)
+    ss=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.slug=? AND ss.is_visible=1",(ks['id'],ss_slug)).fetchone()
+    if not ss: abort(404)
+    siblings=db.execute("SELECT ss2.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss2 LEFT JOIN sub_spot_categories ssc ON ss2.category_id=ssc.id WHERE ss2.key_spot_id=? AND ss2.is_visible=1 AND ss2.id!=? ORDER BY ss2.sort_order",(ks['id'],ss['id'])).fetchall()
+    return render_template('frontend/sub_spot.html',place=place,kp=kp,ks=ks,ss=ss,siblings=siblings)
 
 @app.route('/explore')
 def explore():
@@ -218,7 +371,10 @@ def entry_detail(mod_slug,entry_slug):
 @app.route('/search')
 def search(): q=request.args.get('q',''); return redirect(url_for('explore',q=q)) if q else redirect(url_for('explore'))
 
-# ═══ ADMIN ═══
+# ═══════════════════════════════════════════
+# ADMIN ROUTES
+# ═══════════════════════════════════════════
+
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     if request.method=='POST':
@@ -236,7 +392,7 @@ def admin_logout(): session.clear(); flash('Logged out.','info'); return redirec
 @login_required
 def admin_dashboard():
     db=get_db()
-    stats={'places':db.execute("SELECT COUNT(*) FROM places").fetchone()[0],'published':db.execute("SELECT COUNT(*) FROM places WHERE status='published'").fetchone()[0],'entries':db.execute("SELECT COUNT(*) FROM module_entries").fetchone()[0],'media':db.execute("SELECT COUNT(*) FROM media").fetchone()[0],'users':db.execute("SELECT COUNT(*) FROM users WHERE is_active=1").fetchone()[0],'modules':db.execute("SELECT COUNT(*) FROM modules WHERE is_active=1").fetchone()[0]}
+    stats={'places':db.execute("SELECT COUNT(*) FROM places").fetchone()[0],'published':db.execute("SELECT COUNT(*) FROM places WHERE status='published'").fetchone()[0],'key_places':db.execute("SELECT COUNT(*) FROM key_places").fetchone()[0],'entries':db.execute("SELECT COUNT(*) FROM module_entries").fetchone()[0],'media':db.execute("SELECT COUNT(*) FROM media").fetchone()[0],'users':db.execute("SELECT COUNT(*) FROM users WHERE is_active=1").fetchone()[0],'modules':db.execute("SELECT COUNT(*) FROM modules WHERE is_active=1").fetchone()[0],'key_spots':db.execute("SELECT COUNT(*) FROM key_spots").fetchone()[0],'sub_spots':db.execute("SELECT COUNT(*) FROM sub_spots").fetchone()[0]}
     return render_template('admin/dashboard.html',stats=stats,recent_places=db.execute("SELECT * FROM places ORDER BY updated_at DESC LIMIT 5").fetchall(),recent_log=db.execute("SELECT al.*,u.display_name FROM audit_log al LEFT JOIN users u ON al.user_id=u.id ORDER BY al.created_at DESC LIMIT 10").fetchall(),modules=db.execute("SELECT m.*,(SELECT COUNT(*) FROM module_entries me WHERE me.module_id=m.id) as entry_count FROM modules m ORDER BY m.sort_order").fetchall())
 
 # Custom Fields
@@ -267,22 +423,22 @@ def admin_field_delete(field_id):
     get_db().execute("DELETE FROM custom_field_defs WHERE id=?",(field_id,)); get_db().commit(); flash('Deleted.','info')
     return redirect(url_for('admin_fields'))
 
-# Places CRUD
+# ─── Places (Dham) CRUD ───
 @app.route('/admin/places')
 @login_required
 def admin_places():
     db=get_db(); sf=request.args.get('status',''); q=request.args.get('q','')
-    query="SELECT * FROM places WHERE 1=1"; params=[]
-    if sf: query+=" AND status=?"; params.append(sf)
-    if q: query+=" AND (title LIKE ? OR city LIKE ? OR state LIKE ?)"; params.extend([f'%{q}%']*3)
-    return render_template('admin/places.html',places=db.execute(query+" ORDER BY updated_at DESC",params).fetchall(),current_status=sf,query=q)
+    query="SELECT p.*,(SELECT COUNT(*) FROM key_places kp WHERE kp.parent_place_id=p.id) as kp_count FROM places p WHERE 1=1"; params=[]
+    if sf: query+=" AND p.status=?"; params.append(sf)
+    if q: query+=" AND (p.title LIKE ? OR p.city LIKE ? OR p.state LIKE ?)"; params.extend([f'%{q}%']*3)
+    return render_template('admin/places.html',places=db.execute(query+" ORDER BY p.updated_at DESC",params).fetchall(),current_status=sf,query=q)
 
 @app.route('/admin/places/new', methods=['GET','POST'])
 @login_required
 def admin_place_new():
     db=get_db()
     if request.method=='POST': return _save_place(None)
-    return render_template('admin/place_form.html',place=None,tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall(),place_tags=[],custom_fields=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','place') ORDER BY sort_order").fetchall(),custom_values={},key_places=[],key_place_customs={},editing=False)
+    return render_template('admin/place_form.html',place=None,tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall(),place_tags=[],custom_fields=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','place') ORDER BY sort_order").fetchall(),custom_values={},key_places=[],key_place_customs={},editing=False,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall())
 
 @app.route('/admin/places/<int:place_id>/edit', methods=['GET','POST'])
 @login_required
@@ -298,7 +454,11 @@ def admin_place_edit(place_id):
     kpc={}
     for kp in kps:
         kpc[kp['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible']} for r in db.execute("SELECT field_def_id,value,is_visible FROM key_place_custom_values WHERE key_place_id=?",(kp['id'],)).fetchall()}
-    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True)
+    # Get key spots count per key place
+    kp_spot_counts={}
+    for kp in kps:
+        kp_spot_counts[kp['id']]=db.execute("SELECT COUNT(*) FROM key_spots WHERE key_place_id=?",(kp['id'],)).fetchone()[0]
+    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts)
 
 def _save_place(place_id):
     db=get_db(); f=request.form; title=f['title']; slug=slugify(title)
@@ -338,7 +498,7 @@ def _save_place(place_id):
         if not val: val=f.get(f"cf_{cf['id']}",'')
         iv=1 if f.get(f"cf_vis_{cf['id']}") else 0
         db.execute("INSERT OR REPLACE INTO place_custom_values (place_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(place_id,cf['id'],val,iv))
-    # Key Places
+    # Key Places (Tier 2)
     existing_kpids=[r['id'] for r in db.execute("SELECT id FROM key_places WHERE parent_place_id=?",(place_id,)).fetchall()]
     submitted_kpids=[]; kpi=0
     while True:
@@ -372,15 +532,98 @@ def _save_place(place_id):
     for oid in existing_kpids:
         if oid not in submitted_kpids: db.execute("DELETE FROM key_places WHERE id=?",(oid,))
     db.commit(); log_action(session['user_id'],'save_place','place',place_id,title)
-    flash(f'Place "{title}" saved!','success'); return redirect(url_for('admin_places'))
+    flash(f'Holy Dham "{title}" saved!','success'); return redirect(url_for('admin_places'))
 
 @app.route('/admin/places/<int:place_id>/delete', methods=['POST'])
 @login_required
 def admin_place_delete(place_id):
-    db=get_db(); p=db.execute("SELECT title FROM places WHERE id=?",(place_id,)).fetchone()
-    db.execute("DELETE FROM places WHERE id=?",(place_id,)); db.commit(); flash('Deleted.','info'); return redirect(url_for('admin_places'))
+    db=get_db(); db.execute("DELETE FROM places WHERE id=?",(place_id,)); db.commit(); flash('Deleted.','info'); return redirect(url_for('admin_places'))
 
-# Modules
+# ─── Key Spots (Tier 3) Admin ───
+@app.route('/admin/key-place/<int:kp_id>/spots')
+@login_required
+def admin_key_place_spots(kp_id):
+    db=get_db()
+    kp=db.execute("SELECT kp.*,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
+    if not kp: abort(404)
+    spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? ORDER BY ks.sort_order",(kp_id,)).fetchall()
+    return render_template('admin/key_spots.html',kp=kp,spots=spots,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall())
+
+@app.route('/admin/key-place/<int:kp_id>/spots/save', methods=['POST'])
+@login_required
+def admin_key_spots_save(kp_id):
+    db=get_db(); f=request.form
+    existing=[r['id'] for r in db.execute("SELECT id FROM key_spots WHERE key_place_id=?",(kp_id,)).fetchall()]
+    submitted=[]; i=0
+    while True:
+        t=f.get(f'ks_{i}_title')
+        if t is None: break
+        if not t.strip(): i+=1; continue
+        sid=f.get(f'ks_{i}_id',type=int); slug=slugify(t)
+        catid=f.get(f'ks_{i}_category',type=int) or None
+        sd=f.get(f'ks_{i}_short_description',''); fc=f.get(f'ks_{i}_full_content','')
+        lat=f.get(f'ks_{i}_latitude',type=float); lng=f.get(f'ks_{i}_longitude',type=float)
+        vis=1 if f.get(f'ks_{i}_is_visible') else 0
+        img=f.get(f'ks_{i}_featured_image_existing','')
+        fk=f'ks_{i}_featured_image_file'
+        if fk in request.files:
+            uf=request.files[fk]
+            if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
+        if sid and sid in existing:
+            db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,lat,lng,i,vis,sid)); submitted.append(sid)
+        else:
+            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (kp_id,catid,t,slug,sd,fc,img,lat,lng,i,vis))
+            sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
+        i+=1
+    for oid in existing:
+        if oid not in submitted: db.execute("DELETE FROM key_spots WHERE id=?",(oid,))
+    db.commit(); flash('Key Spots saved!','success'); return redirect(url_for('admin_key_place_spots',kp_id=kp_id))
+
+# ─── Sub-Spots (Tier 4) Admin ───
+@app.route('/admin/key-spot/<int:ks_id>/subs')
+@login_required
+def admin_key_spot_subs(ks_id):
+    db=get_db()
+    ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,kp.title as kp_title,kp.id as kp_id,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
+    if not ks: abort(404)
+    subs=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? ORDER BY ss.sort_order",(ks_id,)).fetchall()
+    return render_template('admin/sub_spots.html',ks=ks,subs=subs,sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall())
+
+@app.route('/admin/key-spot/<int:ks_id>/subs/save', methods=['POST'])
+@login_required
+def admin_sub_spots_save(ks_id):
+    db=get_db(); f=request.form
+    existing=[r['id'] for r in db.execute("SELECT id FROM sub_spots WHERE key_spot_id=?",(ks_id,)).fetchall()]
+    submitted=[]; i=0
+    while True:
+        t=f.get(f'ss_{i}_title')
+        if t is None: break
+        if not t.strip(): i+=1; continue
+        sid=f.get(f'ss_{i}_id',type=int); slug=slugify(t)
+        catid=f.get(f'ss_{i}_category',type=int) or None
+        sd=f.get(f'ss_{i}_short_description',''); fc=f.get(f'ss_{i}_full_content','')
+        lat=f.get(f'ss_{i}_latitude',type=float); lng=f.get(f'ss_{i}_longitude',type=float)
+        vis=1 if f.get(f'ss_{i}_is_visible') else 0
+        img=f.get(f'ss_{i}_featured_image_existing','')
+        fk=f'ss_{i}_featured_image_file'
+        if fk in request.files:
+            uf=request.files[fk]
+            if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
+        if sid and sid in existing:
+            db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,lat,lng,i,vis,sid)); submitted.append(sid)
+        else:
+            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (ks_id,catid,t,slug,sd,fc,img,lat,lng,i,vis))
+            sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
+        i+=1
+    for oid in existing:
+        if oid not in submitted: db.execute("DELETE FROM sub_spots WHERE id=?",(oid,))
+    db.commit(); flash('Sub-Spots saved!','success'); return redirect(url_for('admin_key_spot_subs',ks_id=ks_id))
+
+# ─── Modules ───
 @app.route('/admin/modules')
 @login_required
 def admin_modules():
@@ -411,7 +654,7 @@ def admin_module_edit(mod_id):
 @login_required
 def admin_module_delete(mod_id): get_db().execute("DELETE FROM modules WHERE id=?",(mod_id,)); get_db().commit(); flash('Deleted.','info'); return redirect(url_for('admin_modules'))
 
-# Entries
+# ─── Entries ───
 @app.route('/admin/entries')
 @app.route('/admin/entries/<int:mod_id>')
 @login_required
@@ -447,7 +690,7 @@ def admin_entry_edit(entry_id):
 @login_required
 def admin_entry_delete(entry_id): get_db().execute("DELETE FROM module_entries WHERE id=?",(entry_id,)); get_db().commit(); flash('Deleted.','info'); return redirect(url_for('admin_entries'))
 
-# Media
+# ─── Media ───
 @app.route('/admin/media')
 @login_required
 def admin_media():
@@ -467,14 +710,14 @@ def admin_media_upload():
 @app.route('/admin/media/<int:media_id>/delete', methods=['POST'])
 @login_required
 def admin_media_delete(media_id):
-    db=get_db(); m=db.execute("SELECT * FROM media WHERE id=?",(mod_id,)).fetchone()
+    db=get_db(); m=db.execute("SELECT * FROM media WHERE id=?",(media_id,)).fetchone()
     if m:
         fp=os.path.join(app.config['UPLOAD_FOLDER'],m['filename'])
         if os.path.exists(fp): os.remove(fp)
-        db.execute("DELETE FROM media WHERE id=?",(mod_id,)); db.commit()
+        db.execute("DELETE FROM media WHERE id=?",(media_id,)); db.commit()
     flash('Deleted.','info'); return redirect(url_for('admin_media'))
 
-# Users
+# ─── Users ───
 @app.route('/admin/users')
 @login_required
 @role_required('super_admin')
@@ -512,7 +755,7 @@ def admin_user_delete(user_id):
     if user_id==session['user_id']: flash('Cannot.','error'); return redirect(url_for('admin_users'))
     get_db().execute("UPDATE users SET is_active=0 WHERE id=?",(user_id,)); get_db().commit(); flash('Deactivated.','info'); return redirect(url_for('admin_users'))
 
-# Tags
+# ─── Tags ───
 @app.route('/admin/tags', methods=['GET','POST'])
 @login_required
 def admin_tags():
@@ -527,7 +770,7 @@ def admin_tags():
 @login_required
 def admin_tag_delete(tag_id): get_db().execute("DELETE FROM tags WHERE id=?",(tag_id,)); get_db().commit(); flash('Deleted.','info'); return redirect(url_for('admin_tags'))
 
-# API
+# ─── API ───
 @app.route('/api/v1/places')
 def api_places():
     db=get_db(); page=request.args.get('page',1,type=int); pp=20; q=request.args.get('q','')
@@ -558,6 +801,23 @@ def api_search():
     q=request.args.get('q','');
     if not q: return jsonify({'results':[]})
     db=get_db(); return jsonify({'places':[dict(r) for r in db.execute("SELECT id,title,slug,short_description,state,city FROM places WHERE status='published' AND (title LIKE ? OR short_description LIKE ?) LIMIT 10",(f'%{q}%',f'%{q}%')).fetchall()]})
+
+# ─── Hierarchy API ───
+@app.route('/api/v1/places/<slug>/hierarchy')
+def api_place_hierarchy(slug):
+    db=get_db(); place=db.execute("SELECT * FROM places WHERE slug=? AND status='published'",(slug,)).fetchone()
+    if not place: return jsonify({'error':'Not found'}),404
+    h=get_dham_hierarchy(place['id'])
+    result=[]
+    for kp_data in h:
+        kp_dict=dict(kp_data['place'])
+        kp_dict['key_spots']=[]
+        for ks_data in kp_data['key_spots']:
+            ks_dict=dict(ks_data['spot'])
+            ks_dict['sub_spots']=[dict(ss) for ss in ks_data['sub_spots']]
+            kp_dict['key_spots'].append(ks_dict)
+        result.append(kp_dict)
+    return jsonify({'dham':dict(place),'key_places':result})
 
 @app.errorhandler(404)
 def not_found(e):

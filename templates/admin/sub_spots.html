@@ -1,0 +1,122 @@
+{% extends "admin/base.html" %}
+{% block title %}Sub-Spots (Tier 4) — {{ ks.title }}{% endblock %}
+{% block page_title %}
+<div style="display:flex;align-items:center;gap:12px">
+<span style="width:36px;height:36px;background:#9C27B015;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">✦</span>
+<div>
+<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#9C27B0">Tier 4 · Sub-Spots</div>
+<div>{{ ks.title }}</div>
+</div>
+</div>
+{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_key_place_spots', kp_id=ks.kp_id) }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Key Spots</a>
+{% endblock %}
+
+{% block admin_content %}
+<!-- Full Hierarchy Breadcrumb with ALL 4 Tier labels -->
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:20px;font-size:13px">
+<a href="{{ url_for('admin_places') }}" style="display:flex;align-items:center;gap:4px;text-decoration:none;color:var(--text-light)"><span style="width:18px;height:18px;background:#C76B8F;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T1</span> {{ ks.dham_title }}</a>
+<span style="color:var(--text-light)">›</span>
+<a href="{{ url_for('admin_place_edit', place_id=ks.dham_id) }}" style="display:flex;align-items:center;gap:4px;text-decoration:none;color:#2E86AB"><span style="width:18px;height:18px;background:#2E86AB;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T2</span> {{ ks.kp_title }}</a>
+<span style="color:var(--text-light)">›</span>
+<a href="{{ url_for('admin_key_place_spots', kp_id=ks.kp_id) }}" style="display:flex;align-items:center;gap:4px;text-decoration:none;color:#E74845"><span style="width:18px;height:18px;background:#E74845;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T3</span> {{ ks.title }}</a>
+<span style="color:var(--text-light)">›</span>
+<span style="display:flex;align-items:center;gap:4px;color:#9C27B0;font-weight:700"><span style="width:18px;height:18px;background:#9C27B0;color:white;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:700">T4</span> Sub-Spots</span>
+</div>
+
+<!-- Tier Info Banner -->
+<div style="background:linear-gradient(135deg,#faf5fc,#f3ecf8);border:1.5px solid #9C27B020;border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+<span style="width:44px;height:44px;background:#9C27B015;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">✦</span>
+<div style="flex:1;min-width:200px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+<span style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;background:#9C27B0;color:white;border-radius:50px">Tier 4</span>
+<span style="font-size:14px;font-weight:700;color:#9C27B0">Sub-Spots</span>
+</div>
+<div style="font-size:13px;color:var(--text-mid)">Specific sacred points within <strong>{{ ks.title }}</strong> <span style="padding:2px 8px;background:{{ ks.cat_color or '#666' }}12;color:{{ ks.cat_color or '#666' }};border-radius:50px;font-size:11px;font-weight:600;border:1px solid {{ ks.cat_color or '#666' }}20">{{ ks.cat_icon or '📍' }} {{ ks.cat_name or 'Key Spot' }}</span> — for deeper engagement</div>
+</div>
+<div style="text-align:center;padding:8px 16px;background:white;border-radius:10px;border:1px solid var(--border)">
+<div style="font-size:24px;font-weight:700;color:#9C27B0">{{ subs|length }}</div>
+<div style="font-size:11px;color:var(--text-light)">Sub-Spots</div>
+</div>
+</div>
+
+<form method="POST" action="{{ url_for('admin_sub_spots_save', ks_id=ks.id) }}" enctype="multipart/form-data">
+<div id="subs-container">
+{% for sub in subs %}
+<div class="ss-item admin-card" style="margin-bottom:16px;border-left:4px solid {{ sub.cat_color or '#9C27B0' }}" data-index="{{ loop.index0 }}">
+<input type="hidden" name="ss_{{ loop.index0 }}_id" value="{{ sub.id }}">
+<div class="admin-card-header" style="cursor:pointer;user-select:none" onclick="this.parentElement.classList.toggle('ss-collapsed')">
+<div style="display:flex;align-items:center;gap:10px">
+<span style="font-size:18px">{{ sub.cat_icon or '✦' }}</span>
+<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#9C27B010;color:#9C27B0;border-radius:50px;border:1px solid #9C27B020">Tier 4</span>
+<h3 class="ss-title-display" style="margin:0">{{ sub.title }}</h3>
+<span class="badge" style="background:{{ sub.cat_color or '#9C27B0' }}15;color:{{ sub.cat_color or '#9C27B0' }};font-size:11px;border:1px solid {{ sub.cat_color or '#9C27B0' }}25">{{ sub.cat_name or 'No Category' }}</span>
+</div>
+<i class="fas fa-chevron-down ss-chevron" style="transition:transform .3s;color:var(--text-light)"></i>
+</div>
+<div class="ss-body" style="padding:20px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div class="form-group"><label>Title *</label><input type="text" class="form-control" name="ss_{{ loop.index0 }}_title" value="{{ sub.title }}" required></div>
+<div class="form-group"><label>Category <span style="font-size:10px;color:var(--text-light)">(10 types from framework)</span></label>
+<select class="form-control" name="ss_{{ loop.index0 }}_category">
+<option value="">— Select Category —</option>
+{% for cat in sub_spot_categories %}<option value="{{ cat.id }}" {{ 'selected' if sub.category_id == cat.id }}>{{ cat.icon }} {{ cat.name }} — {{ cat.description }}</option>{% endfor %}
+</select></div>
+</div>
+<div class="form-group"><label>Short Description</label><textarea class="form-control" name="ss_{{ loop.index0 }}_short_description" rows="2">{{ sub.short_description or '' }}</textarea></div>
+<div class="form-group"><label>Full Content</label><textarea class="form-control" name="ss_{{ loop.index0 }}_full_content" rows="4" style="min-height:100px">{{ sub.full_content or '' }}</textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+<div class="form-group"><label>Latitude</label><input type="number" class="form-control" name="ss_{{ loop.index0 }}_latitude" value="{{ sub.latitude or '' }}" step="any"></div>
+<div class="form-group"><label>Longitude</label><input type="number" class="form-control" name="ss_{{ loop.index0 }}_longitude" value="{{ sub.longitude or '' }}" step="any"></div>
+<div class="form-group"><label>Featured Image</label>
+{% if sub.featured_image %}<input type="hidden" name="ss_{{ loop.index0 }}_featured_image_existing" value="{{ sub.featured_image }}"><div style="font-size:12px;color:var(--text-light);margin-bottom:4px">{{ sub.featured_image }}</div>{% endif %}
+<input type="file" class="form-control" name="ss_{{ loop.index0 }}_featured_image_file" accept="image/*">
+</div>
+</div>
+<div class="form-group"><label><input type="checkbox" name="ss_{{ loop.index0 }}_is_visible" {{ 'checked' if sub.is_visible }}> Visible on frontend</label></div>
+<button type="button" class="btn btn-sm" style="background:#e74c3c15;color:#e74c3c;border:1px solid #e74c3c30;margin-top:8px" onclick="this.closest('.ss-item').remove()"><i class="fas fa-trash"></i> Remove</button>
+</div>
+</div>
+{% endfor %}
+</div>
+
+<div style="display:flex;gap:12px;margin-top:20px">
+<button type="button" class="btn btn-secondary" id="addSubBtn" style="border-color:#9C27B040;color:#9C27B0"><i class="fas fa-plus"></i> Add Sub-Spot (Tier 4)</button>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save All Sub-Spots</button>
+</div>
+</form>
+
+<style>
+.ss-item.ss-collapsed .ss-body{display:none}
+.ss-item.ss-collapsed .ss-chevron{transform:rotate(-90deg)}
+</style>
+<script>
+let subIdx = {{ subs|length }};
+document.getElementById('addSubBtn').addEventListener('click', function(){
+    const c = document.getElementById('subs-container');
+    const html = `<div class="ss-item admin-card" style="margin-bottom:16px;border-left:4px solid #9C27B0" data-index="${subIdx}">
+    <div class="admin-card-header" onclick="this.parentElement.classList.toggle('ss-collapsed')" style="cursor:pointer;user-select:none">
+    <div style="display:flex;align-items:center;gap:10px"><span style="font-size:18px">✦</span><span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#9C27B010;color:#9C27B0;border-radius:50px;border:1px solid #9C27B020">Tier 4</span><h3>New Sub-Spot</h3></div>
+    <i class="fas fa-chevron-down ss-chevron" style="transition:transform .3s;color:var(--text-light)"></i>
+    </div>
+    <div class="ss-body" style="padding:20px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="form-group"><label>Title *</label><input type="text" class="form-control" name="ss_${subIdx}_title" required></div>
+    <div class="form-group"><label>Category</label><select class="form-control" name="ss_${subIdx}_category"><option value="">— Select Category —</option>{% for cat in sub_spot_categories %}<option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }} — {{ cat.description }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="form-group"><label>Short Description</label><textarea class="form-control" name="ss_${subIdx}_short_description" rows="2"></textarea></div>
+    <div class="form-group"><label>Full Content</label><textarea class="form-control" name="ss_${subIdx}_full_content" rows="4" style="min-height:100px"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div class="form-group"><label>Latitude</label><input type="number" class="form-control" name="ss_${subIdx}_latitude" step="any"></div>
+    <div class="form-group"><label>Longitude</label><input type="number" class="form-control" name="ss_${subIdx}_longitude" step="any"></div>
+    <div class="form-group"><label>Featured Image</label><input type="file" class="form-control" name="ss_${subIdx}_featured_image_file" accept="image/*"></div>
+    </div>
+    <div class="form-group"><label><input type="checkbox" name="ss_${subIdx}_is_visible" checked> Visible on frontend</label></div>
+    <button type="button" class="btn btn-sm" style="background:#e74c3c15;color:#e74c3c;border:1px solid #e74c3c30;margin-top:8px" onclick="this.closest('.ss-item').remove()"><i class="fas fa-trash"></i> Remove</button>
+    </div></div>`;
+    c.insertAdjacentHTML('beforeend', html);
+    subIdx++;
+});
+</script>
+{% endblock %}

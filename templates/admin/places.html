@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
-{% block title %}Holy Places{% endblock %}
-{% block page_title %}Holy Places{% endblock %}
-{% block topbar_actions %}<a href="{{ url_for('admin_place_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Place</a>{% endblock %}
+{% block title %}Holy Dhams{% endblock %}
+{% block page_title %}Holy Dhams{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_place_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Dham</a>{% endblock %}
 
 {% block admin_content %}
 <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
@@ -9,7 +9,7 @@
 <a class="btn btn-sm {{ 'btn-primary' if current_status=='published' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='published') }}">Published</a>
 <a class="btn btn-sm {{ 'btn-primary' if current_status=='draft' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='draft') }}">Drafts</a>
 <form action="{{ url_for('admin_places') }}" method="GET" style="margin-left:auto;display:flex;gap:8px">
-<input name="q" value="{{ query }}" placeholder="Search places..." class="form-control" style="width:240px;padding:8px 14px">
+<input name="q" value="{{ query }}" placeholder="Search dhams..." class="form-control" style="width:240px;padding:8px 14px">
 <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i></button>
 </form>
 </div>
@@ -18,12 +18,16 @@
 {% if places %}
 <div style="overflow-x:auto">
 <table class="admin-table">
-<thead><tr><th>Title</th><th>Location</th><th>Status</th><th>Featured</th><th>Views</th><th>Updated</th><th>Actions</th></tr></thead>
+<thead><tr><th>Dham Name</th><th>Location</th><th>Key Places</th><th>Status</th><th>Featured</th><th>Views</th><th>Updated</th><th>Actions</th></tr></thead>
 <tbody>
 {% for place in places %}
 <tr>
-<td><a href="{{ url_for('admin_place_edit', place_id=place.id) }}" style="font-weight:600;color:var(--text)">{{ place.title }}</a></td>
-<td style="font-size:13px;color:var(--text-light)">{{ place.city }}, {{ place.state }}</td>
+<td>
+<a href="{{ url_for('admin_place_edit', place_id=place.id) }}" style="font-weight:600;color:var(--text)">{{ place.title }}</a>
+<div style="font-size:11px;color:var(--text-light);margin-top:2px">🙏 Tier 1 · Holy Dham</div>
+</td>
+<td style="font-size:13px;color:var(--text-light)">{{ place.city }}{% if place.city and place.state %}, {% endif %}{{ place.state }}</td>
+<td><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--primary-light);color:var(--primary);border-radius:50px;font-size:12px;font-weight:600">📍 {{ place.kp_count }}</span></td>
 <td><span class="badge badge-{{ place.status }}">{{ place.status }}</span></td>
 <td>{% if place.is_featured %}<i class="fas fa-star" style="color:var(--warning)"></i>{% endif %}</td>
 <td>{{ place.view_count }}</td>
@@ -31,7 +35,7 @@
 <td class="actions">
 <a href="{{ url_for('admin_place_edit', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
 <a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary btn-icon btn-sm" title="View"><i class="fas fa-eye"></i></a>
-<form method="POST" action="{{ url_for('admin_place_delete', place_id=place.id) }}" style="display:inline" onsubmit="return confirm('Delete this place?')">
+<form method="POST" action="{{ url_for('admin_place_delete', place_id=place.id) }}" style="display:inline" onsubmit="return confirm('Delete this dham?')">
 <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete"><i class="fas fa-trash"></i></button>
 </form>
 </td>
@@ -41,7 +45,7 @@
 </table>
 </div>
 {% else %}
-<div class="empty"><span class="icon">🛕</span><h3>No places found</h3><p>Create your first holy place to get started.</p></div>
+<div class="empty"><span class="icon">🛕</span><h3>No Holy Dhams found</h3><p>Create your first Holy Dham to begin building the spiritual hierarchy.</p></div>
 {% endif %}
 </div>
 {% endblock %}
