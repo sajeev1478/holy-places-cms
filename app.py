@@ -20,6 +20,43 @@ ALLOWED_IMAGE_EXT = {'png','jpg','jpeg','gif','webp','svg'}
 ALLOWED_AUDIO_EXT = {'mp3','wav','ogg','aac'}
 ALLOWED_VIDEO_EXT = {'mp4','webm','mov'}
 
+# ─── Predefined Icon Library (50+ icons for field selection) ───
+FIELD_ICONS = [
+    ('🕐','Clock / Hours'),('⏰','Alarm / Timing'),('🕰️','Mantle Clock'),
+    ('📅','Calendar / Date'),('🌤️','Weather / Season'),('☀️','Sun / Summer'),('❄️','Winter'),
+    ('🚗','Car / Drive'),('✈️','Flight'),('🚌','Bus'),('🚂','Train'),('🛺','Auto / Rickshaw'),('🗺️','Map / Route'),('🧭','Compass'),
+    ('🏨','Hotel / Stay'),('🛏️','Bed / Room'),('🏠','House'),('🏕️','Camp'),
+    ('📜','History / Scroll'),('🏛️','Heritage'),('📚','Books'),('📖','Open Book'),
+    ('👔','Formal Dress'),('👗','Dress'),('🥻','Saree'),('👞','Shoes'),
+    ('🎵','Music / Audio'),('🔊','Speaker'),('🎙️','Microphone'),('🎶','Musical Notes'),
+    ('🎬','Video / Film'),('📹','Camera'),('🎥','Movie Camera'),
+    ('🖼️','Gallery / Frame'),('📷','Photo'),('🎞️','Film Strip'),('📸','Camera Flash'),
+    ('🔗','Link / URL'),('🌐','Web / Globe'),
+    ('💰','Cost / Fee'),('🎫','Ticket'),('💳','Card / Payment'),('🆓','Free'),
+    ('📍','Location / Pin'),('📌','Pinned'),('🗺️','Map'),
+    ('📋','Clipboard / Info'),('ℹ️','Information'),('📄','Document'),('📝','Notes / Write'),
+    ('🙏','Prayer / Worship'),('🪔','Diya / Lamp'),('🕉️','Om / Sacred'),('📿','Mala / Beads'),
+    ('🛕','Temple'),('⛩️','Shrine / Torii'),('🔔','Bell'),('🌺','Flower / Offering'),
+    ('🧘','Meditation'),('💐','Bouquet'),('🌸','Cherry Blossom'),('🪷','Lotus'),
+    ('☎️','Phone'),('📞','Telephone'),('✉️','Email'),('📮','Mail'),
+    ('⚠️','Warning / Note'),('✅','Checkmark'),('❌','Cross / Closed'),('🔒','Locked / Private'),
+    ('🌊','Water / River'),('⛰️','Mountain'),('🌳','Tree / Forest'),('🌙','Moon / Night'),
+    ('🍲','Food'),('☕','Tea / Coffee'),('🥤','Drink'),('🍽️','Dining'),
+    ('♿','Accessibility'),('🚻','Restroom'),('🅿️','Parking'),('🚰','Drinking Water'),
+]
+
+# Default icons for built-in & custom fields
+FIELD_DEFAULT_ICONS = {
+    'title':'📝','city':'🏙️','state':'🗺️','country':'🌍',
+    'short_description':'📋','full_content':'📖','featured_image':'🖼️',
+    'latitude':'📍','longitude':'📍','tags':'🏷️','status':'📊','is_featured':'⭐',
+    'audio_narration':'🎵','video_tour':'🎬','gallery_images':'🖼️',
+    'opening_hours':'🕐','best_time_to_visit':'🌤️','how_to_reach':'🚗',
+    'accommodation':'🏨','history':'📜','dress_code':'🥻',
+    'external_audio_url':'🔗','external_video_url':'🔗',
+    'entry_fee':'💰','phone':'☎️','email':'✉️','website':'🌐',
+}
+
 BUILTIN_FIELDS = [
     {'key':'title','label':'Title','type':'text','required':True},
     {'key':'city','label':'City','type':'text'},
@@ -86,9 +123,9 @@ def init_db():
     CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'editor', permissions TEXT DEFAULT '{}', is_active INTEGER DEFAULT 1, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, last_login TIMESTAMP);
     CREATE TABLE IF NOT EXISTS modules (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, description TEXT, icon TEXT DEFAULT '📁', sort_order INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1, fields_schema TEXT DEFAULT '[]', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS places (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, short_description TEXT, full_content TEXT, state TEXT, city TEXT, country TEXT DEFAULT 'India', latitude REAL, longitude REAL, featured_image TEXT, status TEXT DEFAULT 'draft', is_featured INTEGER DEFAULT 0, view_count INTEGER DEFAULT 0, field_visibility TEXT DEFAULT '{}', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-    CREATE TABLE IF NOT EXISTS custom_field_defs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, label TEXT NOT NULL, field_type TEXT NOT NULL DEFAULT 'text', placeholder TEXT DEFAULT '', is_active INTEGER DEFAULT 1, sort_order INTEGER DEFAULT 0, applies_to TEXT DEFAULT 'both', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+    CREATE TABLE IF NOT EXISTS custom_field_defs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, label TEXT NOT NULL, field_type TEXT NOT NULL DEFAULT 'text', placeholder TEXT DEFAULT '', icon TEXT DEFAULT '📋', is_active INTEGER DEFAULT 1, sort_order INTEGER DEFAULT 0, applies_to TEXT DEFAULT 'both', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS place_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, place_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(place_id, field_def_id));
-    CREATE TABLE IF NOT EXISTS key_places (id INTEGER PRIMARY KEY AUTOINCREMENT, parent_place_id INTEGER NOT NULL, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (parent_place_id) REFERENCES places(id) ON DELETE CASCADE);
+    CREATE TABLE IF NOT EXISTS key_places (id INTEGER PRIMARY KEY AUTOINCREMENT, parent_place_id INTEGER NOT NULL, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (parent_place_id) REFERENCES places(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS key_place_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(key_place_id, field_def_id));
 
     /* ─── NEW: Tier 3 & 4 Category Tables ─── */
@@ -96,10 +133,12 @@ def init_db():
     CREATE TABLE IF NOT EXISTS sub_spot_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT UNIQUE NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT DEFAULT '📍', color TEXT DEFAULT '#666');
 
     /* ─── NEW: Tier 3 Key Spots ─── */
-    CREATE TABLE IF NOT EXISTS key_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES spot_categories(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS key_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', state TEXT, city TEXT, country TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES spot_categories(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS key_spot_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(key_spot_id, field_def_id));
 
-    /* ─── NEW: Tier 4 Sub-Spots ─── */
-    CREATE TABLE IF NOT EXISTS sub_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES sub_spot_categories(id) ON DELETE SET NULL);
+    /* ─── NEW: Tier 4 Key Points ─── */
+    CREATE TABLE IF NOT EXISTS sub_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', state TEXT, city TEXT, country TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES sub_spot_categories(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS sub_spot_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, sub_spot_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (sub_spot_id) REFERENCES sub_spots(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(sub_spot_id, field_def_id));
 
     CREATE TABLE IF NOT EXISTS module_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, module_id INTEGER NOT NULL, place_id INTEGER, title TEXT NOT NULL, slug TEXT NOT NULL, content TEXT, custom_fields TEXT DEFAULT '{}', featured_image TEXT, status TEXT DEFAULT 'draft', sort_order INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS media (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, original_name TEXT NOT NULL, file_type TEXT NOT NULL, mime_type TEXT, file_size INTEGER, folder TEXT DEFAULT 'general', alt_text TEXT, caption TEXT, uploaded_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
@@ -133,9 +172,9 @@ def seed_db():
     # Tags
     for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843'),('Braj Dham','braj-dham','#E84855'),('Gaudiya Vaishnava','gaudiya-vaishnava','#6C5CE7')]:
         db.execute("INSERT INTO tags (name,slug,color) VALUES (?,?,?)", (name,slug,color))
-    # Custom Fields (no entry_fee)
-    for name,label,ftype,ph,order,applies in [('audio_narration','Audio Narration','audio','Upload audio',1,'both'),('video_tour','Video Tour','video','Upload or paste URL',2,'both'),('gallery_images','Gallery Images','images','Upload photos',3,'both'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both'),('how_to_reach','How to Reach','textarea','Directions',6,'place'),('accommodation','Accommodation','textarea','Stay options',7,'place'),('history','History & Significance','richtext','Detailed history',8,'both'),('dress_code','Dress Code','text','If any',9,'both'),('external_audio_url','External Audio Link','url','Audio URL',11,'both'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both')]:
-        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to) VALUES (?,?,?,?,?,?)", (name,label,ftype,ph,order,applies))
+    # Custom Fields with icons
+    for name,label,ftype,ph,order,applies,icon in [('audio_narration','Audio Narration','audio','Upload audio',1,'both','🎵'),('video_tour','Video Tour','video','Upload or paste URL',2,'both','🎬'),('gallery_images','Gallery Images','images','Upload photos',3,'both','🖼️'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both','🕐'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both','🌤️'),('how_to_reach','How to Reach','textarea','Directions',6,'place','🚗'),('accommodation','Accommodation','textarea','Stay options',7,'place','🏨'),('history','History & Significance','richtext','Detailed history',8,'both','📜'),('dress_code','Dress Code','text','If any',9,'both','🥻'),('external_audio_url','External Audio Link','url','Audio URL',11,'both','🔗'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both','🔗')]:
+        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon) VALUES (?,?,?,?,?,?,?)", (name,label,ftype,ph,order,applies,icon))
 
     # ─── SAMPLE: Vrindavan Dham (Tier 1) ───
     db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)",
@@ -178,7 +217,7 @@ def seed_db():
     ]
     ks_ids = {}
     for kpid,catid,t,s,sd,fc,lat,lng,o in ks_data:
-        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,lat,lng,o))
+        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,'Uttar Pradesh','Mathura','India',lat,lng,o))
         ks_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
 
     # ─── Tier 4: Sub-Spots (with categories) ───
@@ -194,7 +233,7 @@ def seed_db():
         (ks_ids['iskcon-krishna-balaram'],courtyard_cat,'Temple Courtyard','temple-courtyard','Open gathering space for kirtans.','<p>The spacious courtyard hosts daily kirtans, festivals, and spiritual programs.</p>',4),
     ]
     for ksid,catid,t,s,sd,fc,o in ss_data:
-        db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,o))
+        db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,state,city,country,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,'Uttar Pradesh','Vrindavan','India',o))
 
     # More sample dhams
     for t,s,sd,fc,st,ci,lat,lng in [('Mayapur Dham','mayapur-dham','The spiritual headquarters of ISKCON and birthplace of Sri Chaitanya Mahaprabhu.','<h2>The Holy Land of Mayapur</h2><p>Mayapur is one of the most important pilgrimage sites for Gaudiya Vaishnavas.</p>','West Bengal','Nadia',23.4231,88.3884),
@@ -258,7 +297,7 @@ def get_dham_hierarchy(place_id):
     key_places=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 ORDER BY sort_order",(place_id,)).fetchall()
     hierarchy=[]
     for kp in key_places:
-        kp_customs=db.execute("SELECT pcv.*,cfd.name,cfd.label,cfd.field_type FROM key_place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.key_place_id=? AND pcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
+        kp_customs=db.execute("SELECT pcv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM key_place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.key_place_id=? AND pcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
         key_spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color,sc.slug as cat_slug FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.is_visible=1 ORDER BY ks.sort_order",(kp['id'],)).fetchall()
         spots_with_subs=[]
         for ks in key_spots:
@@ -270,7 +309,7 @@ def get_dham_hierarchy(place_id):
 @app.context_processor
 def inject_globals():
     db=get_db(); modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
-    return {'current_user':get_current_user(),'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'builtin_fields':BUILTIN_FIELDS,'json':json}
+    return {'current_user':get_current_user(),'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS}
 
 # ═══════════════════════════════════════════
 # FRONTEND ROUTES
@@ -292,7 +331,7 @@ def place_detail(slug):
     db.execute("UPDATE places SET view_count=view_count+1 WHERE id=?",(place['id'],)); db.commit()
     tags=db.execute("SELECT t.* FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?",(place['id'],)).fetchall()
     visibility=json.loads(place['field_visibility'] or '{}')
-    custom_values=db.execute("SELECT pcv.*,cfd.name,cfd.label,cfd.field_type FROM place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.place_id=? AND pcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(place['id'],)).fetchall()
+    custom_values=db.execute("SELECT pcv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.place_id=? AND pcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(place['id'],)).fetchall()
     hierarchy=get_dham_hierarchy(place['id'])
     media_items=db.execute("SELECT m.*,pm.media_role FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? ORDER BY pm.sort_order",(place['id'],)).fetchall()
     nearby=db.execute("SELECT p.*,np.distance_km FROM places p JOIN nearby_places np ON p.id=np.nearby_place_id WHERE np.place_id=? AND p.status='published'",(place['id'],)).fetchall()
@@ -307,7 +346,7 @@ def key_place_detail(slug, kp_slug):
     if not place: abort(404)
     kp=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND slug=? AND is_visible=1",(place['id'],kp_slug)).fetchone()
     if not kp: abort(404)
-    kp_customs=db.execute("SELECT kpcv.*,cfd.name,cfd.label,cfd.field_type FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
+    kp_customs=db.execute("SELECT kpcv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
     key_spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.is_visible=1 ORDER BY ks.sort_order",(kp['id'],)).fetchall()
     spots_with_subs=[]
     for ks in key_spots:
@@ -315,7 +354,8 @@ def key_place_detail(slug, kp_slug):
         spots_with_subs.append({'spot':ks,'sub_spots':subs})
     siblings=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 AND id!=? ORDER BY sort_order",(place['id'],kp['id'])).fetchall()
     tags=db.execute("SELECT t.* FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?",(place['id'],)).fetchall()
-    return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,key_spots=spots_with_subs,siblings=siblings,tags=tags)
+    kp_gallery=[x.strip() for x in (kp['gallery_images'] or '').split(',') if x.strip()]
+    return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,key_spots=spots_with_subs,siblings=siblings,tags=tags,kp_gallery=kp_gallery)
 
 @app.route('/place/<slug>/key/<kp_slug>/spot/<ks_slug>')
 def key_spot_detail(slug, kp_slug, ks_slug):
@@ -326,8 +366,10 @@ def key_spot_detail(slug, kp_slug, ks_slug):
     ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.slug=? AND ks.is_visible=1",(kp['id'],ks_slug)).fetchone()
     if not ks: abort(404)
     sub_spots=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.is_visible=1 ORDER BY ss.sort_order",(ks['id'],)).fetchall()
+    ks_customs=db.execute("SELECT kscv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM key_spot_custom_values kscv JOIN custom_field_defs cfd ON kscv.field_def_id=cfd.id WHERE kscv.key_spot_id=? AND kscv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(ks['id'],)).fetchall()
+    ks_gallery=[x.strip() for x in (ks['gallery_images'] or '').split(',') if x.strip()]
     siblings=db.execute("SELECT ks2.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks2 LEFT JOIN spot_categories sc ON ks2.category_id=sc.id WHERE ks2.key_place_id=? AND ks2.is_visible=1 AND ks2.id!=? ORDER BY ks2.sort_order",(kp['id'],ks['id'])).fetchall()
-    return render_template('frontend/key_spot.html',place=place,kp=kp,ks=ks,sub_spots=sub_spots,siblings=siblings)
+    return render_template('frontend/key_spot.html',place=place,kp=kp,ks=ks,sub_spots=sub_spots,siblings=siblings,ks_customs=ks_customs,ks_gallery=ks_gallery)
 
 @app.route('/place/<slug>/key/<kp_slug>/spot/<ks_slug>/sub/<ss_slug>')
 def sub_spot_detail(slug, kp_slug, ks_slug, ss_slug):
@@ -339,8 +381,10 @@ def sub_spot_detail(slug, kp_slug, ks_slug, ss_slug):
     if not ks: abort(404)
     ss=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.slug=? AND ss.is_visible=1",(ks['id'],ss_slug)).fetchone()
     if not ss: abort(404)
+    ss_customs=db.execute("SELECT sscv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM sub_spot_custom_values sscv JOIN custom_field_defs cfd ON sscv.field_def_id=cfd.id WHERE sscv.sub_spot_id=? AND sscv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(ss['id'],)).fetchall()
+    ss_gallery=[x.strip() for x in (ss['gallery_images'] or '').split(',') if x.strip()]
     siblings=db.execute("SELECT ss2.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss2 LEFT JOIN sub_spot_categories ssc ON ss2.category_id=ssc.id WHERE ss2.key_spot_id=? AND ss2.is_visible=1 AND ss2.id!=? ORDER BY ss2.sort_order",(ks['id'],ss['id'])).fetchall()
-    return render_template('frontend/sub_spot.html',place=place,kp=kp,ks=ks,ss=ss,siblings=siblings)
+    return render_template('frontend/sub_spot.html',place=place,kp=kp,ks=ks,ss=ss,siblings=siblings,ss_customs=ss_customs,ss_gallery=ss_gallery)
 
 @app.route('/explore')
 def explore():
@@ -405,10 +449,20 @@ def admin_fields():
 @login_required
 def admin_field_new():
     db=get_db(); name=slugify(request.form['label']).replace('-','_')
+    icon=request.form.get('icon','📋')
     try:
-        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to) VALUES (?,?,?,?,?,?)",(name,request.form['label'],request.form['field_type'],request.form.get('placeholder',''),request.form.get('sort_order',0,type=int),request.form.get('applies_to','both')))
+        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon) VALUES (?,?,?,?,?,?,?)",(name,request.form['label'],request.form['field_type'],request.form.get('placeholder',''),request.form.get('sort_order',0,type=int),request.form.get('applies_to','both'),icon))
         db.commit(); flash('Field created!','success')
     except sqlite3.IntegrityError: flash('Field already exists.','error')
+    return redirect(url_for('admin_fields'))
+
+@app.route('/admin/fields/<int:field_id>/update', methods=['POST'])
+@login_required
+def admin_field_update(field_id):
+    db=get_db(); f=request.form
+    db.execute("UPDATE custom_field_defs SET label=?,field_type=?,placeholder=?,sort_order=?,applies_to=?,icon=? WHERE id=?",
+        (f['label'],f['field_type'],f.get('placeholder',''),f.get('sort_order',0,type=int),f.get('applies_to','both'),f.get('icon','📋'),field_id))
+    db.commit(); flash('Field updated!','success')
     return redirect(url_for('admin_fields'))
 
 @app.route('/admin/fields/<int:field_id>/toggle', methods=['POST'])
@@ -517,12 +571,22 @@ def _save_place(place_id):
         if kfk in request.files:
             uf=request.files[kfk]
             if uf and uf.filename: u=save_upload(uf,'images'); kimg=u if u else kimg
+        # Gallery images for T2
+        kgallery=f.get(f'kp_{kpi}_gallery_existing','')
+        kgk=f'kp_{kpi}_gallery_files'
+        if kgk in request.files:
+            new_imgs=[]
+            for gf in request.files.getlist(kgk):
+                if gf and gf.filename: u=save_upload(gf,'images'); new_imgs.append(u) if u else None
+            if new_imgs:
+                existing_imgs=[x for x in kgallery.split(',') if x.strip()] if kgallery else []
+                kgallery=','.join(existing_imgs+new_imgs)
         if kpid and kpid in existing_kpids:
-            db.execute("UPDATE key_places SET title=?,slug=?,short_description=?,full_content=?,featured_image=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (kt,ks,ksd,kfc,kimg,klat,klng,kpi,kv,kpid)); submitted_kpids.append(kpid)
+            db.execute("UPDATE key_places SET title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (kt,ks,ksd,kfc,kimg,kgallery,klat,klng,kpi,kv,kpid)); submitted_kpids.append(kpid)
         else:
-            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                (place_id,kt,ks,ksd,kfc,kimg,klat,klng,kpi,kv))
+            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,gallery_images,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (place_id,kt,ks,ksd,kfc,kimg,kgallery,klat,klng,kpi,kv))
             kpid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted_kpids.append(kpid)
         for cf in cfs:
             kcv=''; kcfk=f"kp_{kpi}_cf_file_{cf['id']}"
@@ -551,12 +615,17 @@ def admin_key_place_spots(kp_id):
     kp=db.execute("SELECT kp.*,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
     if not kp: abort(404)
     spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? ORDER BY ks.sort_order",(kp_id,)).fetchall()
-    return render_template('admin/key_spots.html',kp=kp,spots=spots,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall())
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
+    ks_customs={}
+    for s in spots:
+        ks_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible']} for r in db.execute("SELECT field_def_id,value,is_visible FROM key_spot_custom_values WHERE key_spot_id=?",(s['id'],)).fetchall()}
+    return render_template('admin/key_spots.html',kp=kp,spots=spots,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),custom_fields=cfs,ks_customs=ks_customs,field_icons=FIELD_ICONS)
 
 @app.route('/admin/key-place/<int:kp_id>/spots/save', methods=['POST'])
 @login_required
 def admin_key_spots_save(kp_id):
     db=get_db(); f=request.form
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     existing=[r['id'] for r in db.execute("SELECT id FROM key_spots WHERE key_place_id=?",(kp_id,)).fetchall()]
     submitted=[]; i=0
     while True:
@@ -566,6 +635,7 @@ def admin_key_spots_save(kp_id):
         sid=f.get(f'ks_{i}_id',type=int); slug=slugify(t)
         catid=f.get(f'ks_{i}_category',type=int) or None
         sd=f.get(f'ks_{i}_short_description',''); fc=f.get(f'ks_{i}_full_content','')
+        state=f.get(f'ks_{i}_state',''); city=f.get(f'ks_{i}_city',''); country=f.get(f'ks_{i}_country','')
         lat=f.get(f'ks_{i}_latitude',type=float); lng=f.get(f'ks_{i}_longitude',type=float)
         vis=1 if f.get(f'ks_{i}_is_visible') else 0
         img=f.get(f'ks_{i}_featured_image_existing','')
@@ -573,13 +643,41 @@ def admin_key_spots_save(kp_id):
         if fk in request.files:
             uf=request.files[fk]
             if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
+        # Gallery images
+        gallery=f.get(f'ks_{i}_gallery_existing','')
+        gk=f'ks_{i}_gallery_files'
+        if gk in request.files:
+            new_imgs=[]
+            for gf in request.files.getlist(gk):
+                if gf and gf.filename: u=save_upload(gf,'images'); new_imgs.append(u) if u else None
+            if new_imgs:
+                existing_imgs=[x for x in gallery.split(',') if x.strip()] if gallery else []
+                gallery=','.join(existing_imgs+new_imgs)
         if sid and sid in existing:
-            db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (catid,t,slug,sd,fc,img,lat,lng,i,vis,sid)); submitted.append(sid)
+            db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
         else:
-            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                (kp_id,catid,t,slug,sd,fc,img,lat,lng,i,vis))
+            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (kp_id,catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
+        # Save custom fields for this spot
+        for cf in cfs:
+            cv=''; cfk=f"ks_{i}_cf_file_{cf['id']}"
+            if cfk in request.files:
+                uf=request.files[cfk]
+                if uf and uf.filename: u=save_upload(uf); cv=u if u else cv
+            cfmk=f"ks_{i}_cf_files_{cf['id']}"
+            if cfmk in request.files:
+                paths=[]
+                for uf in request.files.getlist(cfmk):
+                    if uf and uf.filename: u=save_upload(uf); paths.append(u) if u else None
+                if paths:
+                    ev=f.get(f"ks_{i}_cf_{cf['id']}",'')
+                    if ev: paths=ev.split(',')+paths
+                    cv=','.join(paths)
+            if not cv: cv=f.get(f"ks_{i}_cf_{cf['id']}",'')
+            cfvis=1 if f.get(f"ks_{i}_cf_vis_{cf['id']}") else 0
+            if cv or cfvis: db.execute("INSERT OR REPLACE INTO key_spot_custom_values (key_spot_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(sid,cf['id'],cv,cfvis))
         i+=1
     for oid in existing:
         if oid not in submitted: db.execute("DELETE FROM key_spots WHERE id=?",(oid,))
@@ -593,12 +691,17 @@ def admin_key_spot_subs(ks_id):
     ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,kp.title as kp_title,kp.id as kp_id,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
     if not ks: abort(404)
     subs=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? ORDER BY ss.sort_order",(ks_id,)).fetchall()
-    return render_template('admin/sub_spots.html',ks=ks,subs=subs,sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall())
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
+    ss_customs={}
+    for s in subs:
+        ss_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible']} for r in db.execute("SELECT field_def_id,value,is_visible FROM sub_spot_custom_values WHERE sub_spot_id=?",(s['id'],)).fetchall()}
+    return render_template('admin/sub_spots.html',ks=ks,subs=subs,sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),custom_fields=cfs,ss_customs=ss_customs,field_icons=FIELD_ICONS)
 
 @app.route('/admin/key-spot/<int:ks_id>/subs/save', methods=['POST'])
 @login_required
 def admin_sub_spots_save(ks_id):
     db=get_db(); f=request.form
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     existing=[r['id'] for r in db.execute("SELECT id FROM sub_spots WHERE key_spot_id=?",(ks_id,)).fetchall()]
     submitted=[]; i=0
     while True:
@@ -608,6 +711,7 @@ def admin_sub_spots_save(ks_id):
         sid=f.get(f'ss_{i}_id',type=int); slug=slugify(t)
         catid=f.get(f'ss_{i}_category',type=int) or None
         sd=f.get(f'ss_{i}_short_description',''); fc=f.get(f'ss_{i}_full_content','')
+        state=f.get(f'ss_{i}_state',''); city=f.get(f'ss_{i}_city',''); country=f.get(f'ss_{i}_country','')
         lat=f.get(f'ss_{i}_latitude',type=float); lng=f.get(f'ss_{i}_longitude',type=float)
         vis=1 if f.get(f'ss_{i}_is_visible') else 0
         img=f.get(f'ss_{i}_featured_image_existing','')
@@ -615,13 +719,39 @@ def admin_sub_spots_save(ks_id):
         if fk in request.files:
             uf=request.files[fk]
             if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
+        gallery=f.get(f'ss_{i}_gallery_existing','')
+        gk=f'ss_{i}_gallery_files'
+        if gk in request.files:
+            new_imgs=[]
+            for gf in request.files.getlist(gk):
+                if gf and gf.filename: u=save_upload(gf,'images'); new_imgs.append(u) if u else None
+            if new_imgs:
+                existing_imgs=[x for x in gallery.split(',') if x.strip()] if gallery else []
+                gallery=','.join(existing_imgs+new_imgs)
         if sid and sid in existing:
-            db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (catid,t,slug,sd,fc,img,lat,lng,i,vis,sid)); submitted.append(sid)
+            db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
         else:
-            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                (ks_id,catid,t,slug,sd,fc,img,lat,lng,i,vis))
+            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (ks_id,catid,t,slug,sd,fc,img,gallery,state,city,country,lat,lng,i,vis))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
+        for cf in cfs:
+            cv=''; cfk=f"ss_{i}_cf_file_{cf['id']}"
+            if cfk in request.files:
+                uf=request.files[cfk]
+                if uf and uf.filename: u=save_upload(uf); cv=u if u else cv
+            cfmk=f"ss_{i}_cf_files_{cf['id']}"
+            if cfmk in request.files:
+                paths=[]
+                for uf in request.files.getlist(cfmk):
+                    if uf and uf.filename: u=save_upload(uf); paths.append(u) if u else None
+                if paths:
+                    ev=f.get(f"ss_{i}_cf_{cf['id']}",'')
+                    if ev: paths=ev.split(',')+paths
+                    cv=','.join(paths)
+            if not cv: cv=f.get(f"ss_{i}_cf_{cf['id']}",'')
+            cfvis=1 if f.get(f"ss_{i}_cf_vis_{cf['id']}") else 0
+            if cv or cfvis: db.execute("INSERT OR REPLACE INTO sub_spot_custom_values (sub_spot_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(sid,cf['id'],cv,cfvis))
         i+=1
     for oid in existing:
         if oid not in submitted: db.execute("DELETE FROM sub_spots WHERE id=?",(oid,))

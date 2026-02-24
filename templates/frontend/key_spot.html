@@ -47,7 +47,18 @@
 
 {% if ks.featured_image %}<div style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ ks.featured_image }}" alt="{{ ks.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
 
+<!-- Gallery Slider -->
+{% if ks_gallery %}
+<div style="margin-bottom:28px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">📸 Photo Gallery <span style="font-size:12px;font-weight:500;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">{{ ks_gallery|length }} images</span></h3>
+{% with gallery_images=ks_gallery, slider_id='ks' %}{% include 'frontend/_gallery_slider.html' %}{% endwith %}
+</div>
+{% endif %}
+
 {% if ks.full_content %}<div class="rich-content" style="margin-bottom:36px;line-height:1.85;font-size:15.5px;color:var(--text-mid)">{{ ks.full_content|safe }}</div>{% endif %}
+
+<!-- Custom Fields with Icons -->
+{% with custom_vals=ks_customs, accent=ks.cat_color or '#E74845' %}{% include 'frontend/_custom_fields.html' %}{% endwith %}
 
 <!-- ═══ TIER 4: SUB-SPOTS ═══ -->
 {% if sub_spots %}
@@ -88,7 +99,13 @@
 <span style="width:48px;height:48px;background:{{ accent }}12;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px">{{ ks.cat_icon or '📍' }}</span>
 <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:{{ accent }};font-family:'Plus Jakarta Sans',sans-serif">Category</div><div style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:600">{{ ks.cat_name or 'Key Spot' }}</div></div>
 </div>
-<div style="font-size:13px;color:var(--text-light);line-height:1.5;font-family:'Plus Jakarta Sans',sans-serif">Part of <strong style="color:var(--text-dark)">{{ kp.title }}</strong> in <strong style="color:var(--text-dark)">{{ place.title }}</strong></div>
+<div style="font-size:13px;color:var(--text-light);line-height:1.5;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:12px">Part of <strong style="color:var(--text-dark)">{{ kp.title }}</strong> in <strong style="color:var(--text-dark)">{{ place.title }}</strong></div>
+<!-- Location Fields with Icons -->
+<div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px">
+{% if ks.city %}<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-size:15px">🏙️</span><span style="color:var(--text-light)">City</span><strong style="margin-left:auto;color:var(--text-dark)">{{ ks.city }}</strong></div>{% endif %}
+{% if ks.state %}<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-size:15px">🗺️</span><span style="color:var(--text-light)">State</span><strong style="margin-left:auto;color:var(--text-dark)">{{ ks.state }}</strong></div>{% endif %}
+{% if ks.country %}<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-size:15px">🌍</span><span style="color:var(--text-light)">Country</span><strong style="margin-left:auto;color:var(--text-dark)">{{ ks.country }}</strong></div>{% endif %}
+</div>
 </div>
 
 {% if ks.latitude and ks.longitude %}<div style="background:white;border:2px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px"><iframe src="https://maps.google.com/maps?q={{ ks.latitude }},{{ ks.longitude }}&z=16&output=embed" style="width:100%;height:200px;border:0"></iframe></div>{% endif %}

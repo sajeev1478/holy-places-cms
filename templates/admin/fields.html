@@ -3,31 +3,36 @@
 {% block page_title %}Custom Fields{% endblock %}
 
 {% block admin_content %}
-<p style="color:var(--text-light);margin-bottom:20px;font-size:14px">Define extra fields that can be added to Holy Dhams, Key Places, and Key Spots. Fields like audio, video, images, text, URLs, etc.</p>
+<p style="color:var(--text-light);margin-bottom:20px;font-size:14px">Define extra fields that appear on all tiers (T1 Holy Dhams, T2 Key Places, T3 Key Spots, T4 Key Points). Each field has an icon shown on the frontend.</p>
 
 <!-- Add Field -->
 <div class="admin-card" style="margin-bottom:20px">
 <div class="admin-card-header"><h3>Add New Field</h3></div>
 <div class="admin-card-body">
 <form method="POST" action="{{ url_for('admin_field_new') }}" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap">
-<div class="form-group" style="margin:0;flex:1;min-width:180px"><label>Label</label><input name="label" class="form-control" required placeholder="e.g. Audio Narration"></div>
-<div class="form-group" style="margin:0;width:160px"><label>Field Type</label><select name="field_type" class="form-control">
-<option value="text">Text (single line)</option>
-<option value="textarea">Textarea (multi-line)</option>
-<option value="richtext">Rich Text Editor</option>
-<option value="number">Number</option>
-<option value="url">URL / Link</option>
-<option value="image">Image Upload</option>
-<option value="audio">Audio Upload</option>
-<option value="video">Video Upload</option>
-<option value="images">Multiple Images</option>
+<div class="form-group" style="margin:0;width:70px">
+<label>Icon</label>
+<div class="icon-picker-wrap" style="position:relative">
+<button type="button" class="form-control icon-pick-btn" onclick="toggleIconPicker(this)" style="font-size:22px;text-align:center;cursor:pointer;padding:6px;height:42px">📋</button>
+<input type="hidden" name="icon" value="📋" class="icon-pick-val">
+<div class="icon-picker-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:999;background:white;border:2px solid var(--border);border-radius:12px;padding:10px;width:320px;max-height:240px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.15);margin-top:4px">
+<input type="text" class="form-control icon-search" placeholder="Search icons..." style="font-size:12px;margin-bottom:8px;padding:6px 10px" oninput="filterIcons(this)">
+<div class="icon-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px">
+{% for emoji, label in field_icons %}<button type="button" class="icon-opt" data-label="{{ label }}" onclick="pickIcon(this,'{{ emoji }}')" title="{{ label }}" style="font-size:18px;padding:6px;border:1px solid transparent;border-radius:8px;background:none;cursor:pointer;transition:all .15s;text-align:center" onmouseover="this.style.background='#f0f0f0';this.style.borderColor='#ddd'" onmouseout="this.style.background='none';this.style.borderColor='transparent'">{{ emoji }}</button>{% endfor %}
+</div>
+</div>
+</div>
+</div>
+<div class="form-group" style="margin:0;flex:1;min-width:160px"><label>Label</label><input name="label" class="form-control" required placeholder="e.g. Opening Hours"></div>
+<div class="form-group" style="margin:0;width:150px"><label>Field Type</label><select name="field_type" class="form-control">
+<option value="text">Text</option><option value="textarea">Textarea</option><option value="richtext">Rich Text</option>
+<option value="number">Number</option><option value="url">URL / Link</option>
+<option value="image">Image</option><option value="audio">Audio</option><option value="video">Video</option><option value="images">Multi-Images</option>
 </select></div>
-<div class="form-group" style="margin:0;width:180px"><label>Placeholder</label><input name="placeholder" class="form-control" placeholder="Hint text"></div>
-<div class="form-group" style="margin:0;width:100px"><label>Order</label><input name="sort_order" class="form-control" type="number" value="0"></div>
-<div class="form-group" style="margin:0;width:130px"><label>Applies To</label><select name="applies_to" class="form-control">
-<option value="both">Both</option>
-<option value="place">Places Only</option>
-<option value="key_place">Key Places Only</option>
+<div class="form-group" style="margin:0;width:150px"><label>Placeholder</label><input name="placeholder" class="form-control" placeholder="Hint text"></div>
+<div class="form-group" style="margin:0;width:70px"><label>Order</label><input name="sort_order" class="form-control" type="number" value="0"></div>
+<div class="form-group" style="margin:0;width:120px"><label>Applies To</label><select name="applies_to" class="form-control">
+<option value="both">All Tiers</option><option value="place">T1 Only</option><option value="key_place">T2+ Only</option>
 </select></div>
 <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
 </form>
@@ -39,24 +44,24 @@
 {% if fields %}
 <div style="overflow-x:auto">
 <table class="admin-table">
-<thead><tr><th>Order</th><th>Label</th><th>Field Name</th><th>Type</th><th>Applies To</th><th>Status</th><th>Actions</th></tr></thead>
+<thead><tr><th style="width:50px">Icon</th><th>Order</th><th>Label</th><th>Name</th><th>Type</th><th>Scope</th><th>Status</th><th style="width:220px">Actions</th></tr></thead>
 <tbody>
 {% for f in fields %}
 <tr style="{{ 'opacity:.5' if not f.is_active }}">
+<td style="text-align:center;font-size:22px">{{ f.icon or '📋' }}</td>
 <td>{{ f.sort_order }}</td>
 <td style="font-weight:600">{{ f.label }}</td>
-<td style="font-size:12px;color:var(--text-light);font-family:monospace">{{ f.name }}</td>
+<td style="font-size:11px;color:var(--text-light);font-family:monospace">{{ f.name }}</td>
 <td><span class="badge" style="background:{{ {'text':'#D4E0F5','textarea':'#D4E5D4','richtext':'#F5ECD4','number':'#E5D4E8','url':'#D4E0F5','image':'#F8E5EE','audio':'#E8F5E8','video':'#F5E8E8','images':'#F8E5EE'}.get(f.field_type,'#EEE') }};color:var(--text-dark)">{{ f.field_type }}</span></td>
 <td style="font-size:12px">{{ f.applies_to }}</td>
 <td>
 <form method="POST" action="{{ url_for('admin_field_toggle', field_id=f.id) }}" style="display:inline">
-<button class="btn btn-sm {{ 'btn-primary' if f.is_active else 'btn-danger' }}" style="font-size:11px">
-{{ '● Active' if f.is_active else '○ Inactive' }}
-</button>
+<button class="btn btn-sm {{ 'btn-primary' if f.is_active else 'btn-danger' }}" style="font-size:11px">{{ '● Active' if f.is_active else '○ Off' }}</button>
 </form>
 </td>
-<td>
-<form method="POST" action="{{ url_for('admin_field_delete', field_id=f.id) }}" style="display:inline" onsubmit="return confirm('Delete this field and all its values?')">
+<td style="display:flex;gap:6px">
+<button type="button" class="btn btn-secondary btn-sm" style="font-size:11px" onclick="openEditField({{ f.id }},'{{ f.label|e }}','{{ f.field_type }}','{{ (f.placeholder or '')|e }}',{{ f.sort_order }},'{{ f.applies_to }}','{{ f.icon or '📋' }}')"><i class="fas fa-edit"></i> Edit</button>
+<form method="POST" action="{{ url_for('admin_field_delete', field_id=f.id) }}" style="display:inline" onsubmit="return confirm('Delete field and all values?')">
 <button class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button>
 </form>
 </td>
@@ -66,7 +71,91 @@
 </table>
 </div>
 {% else %}
-<div class="empty"><span class="icon">⚙️</span><h3>No custom fields yet</h3><p>Create fields above to extend place data.</p></div>
+<div class="empty"><span class="icon">⚙️</span><h3>No custom fields yet</h3><p>Create fields above to extend data across all tiers.</p></div>
 {% endif %}
 </div>
+
+<!-- Edit Field Modal -->
+<div id="editFieldModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.4);align-items:center;justify-content:center">
+<div style="background:white;border-radius:16px;padding:28px;width:480px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+<h3 style="margin-bottom:16px;font-family:'Josefin Sans',sans-serif">Edit Field</h3>
+<form id="editFieldForm" method="POST">
+<div style="display:grid;gap:12px">
+<div style="display:flex;gap:12px">
+<div class="form-group" style="margin:0;width:70px">
+<label>Icon</label>
+<div class="icon-picker-wrap" style="position:relative">
+<button type="button" class="form-control icon-pick-btn" id="editIconBtn" onclick="toggleIconPicker(this)" style="font-size:22px;text-align:center;cursor:pointer;padding:6px;height:42px">📋</button>
+<input type="hidden" name="icon" value="📋" id="editIconVal" class="icon-pick-val">
+<div class="icon-picker-dropdown" style="display:none;position:absolute;top:100%;left:0;z-index:999;background:white;border:2px solid var(--border);border-radius:12px;padding:10px;width:320px;max-height:240px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.15)">
+<input type="text" class="form-control icon-search" placeholder="Search icons..." style="font-size:12px;margin-bottom:8px;padding:6px 10px" oninput="filterIcons(this)">
+<div class="icon-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px">
+{% for emoji, label in field_icons %}<button type="button" class="icon-opt" data-label="{{ label }}" onclick="pickIcon(this,'{{ emoji }}')" title="{{ label }}" style="font-size:18px;padding:6px;border:1px solid transparent;border-radius:8px;background:none;cursor:pointer;text-align:center" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='none'">{{ emoji }}</button>{% endfor %}
+</div>
+</div>
+</div>
+</div>
+<div class="form-group" style="margin:0;flex:1"><label>Label</label><input name="label" id="editLabel" class="form-control" required></div>
+</div>
+<div style="display:flex;gap:12px">
+<div class="form-group" style="margin:0;flex:1"><label>Type</label><select name="field_type" id="editType" class="form-control">
+<option value="text">Text</option><option value="textarea">Textarea</option><option value="richtext">Rich Text</option>
+<option value="number">Number</option><option value="url">URL</option>
+<option value="image">Image</option><option value="audio">Audio</option><option value="video">Video</option><option value="images">Multi-Images</option>
+</select></div>
+<div class="form-group" style="margin:0;flex:1"><label>Placeholder</label><input name="placeholder" id="editPH" class="form-control"></div>
+</div>
+<div style="display:flex;gap:12px">
+<div class="form-group" style="margin:0;width:100px"><label>Order</label><input name="sort_order" id="editOrder" type="number" class="form-control"></div>
+<div class="form-group" style="margin:0;flex:1"><label>Scope</label><select name="applies_to" id="editScope" class="form-control">
+<option value="both">All Tiers</option><option value="place">T1 Only</option><option value="key_place">T2+ Only</option>
+</select></div>
+</div>
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+<button type="button" class="btn btn-secondary" onclick="closeEditField()">Cancel</button>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+function toggleIconPicker(btn) {
+    const dd = btn.parentElement.querySelector('.icon-picker-dropdown');
+    const show = dd.style.display === 'none';
+    document.querySelectorAll('.icon-picker-dropdown').forEach(d => d.style.display = 'none');
+    dd.style.display = show ? 'block' : 'none';
+    if (show) dd.querySelector('.icon-search').focus();
+}
+function pickIcon(btn, emoji) {
+    const wrap = btn.closest('.icon-picker-wrap');
+    wrap.querySelector('.icon-pick-btn').textContent = emoji;
+    wrap.querySelector('.icon-pick-val').value = emoji;
+    wrap.querySelector('.icon-picker-dropdown').style.display = 'none';
+}
+function filterIcons(input) {
+    const q = input.value.toLowerCase();
+    input.parentElement.querySelectorAll('.icon-opt').forEach(b => {
+        b.style.display = b.getAttribute('data-label').toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.icon-picker-wrap')) {
+        document.querySelectorAll('.icon-picker-dropdown').forEach(d => d.style.display = 'none');
+    }
+});
+function openEditField(id, label, type, ph, order, scope, icon) {
+    document.getElementById('editFieldForm').action = '/admin/fields/' + id + '/update';
+    document.getElementById('editLabel').value = label;
+    document.getElementById('editType').value = type;
+    document.getElementById('editPH').value = ph;
+    document.getElementById('editOrder').value = order;
+    document.getElementById('editScope').value = scope;
+    document.getElementById('editIconBtn').textContent = icon;
+    document.getElementById('editIconVal').value = icon;
+    document.getElementById('editFieldModal').style.display = 'flex';
+}
+function closeEditField() { document.getElementById('editFieldModal').style.display = 'none'; }
+</script>
 {% endblock %}

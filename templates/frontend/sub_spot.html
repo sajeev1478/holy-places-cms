@@ -45,7 +45,18 @@
 
 {% if ss.featured_image %}<div style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ ss.featured_image }}" alt="{{ ss.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
 
+<!-- Gallery Slider -->
+{% if ss_gallery %}
+<div style="margin-bottom:28px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">📸 Photo Gallery <span style="font-size:12px;font-weight:500;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">{{ ss_gallery|length }} images</span></h3>
+{% with gallery_images=ss_gallery, slider_id='ss' %}{% include 'frontend/_gallery_slider.html' %}{% endwith %}
+</div>
+{% endif %}
+
 {% if ss.full_content %}<div class="rich-content" style="margin-bottom:36px;line-height:1.85;font-size:15.5px;color:var(--text-mid)">{{ ss.full_content|safe }}</div>{% endif %}
+
+<!-- Custom Fields with Icons -->
+{% with custom_vals=ss_customs, accent=ss.cat_color or '#9C27B0' %}{% include 'frontend/_custom_fields.html' %}{% endwith %}
 
 <!-- Context Card: Where this key-point sits -->
 <div style="background:linear-gradient(135deg,var(--cream-dark),var(--cream));border-radius:16px;padding:28px;border:1px solid var(--border)">
@@ -87,7 +98,13 @@
 <span style="width:48px;height:48px;background:{{ accent }}12;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px">{{ ss.cat_icon or '✦' }}</span>
 <div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:{{ accent }};font-family:'Plus Jakarta Sans',sans-serif">Category</div><div style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:600">{{ ss.cat_name or 'Key Point' }}</div></div>
 </div>
-<p style="font-size:13px;color:var(--text-light);line-height:1.5;font-family:'Plus Jakarta Sans',sans-serif">Within <strong style="color:var(--text-dark)">{{ ks.title }}</strong></p>
+<p style="font-size:13px;color:var(--text-light);line-height:1.5;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:12px">Within <strong style="color:var(--text-dark)">{{ ks.title }}</strong></p>
+<!-- Location Fields with Icons -->
+<div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px">
+{% if ss.city %}<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-size:15px">🏙️</span><span style="color:var(--text-light)">City</span><strong style="margin-left:auto;color:var(--text-dark)">{{ ss.city }}</strong></div>{% endif %}
+{% if ss.state %}<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-size:15px">🗺️</span><span style="color:var(--text-light)">State</span><strong style="margin-left:auto;color:var(--text-dark)">{{ ss.state }}</strong></div>{% endif %}
+{% if ss.country %}<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-size:15px">🌍</span><span style="color:var(--text-light)">Country</span><strong style="margin-left:auto;color:var(--text-dark)">{{ ss.country }}</strong></div>{% endif %}
+</div>
 </div>
 
 {% if ss.latitude and ss.longitude %}<div style="background:white;border:2px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px"><iframe src="https://maps.google.com/maps?q={{ ss.latitude }},{{ ss.longitude }}&z=17&output=embed" style="width:100%;height:200px;border:0"></iframe></div>

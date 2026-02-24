@@ -1,0 +1,22 @@
+{# Beautiful Gallery Slider - pass gallery_images (list), slider_id (string) #}
+{% if gallery_images and gallery_images|length > 0 %}
+<div class="gallery-slider" id="slider-{{ slider_id }}" data-auto="true">
+<div class="gs-track">
+{% for img in gallery_images %}
+<div class="gs-slide {{ 'active' if loop.first }}">
+<img src="/static/uploads/{{ img }}" alt="Gallery image {{ loop.index }}" loading="lazy">
+</div>
+{% endfor %}
+</div>
+{% if gallery_images|length > 1 %}
+<button class="gs-nav gs-prev" aria-label="Previous">‹</button>
+<button class="gs-nav gs-next" aria-label="Next">›</button>
+<div class="gs-counter"><span class="gs-current">1</span> / {{ gallery_images|length }}</div>
+<div class="gs-dots">
+{% for img in gallery_images %}
+<button class="gs-dot {{ 'active' if loop.first }}" aria-label="Slide {{ loop.index }}"></button>
+{% endfor %}
+</div>
+{% endif %}
+</div>
+{% endif %}

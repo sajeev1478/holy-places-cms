@@ -156,6 +156,33 @@ nav{display:none}
 .footer-inner{grid-template-columns:1fr;gap:32px;padding:0 20px}
 .footer-bottom{flex-direction:column;gap:8px;text-align:center;padding:20px 20px 0}
 }
+/* ═══ GALLERY SLIDER — Beautiful transitions ═══ */
+.gallery-slider{position:relative;width:100%;max-width:600px;border-radius:16px;overflow:hidden;background:linear-gradient(145deg,#141418,#1e1e24);box-shadow:0 12px 48px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.08);margin:0 auto}
+.gallery-slider .gs-track{position:relative;width:100%;aspect-ratio:16/10;overflow:hidden}
+.gallery-slider .gs-slide{position:absolute;inset:0;opacity:0;display:flex;align-items:center;justify-content:center;transition:opacity .9s cubic-bezier(.4,0,.2,1),transform 1.2s cubic-bezier(.4,0,.2,1);transform:scale(1.04)}
+.gallery-slider .gs-slide.active{opacity:1;z-index:2;transform:scale(1)}
+.gallery-slider .gs-slide.fade-out{opacity:0;z-index:1;transform:scale(.96)}
+.gallery-slider .gs-slide.zoom-out{opacity:0;transform:scale(1.15)}
+.gallery-slider .gs-slide.slide-left{opacity:0;transform:translateX(-6%) scale(.98)}
+.gallery-slider .gs-slide.slide-right{opacity:0;transform:translateX(6%) scale(.98)}
+.gallery-slider .gs-slide img{max-width:88%;max-height:88%;object-fit:contain;border-radius:10px;filter:drop-shadow(0 6px 20px rgba(0,0,0,.4));transition:transform .5s ease}
+.gallery-slider:hover .gs-slide.active img{transform:scale(1.01)}
+.gallery-slider .gs-nav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 3px 12px rgba(0,0,0,.2);transition:all .25s;font-size:16px;color:#333;opacity:.7}
+.gallery-slider:hover .gs-nav{opacity:1}
+.gallery-slider .gs-nav:hover{background:white;transform:translateY(-50%) scale(1.12);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.gallery-slider .gs-prev{left:12px}
+.gallery-slider .gs-next{right:12px}
+.gallery-slider .gs-dots{display:flex;justify-content:center;gap:7px;padding:14px 0;background:linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 100%);position:absolute;bottom:0;left:0;right:0;z-index:10}
+.gallery-slider .gs-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);border:none}
+.gallery-slider .gs-dot.active{background:white;transform:scale(1.4);box-shadow:0 0 8px rgba(255,255,255,.4)}
+.gallery-slider .gs-counter{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);color:white;font-size:11px;padding:5px 12px;border-radius:50px;z-index:10;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;letter-spacing:.5px}
+/* Custom field display with icons */
+.cf-grid{display:grid;gap:10px;margin-bottom:24px}
+.cf-item{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--cream-dark);border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s}
+.cf-item:hover{background:var(--cream);transform:translateX(2px)}
+.cf-item .cf-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.cf-item .cf-label{font-size:12px;color:var(--text-light);font-weight:600;letter-spacing:.3px}
+.cf-item .cf-value{font-size:14px;font-weight:600;color:var(--text-dark)}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -254,6 +281,52 @@ nav{display:none}
 window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50)});
 // Auto-hide flash messages
 setTimeout(()=>{document.querySelectorAll('[style*="fadeIn"]').forEach(el=>el.style.opacity='0')},4000);
+
+/* ═══ GALLERY SLIDER ENGINE — Multiple Transitions ═══ */
+function initSlider(el) {
+    const slides = el.querySelectorAll('.gs-slide');
+    const dots = el.querySelectorAll('.gs-dot');
+    const counter = el.querySelector('.gs-counter');
+    const currentSpan = el.querySelector('.gs-current');
+    let cur = 0, total = slides.length, timer, transitioning = false;
+    const effects = ['fade','zoom-out','slide-left','slide-right','fade'];
+    function show(n) {
+        if (transitioning || n === cur) return;
+        transitioning = true;
+        const prev = cur;
+        cur = (n % total + total) % total;
+        const effect = effects[cur % effects.length];
+        // Remove all transition classes from prev
+        slides[prev].classList.remove('active');
+        slides[prev].classList.add(effect === 'zoom-out' ? 'zoom-out' : effect === 'slide-left' ? 'slide-left' : effect === 'slide-right' ? 'slide-right' : 'fade-out');
+        // Activate new slide
+        slides[cur].classList.remove('fade-out','zoom-out','slide-left','slide-right');
+        slides[cur].classList.add('active');
+        // Update dots and counter
+        dots.forEach((d, i) => d.classList.toggle('active', i === cur));
+        if (currentSpan) currentSpan.textContent = cur + 1;
+        else if (counter) counter.textContent = (cur + 1) + ' / ' + total;
+        // Cleanup after transition
+        setTimeout(() => {
+            slides[prev].classList.remove('fade-out','zoom-out','slide-left','slide-right');
+            transitioning = false;
+        }, 1000);
+    }
+    function auto() { timer = setInterval(() => show(cur + 1), 5000); }
+    function reset() { clearInterval(timer); auto(); }
+    el.querySelector('.gs-prev')?.addEventListener('click', () => { show(cur - 1); reset(); });
+    el.querySelector('.gs-next')?.addEventListener('click', () => { show(cur + 1); reset(); });
+    dots.forEach((d, i) => d.addEventListener('click', () => { show(i); reset(); }));
+    // Touch support
+    let tx = 0;
+    el.addEventListener('touchstart', e => tx = e.touches[0].clientX, {passive: true});
+    el.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) { show(dx < 0 ? cur + 1 : cur - 1); reset(); } }, {passive: true});
+    // Keyboard support
+    el.setAttribute('tabindex', '0');
+    el.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { show(cur - 1); reset(); } if (e.key === 'ArrowRight') { show(cur + 1); reset(); } });
+    if (total > 1 && el.dataset.auto !== 'false') auto();
+}
+document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('.gallery-slider').forEach(initSlider));
 </script>
 {% block extra_js %}{% endblock %}
 </body>

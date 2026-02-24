@@ -57,7 +57,10 @@
 {% elif cv.field_type == 'url' %}<a href="{{ cv.value }}" target="_blank" style="color:var(--rose-deep);text-decoration:underline">{{ cv.value }}</a>
 {% elif cv.field_type == 'richtext' %}<div style="line-height:1.7;color:var(--text-mid)">{{ cv.value|safe }}</div>
 {% elif cv.field_type == 'image' %}<img src="/static/uploads/{{ cv.value }}" style="width:100%;border-radius:10px" alt="{{ cv.label }}">
-{% elif cv.field_type == 'images' %}<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">{% for img in cv.value.split(',') %}{% if img.strip() %}<img src="/static/uploads/{{ img.strip() }}" style="width:100%;height:160px;object-fit:cover;border-radius:8px">{% endif %}{% endfor %}</div>
+{% elif cv.field_type == 'images' %}{% set imgs = cv.value.split(',') %}{% set clean_imgs = [] %}{% for img in imgs %}{% if img.strip() %}{% if clean_imgs.append(img.strip()) %}{% endif %}{% endif %}{% endfor %}
+{% if clean_imgs|length > 0 %}
+{% with gallery_images=clean_imgs, slider_id='t1cf' ~ loop.index %}{% include 'frontend/_gallery_slider.html' %}{% endwith %}
+{% endif %}
 {% elif cv.field_type == 'audio' %}<audio controls style="width:100%"><source src="/static/uploads/{{ cv.value }}"></audio>
 {% elif cv.field_type == 'video' %}{% if 'youtube' in cv.value or 'youtu.be' in cv.value %}<div style="position:relative;padding-bottom:56.25%;border-radius:10px;overflow:hidden"><iframe src="{{ cv.value.replace('watch?v=','embed/').replace('youtu.be/','youtube.com/embed/') }}" style="position:absolute;inset:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>{% else %}<video controls style="width:100%;border-radius:10px"><source src="/static/uploads/{{ cv.value }}"></video>{% endif %}
 {% else %}<p style="color:var(--text-mid);line-height:1.6">{{ cv.value }}</p>{% endif %}
@@ -148,7 +151,7 @@
 {% if vis.get('city',1) and place.city %}<div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">City</span><strong>{{ place.city }}</strong></div>{% endif %}
 {% if vis.get('state',1) and place.state %}<div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">State</span><strong>{{ place.state }}</strong></div>{% endif %}
 {% if vis.get('country',1) and place.country %}<div style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Country</span><strong>{{ place.country }}</strong></div>{% endif %}
-{% for cv in custom_values %}{% if cv.value and cv.field_type in ('text','number') %}<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--text-light);white-space:nowrap">{{ cv.label }}</span><strong style="text-align:right">{{ cv.value }}</strong></div>{% endif %}{% endfor %}
+{% for cv in custom_values %}{% if cv.value and cv.field_type in ('text','number') %}<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--text-light);white-space:nowrap;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cv.field_icon or '📋' }}</span> {{ cv.label }}</span><strong style="text-align:right">{{ cv.value }}</strong></div>{% endif %}{% endfor %}
 </div>
 
 <!-- Hierarchy Navigation with Tier Definitions -->
