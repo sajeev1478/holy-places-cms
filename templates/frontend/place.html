@@ -22,7 +22,7 @@
 <div><span style="opacity:.5">Key Places</span> <strong style="margin-left:4px">{{ hierarchy|length }}</strong></div>
 {% set total_spots = namespace(val=0) %}{% set total_subs = namespace(val=0) %}{% for h in hierarchy %}{% for ks in h.key_spots %}{% set total_spots.val = total_spots.val + 1 %}{% set total_subs.val = total_subs.val + ks.sub_spots|length %}{% endfor %}{% endfor %}
 <div><span style="opacity:.5">Key Spots</span> <strong style="margin-left:4px">{{ total_spots.val }}</strong></div>
-<div><span style="opacity:.5">Sub-Spots</span> <strong style="margin-left:4px">{{ total_subs.val }}</strong></div>
+<div><span style="opacity:.5">Key Points</span> <strong style="margin-left:4px">{{ total_subs.val }}</strong></div>
 <div style="margin-left:auto;opacity:.5">👁️ {{ place.view_count or 0 }} views</div>
 </div>{% endif %}
 </div>
@@ -74,7 +74,7 @@
 <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px">
 <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:50px;background:#2E86AB15;color:#2E86AB;font-weight:600;border:1px solid #2E86AB30"><span style="width:8px;height:8px;border-radius:50%;background:#2E86AB"></span> Tier 2 · Key Places</span>
 <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:50px;background:#E7484515;color:#E74845;font-weight:600;border:1px solid #E7484530"><span style="width:8px;height:8px;border-radius:50%;background:#E74845"></span> Tier 3 · Key Spots</span>
-<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:50px;background:#9C27B015;color:#9C27B0;font-weight:600;border:1px solid #9C27B030"><span style="width:8px;height:8px;border-radius:50%;background:#9C27B0"></span> Tier 4 · Sub-Spots</span>
+<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:50px;background:#9C27B015;color:#9C27B0;font-weight:600;border:1px solid #9C27B030"><span style="width:8px;height:8px;border-radius:50%;background:#9C27B0"></span> Tier 4 · Key Points</span>
 </div>
 
 {% for h in hierarchy %}
@@ -118,7 +118,7 @@
         </div>
       </div>
       {% if ks.short_description %}<p style="font-size:12px;color:var(--text-light);line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ ks.short_description }}</p>{% endif %}
-      {% if ksd.sub_spots %}<div style="margin-top:8px;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif"><span style="width:6px;height:6px;border-radius:50%;background:#9C27B0"></span> {{ ksd.sub_spots|length }} sub-spot{{ 's' if ksd.sub_spots|length > 1 }}</div>{% endif %}
+      {% if ksd.sub_spots %}<div style="margin-top:8px;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif"><span style="width:6px;height:6px;border-radius:50%;background:#9C27B0"></span> {{ ksd.sub_spots|length }} key-point{{ 's' if ksd.sub_spots|length > 1 }}</div>{% endif %}
     </a>
     {% endfor %}
     </div>
@@ -151,21 +151,57 @@
 {% for cv in custom_values %}{% if cv.value and cv.field_type in ('text','number') %}<div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--text-light);white-space:nowrap">{{ cv.label }}</span><strong style="text-align:right">{{ cv.value }}</strong></div>{% endif %}{% endfor %}
 </div>
 
-<!-- Hierarchy Navigation -->
+<!-- Hierarchy Navigation with Tier Definitions -->
 {% if hierarchy %}
 <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-<h4 style="font-size:13px;margin-bottom:12px;color:var(--text-light);font-weight:700;letter-spacing:1px;text-transform:uppercase">Dham Hierarchy</h4>
+<h4 style="font-size:13px;margin-bottom:6px;color:var(--text-light);font-weight:700;letter-spacing:1px;text-transform:uppercase">Dham Hierarchy</h4>
+<p style="font-size:11px;color:var(--text-light);line-height:1.5;margin-bottom:14px;opacity:.7">This dham is organized into 4 tiers. Browse from the broadest sacred region down to exact meditation points.</p>
+
+<!-- Tier 1 indicator -->
+<div style="background:#C76B8F08;border:1px solid #C76B8F20;border-radius:10px;padding:10px 12px;margin-bottom:14px">
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+<span style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;background:#C76B8F;color:white;border-radius:50px">T1</span>
+<span style="font-size:12px;font-weight:700;color:#C76B8F">🙏 {{ place.title }}</span>
+</div>
+<p style="font-size:10px;color:var(--text-light);margin:0;line-height:1.4">The entire spiritual ecosystem — a sacred region of divine pastimes.</p>
+</div>
+
+<!-- Tier 2 heading -->
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+<span style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;background:#2E86AB;color:white;border-radius:50px">T2</span>
+<span style="font-size:11px;font-weight:700;color:#2E86AB">Key Places</span>
+<span style="font-size:9px;color:var(--text-light)">— major zones within the dham</span>
+</div>
+
 {% for h in hierarchy %}
 {% set ci = loop.index0 % kp_colors|length %}
 {% set accent = kp_colors[ci] %}
-<div style="margin-bottom:12px">
-<a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=h.place.slug) }}" style="display:flex;gap:8px;align-items:center;text-decoration:none;color:inherit;padding:6px 0;font-weight:600;font-size:14px" onmouseover="this.style.color='{{ accent }}'" onmouseout="this.style.color='inherit'">
-<span style="width:22px;height:22px;background:{{ accent }};color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">{{ loop.index }}</span>{{ h.place.title }}</a>
+<div style="margin-bottom:10px;padding-left:4px;border-left:2px solid {{ accent }}30">
+<a href="{{ url_for('key_place_detail', slug=place.slug, kp_slug=h.place.slug) }}" style="display:flex;gap:8px;align-items:center;text-decoration:none;color:inherit;padding:5px 8px;font-weight:600;font-size:13px;border-radius:8px;transition:all .2s" onmouseover="this.style.background='{{ accent }}08';this.style.color='{{ accent }}'" onmouseout="this.style.background='none';this.style.color='inherit'">
+<span style="width:20px;height:20px;background:{{ accent }};color:white;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0">{{ loop.index }}</span>{{ h.place.title }}</a>
+{% if h.key_spots %}
+<div style="padding-left:16px;margin-top:2px">
+<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+<span style="font-size:7px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:1px 5px;background:#E7484510;color:#E74845;border-radius:50px;border:1px solid #E7484520">T3</span>
+<span style="font-size:9px;color:var(--text-light)">Key Spots</span>
+</div>
 {% for ksd in h.key_spots %}
-<a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=h.place.slug, ks_slug=ksd.spot.slug) }}" style="display:flex;gap:6px;align-items:center;text-decoration:none;color:var(--text-light);padding:3px 0 3px 30px;font-size:12px;transition:color .2s" onmouseover="this.style.color='{{ ksd.spot.cat_color or accent }}'" onmouseout="this.style.color='var(--text-light)'">
-<span style="font-size:12px">{{ ksd.spot.cat_icon or '📍' }}</span>{{ ksd.spot.title }}</a>
+<a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=h.place.slug, ks_slug=ksd.spot.slug) }}" style="display:flex;gap:5px;align-items:center;text-decoration:none;color:var(--text-light);padding:2px 6px;font-size:11px;transition:all .2s;border-radius:6px" onmouseover="this.style.color='{{ ksd.spot.cat_color or accent }}';this.style.background='{{ ksd.spot.cat_color or accent }}08'" onmouseout="this.style.color='var(--text-light)';this.style.background='none'">
+<span style="font-size:11px">{{ ksd.spot.cat_icon or '📍' }}</span>{{ ksd.spot.title }}{% if ksd.sub_spots %}<span style="font-size:8px;padding:0 4px;background:#9C27B010;color:#9C27B0;border-radius:50px;margin-left:auto">{{ ksd.sub_spots|length }} T4</span>{% endif %}</a>
 {% endfor %}
+</div>{% endif %}
 </div>{% endfor %}
+
+<!-- Tier legend at bottom -->
+<div style="margin-top:14px;padding:10px 12px;background:var(--cream-dark);border-radius:10px">
+<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-light);margin-bottom:6px">How this hierarchy works</div>
+<div style="display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--text-mid);line-height:1.4">
+<div><span style="color:#C76B8F;font-weight:700">T1 Holy Dham</span> → Sacred region of pastimes</div>
+<div style="padding-left:8px"><span style="color:#2E86AB;font-weight:700">T2 Key Places</span> → Major zones & pilgrimage stops</div>
+<div style="padding-left:16px"><span style="color:#E74845;font-weight:700">T3 Key Spots</span> → Specific leela locations</div>
+<div style="padding-left:24px"><span style="color:#9C27B0;font-weight:700">T4 Key Points</span> → Exact meditation micro-points</div>
+</div>
+</div>
 </div>{% endif %}
 </div>
 

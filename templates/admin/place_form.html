@@ -1,7 +1,10 @@
 {% extends "admin/base.html" %}
 {% block title %}{{ 'Edit' if editing else 'New' }} Holy Dham{% endblock %}
 {% block page_title %}{{ 'Edit' if editing else 'Create New' }} Holy Dham{% endblock %}
-{% block topbar_actions %}{% if editing %}<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary"><i class="fas fa-eye"></i> View Live</a>{% endif %}{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('admin_places') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to All Dhams</a>
+{% if editing %}<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary"><i class="fas fa-eye"></i> View Live</a>{% endif %}
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -18,34 +21,33 @@
 .field-row .field-main{flex:1}
 .field-row .field-toggle{padding-top:28px;display:flex;align-items:center}
 
-/* ═══ HIERARCHY ROADMAP ═══ */
-.hierarchy-roadmap{background:linear-gradient(135deg,#2D1F2E,#3D2B4E);border-radius:16px;padding:24px 28px;margin-bottom:24px;color:white;position:relative;overflow:hidden}
-.hierarchy-roadmap::before{content:'';position:absolute;right:-40px;top:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(199,107,143,.2),transparent);pointer-events:none}
-.roadmap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
-.roadmap-tier{padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.08);position:relative;transition:all .3s}
-.roadmap-tier.active{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.06)}
-.roadmap-tier .tier-num{font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.5;font-weight:700;margin-bottom:6px}
-.roadmap-tier .tier-icon{font-size:24px;margin-bottom:6px}
-.roadmap-tier .tier-name{font-size:14px;font-weight:700}
-.roadmap-tier .tier-desc{font-size:11px;opacity:.5;margin-top:4px;line-height:1.4}
-.roadmap-tier .tier-badge{position:absolute;top:8px;right:8px;font-size:9px;padding:2px 8px;border-radius:50px;font-weight:700;letter-spacing:.5px}
-.roadmap-arrow{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);font-size:18px;position:absolute;right:-18px;top:50%;transform:translateY(-50%);z-index:1}
+/* ═══ CLICKABLE TIER TABS ═══ */
+.tier-tabs{background:linear-gradient(135deg,#2D1F2E,#3D2B4E);border-radius:16px;padding:22px 24px 18px;margin-bottom:24px;color:white;position:relative;overflow:hidden}
+.tier-tabs::before{content:'';position:absolute;right:-40px;top:-30px;width:200px;height:200px;background:radial-gradient(circle,rgba(199,107,143,.15),transparent);pointer-events:none}
+.tier-tabs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.tier-tab{padding:14px 16px;border-radius:12px;border:2px solid rgba(255,255,255,.06);cursor:pointer;transition:all .3s;position:relative;user-select:none}
+.tier-tab:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.04)}
+.tier-tab.active{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.tier-tab .t-num{font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.5;font-weight:700;margin-bottom:4px}
+.tier-tab.active .t-num{opacity:.9}
+.tier-tab .t-icon{font-size:22px;margin-bottom:4px}
+.tier-tab .t-name{font-size:14px;font-weight:700}
+.tier-tab .t-desc{font-size:10px;opacity:.4;margin-top:3px;line-height:1.3}
+.tier-tab.active .t-desc{opacity:.7}
+.tier-tab .t-count{position:absolute;top:10px;right:10px;font-size:10px;padding:2px 8px;border-radius:50px;font-weight:700;background:rgba(255,255,255,.1)}
+.tier-tab.active .t-count{background:rgba(255,255,255,.2)}
 
-/* Tier Colors */
-.tier-1-accent{color:#C76B8F;border-color:#C76B8F40}
-.tier-2-accent{color:#2E86AB;border-color:#2E86AB40}
-.tier-3-accent{color:#E74845;border-color:#E7484540}
-.tier-4-accent{color:#9C27B0;border-color:#9C27B040}
-.tier-1-bg{background:#C76B8F10;border:2px solid #C76B8F25}
-.tier-2-bg{background:#2E86AB10;border:2px solid #2E86AB25}
-.tier-3-bg{background:#E7484510;border:2px solid #E7484525}
-.tier-4-bg{background:#9C27B010;border:2px solid #9C27B025}
+/* Tier Content Sections */
+.tier-content{display:none}
+.tier-content.active{display:block}
 
-/* Section Headers */
-.tier-section-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-radius:14px;margin-bottom:16px}
-.tier-section-header .tier-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:50px;display:inline-block}
-.tier-section-header h3{margin:0;font-size:17px;font-weight:700}
-.tier-section-header .tier-count{font-size:12px;opacity:.6;margin-left:auto}
+/* Tier definition box */
+.tier-def{border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;gap:16px;align-items:flex-start}
+.tier-def-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.tier-def-body h4{font-size:15px;font-weight:700;margin-bottom:4px}
+.tier-def-body .def-text{font-size:12px;line-height:1.6;opacity:.7}
+.tier-def-body .def-chars{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tier-def-body .def-char{font-size:10px;padding:3px 10px;border-radius:50px;font-weight:600}
 
 /* Two Column Layout */
 .place-two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch}
@@ -65,24 +67,35 @@
 .kp-accordion-header .chevron{transition:transform .3s;font-size:12px;color:var(--text-light)}
 .kp-accordion.open .kp-accordion-header .chevron{transform:rotate(180deg)}
 .kp-num{width:28px;height:28px;background:#2E86AB;color:white;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
-.kp-tier-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:50px;font-weight:700;background:#2E86AB15;color:#2E86AB;border:1px solid #2E86AB30;white-space:nowrap}
 
 .add-kp-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed #2E86AB40;border-radius:14px;cursor:pointer;color:#2E86AB;font-weight:600;transition:all .2s;background:none;width:100%;font-size:14px}
 .add-kp-btn:hover{border-color:#2E86AB;background:#2E86AB08}
 
-/* Key Spots Link Button */
-.manage-spots-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#E7484508;color:#E74845;border:1.5px solid #E7484530;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none;transition:all .2s}
-.manage-spots-btn:hover{background:#E7484515;border-color:#E74845;color:#E74845;transform:translateY(-1px);box-shadow:0 4px 12px #E7484515}
-.manage-spots-btn .spot-count{background:#E74845;color:white;padding:1px 8px;border-radius:50px;font-size:10px}
+/* Hierarchy breadcrumb mini */
+.hier-bc{display:flex;align-items:center;gap:5px;font-size:11px;flex-wrap:wrap;margin-bottom:6px}
+.hier-bc .bc-pill{padding:2px 8px;border-radius:50px;font-weight:700;font-size:9px;letter-spacing:.5px;display:inline-flex;align-items:center;gap:3px}
+.hier-bc .bc-arrow{color:var(--text-light);font-size:8px}
 
-.cf-section{background:#FAFAF5;border-radius:12px;padding:20px;margin-top:12px}
+/* Spot / Point overview card */
+.overview-card{background:white;border-radius:12px;padding:16px 18px;margin-bottom:10px;border-left:4px solid;transition:all .2s;display:flex;align-items:center;gap:14px}
+.overview-card:hover{transform:translateX(3px);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.overview-card .ov-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.overview-card .ov-body{flex:1;min-width:0}
+.overview-card .ov-title{font-size:14px;font-weight:700;color:var(--text)}
+.overview-card .ov-cat{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.overview-card .ov-actions{display:flex;gap:6px;flex-shrink:0}
+
 .img-preview{width:60px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
 .section-save{display:flex;justify-content:flex-end;padding:16px 0 0;border-top:1px solid var(--border);margin-top:16px}
 .section-save .btn{min-width:160px}
+.cf-section{background:#FAFAF5;border-radius:12px;padding:20px;margin-top:12px}
 
-/* Responsive */
-@media(max-width:1024px){.place-two-col{grid-template-columns:1fr}.roadmap-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.roadmap-grid{grid-template-columns:1fr}}
+.back-btn-row{display:flex;gap:8px;margin-bottom:16px}
+.back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text-light);font-size:12px;font-weight:600;text-decoration:none;transition:all .2s}
+.back-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+
+@media(max-width:1024px){.place-two-col{grid-template-columns:1fr}.tier-tabs-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.tier-tabs-grid{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
@@ -90,257 +103,168 @@
 {% set vis = json.loads(place.field_visibility) if editing and place.field_visibility else {} %}
 {% set indian_states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'] %}
 
-<!-- ═══════════════════════════════════════════════ -->
-<!-- 4-TIER HIERARCHY ROADMAP -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="hierarchy-roadmap">
+<!-- ═══ CLICKABLE TIER TABS ═══ -->
+<div class="tier-tabs">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
 <div>
-<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.4;font-weight:700;margin-bottom:4px">Holy Dham Hierarchy Framework</div>
-<div style="font-size:18px;font-weight:700;font-family:'Josefin Sans',sans-serif">{{ place.title if editing else 'New Holy Dham' }}</div>
+<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.4;font-weight:700;margin-bottom:3px">4-Tier Hierarchy · Click a tier to view & manage</div>
+<div style="font-size:18px;font-weight:700">{{ place.title if editing else 'New Holy Dham' }}</div>
 </div>
-<div style="font-size:11px;opacity:.4;text-align:right">
-{% if editing %}Editing existing Dham · ID #{{ place.id }}{% else %}Creating new Tier 1 entry{% endif %}
-</div>
+{% if editing %}<div style="font-size:11px;opacity:.35">ID #{{ place.id }} · {{ place.status }}</div>{% endif %}
 </div>
 
-<div class="roadmap-grid">
-<!-- Tier 1 -->
-<div class="roadmap-tier active" style="background:rgba(199,107,143,.12);border-color:rgba(199,107,143,.3)">
-<div style="position:relative">
-<div class="tier-num" style="color:#C76B8F">Tier 1</div>
-<div class="tier-icon">🙏</div>
-<div class="tier-name">Holy Dham</div>
-<div class="tier-desc">Divine spiritual region</div>
-<span class="tier-badge" style="background:rgba(199,107,143,.3);color:#F0C0D4">{% if editing %}✏️ Editing{% else %}✨ Creating{% endif %}</span>
+<div class="tier-tabs-grid">
+<div class="tier-tab active" onclick="switchTier(1)" data-tier="1" style="border-color:rgba(199,107,143,.4)">
+<div class="t-num" style="color:#E8A0BF">Tier 1</div>
+<div class="t-icon">🙏</div>
+<div class="t-name">Holy Dham</div>
+<div class="t-desc">Divine spiritual region</div>
 </div>
+<div class="tier-tab" onclick="switchTier(2)" data-tier="2">
+<div class="t-num" style="color:#7CC0DE">Tier 2</div>
+<div class="t-icon">📍</div>
+<div class="t-name">Key Places</div>
+<div class="t-desc">Major zones within Dham</div>
+<div class="t-count">{{ key_places|length }}</div>
 </div>
-<!-- Tier 2 -->
-<div class="roadmap-tier" style="background:rgba(46,134,171,.06);border-color:rgba(46,134,171,.15)">
-<div class="tier-num" style="color:#2E86AB">Tier 2</div>
-<div class="tier-icon">📍</div>
-<div class="tier-name">Key Places</div>
-<div class="tier-desc">Major zones within Dham</div>
-{% if editing %}<span class="tier-badge" style="background:rgba(46,134,171,.2);color:#7CC0DE">↓ Below</span>{% endif %}
+<div class="tier-tab" onclick="switchTier(3)" data-tier="3">
+<div class="t-num" style="color:#F09190">Tier 3</div>
+<div class="t-icon">🔸</div>
+<div class="t-name">Key Spots</div>
+<div class="t-desc">Pilgrimage locations</div>
+<div class="t-count">{{ all_spots|length if editing else 0 }}</div>
 </div>
-<!-- Tier 3 -->
-<div class="roadmap-tier" style="background:rgba(231,72,69,.04);border-color:rgba(231,72,69,.1)">
-<div class="tier-num" style="color:#E74845">Tier 3</div>
-<div class="tier-icon">🔸</div>
-<div class="tier-name">Key Spots</div>
-<div class="tier-desc">Pilgrimage locations with categories</div>
-{% if editing %}<span class="tier-badge" style="background:rgba(231,72,69,.15);color:#F09190">🔗 Separate page</span>{% endif %}
-</div>
-<!-- Tier 4 -->
-<div class="roadmap-tier" style="background:rgba(156,39,176,.04);border-color:rgba(156,39,176,.1)">
-<div class="tier-num" style="color:#9C27B0">Tier 4</div>
-<div class="tier-icon">✦</div>
-<div class="tier-name">Sub-Spots</div>
-<div class="tier-desc">Sacred points for deeper engagement</div>
-{% if editing %}<span class="tier-badge" style="background:rgba(156,39,176,.12);color:#CE93D8">🔗 Separate page</span>{% endif %}
+<div class="tier-tab" onclick="switchTier(4)" data-tier="4">
+<div class="t-num" style="color:#CE93D8">Tier 4</div>
+<div class="t-icon">✦</div>
+<div class="t-name">Key Points</div>
+<div class="t-desc">Micro-locations for meditation</div>
+<div class="t-count">{{ all_points|length if editing else 0 }}</div>
 </div>
 </div>
 </div>
 
 <form method="POST" enctype="multipart/form-data" id="mainPlaceForm">
 
-<!-- ═══════════════════════════════════════════════ -->
-<!-- TIER 1 SECTION HEADER -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="tier-section-header tier-1-bg" style="margin-bottom:20px">
-<span style="width:44px;height:44px;background:#C76B8F20;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🙏</span>
-<div>
-<span class="tier-label" style="background:#C76B8F;color:white;margin-bottom:4px">Tier 1</span>
-<h3 style="color:#A04870">Holy Dham Information</h3>
+<!-- ════════════════════════════════════════════ -->
+<!-- TIER 1 CONTENT: HOLY DHAM -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tier-content active" id="tier-1-content">
+
+<!-- Tier 1 Definition -->
+<div class="tier-def" style="background:#C76B8F0A;border:1.5px solid #C76B8F20">
+<div class="tier-def-icon" style="background:#C76B8F15">🙏</div>
+<div class="tier-def-body">
+<h4 style="color:#A04870"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:2px 10px;background:#C76B8F;color:white;border-radius:50px;margin-right:8px">Tier 1</span> Holy Dham</h4>
+<div class="def-text">A spiritually complete sacred region associated with the divine pastimes of the Lord and His associates. Represents the entire spiritual ecosystem.</div>
+<div class="def-chars">
+<span class="def-char" style="background:#C76B8F15;color:#C76B8F">Scripturally established</span>
+<span class="def-char" style="background:#C76B8F15;color:#C76B8F">Multiple pastime locations</span>
+<span class="def-char" style="background:#C76B8F15;color:#C76B8F">Pilgrimage destination</span>
 </div>
-<span class="tier-count">Divine spiritual region where the Lord performs eternal pastimes</span>
+</div>
 </div>
 
-<!-- ═══ TWO COLUMN LAYOUT ═══ -->
 <div class="place-two-col" style="margin-bottom:28px">
 
-<!-- LEFT COLUMN: Core Fields -->
+<!-- LEFT: Core Fields -->
 <div class="admin-card" style="border-top:3px solid #C76B8F">
-<div class="admin-card-header"><h3>🛕 Core Details</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px;letter-spacing:1px">TIER 1</span></div>
+<div class="admin-card-header"><h3>🛕 Core Details</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px">TIER 1</span></div>
 <div class="admin-card-body">
-
-<!-- Title -->
 <div class="form-group"><label>Dham Title <span class="red-star">*</span></label>
-<input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Vrindavan Dham, Mayapur Dham">
-<input type="hidden" name="vis_title" value="on">
-</div>
-
-<!-- City / State / Country -->
+<input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Vrindavan Dham, Mayapur Dham"></div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
 <div class="form-group"><label>City <span class="red-star">*</span></label><input name="city" class="form-control" value="{{ place.city if editing else '' }}" placeholder="e.g. Mathura"><input type="hidden" name="vis_city" value="on"></div>
 <div class="form-group"><label>State <span class="red-star">*</span></label>
-<select name="state" class="form-control">
-<option value="">Select State</option>
-{% for st in indian_states %}<option value="{{ st }}" {{ 'selected' if editing and place.state == st }}>{{ st }}</option>{% endfor %}
-</select>
-<input type="hidden" name="vis_state" value="on"></div>
+<select name="state" class="form-control"><option value="">Select State</option>{% for st in indian_states %}<option value="{{ st }}" {{ 'selected' if editing and place.state == st }}>{{ st }}</option>{% endfor %}</select><input type="hidden" name="vis_state" value="on"></div>
 <div class="form-group"><label>Country</label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"><input type="hidden" name="vis_country" value="on"></div>
 </div>
-
-<!-- Short Description -->
 <div class="form-group"><label>Short Description <span class="red-star">*</span></label>
-<textarea name="short_description" class="form-control" rows="3" placeholder="Brief overview of this Holy Dham...">{{ place.short_description if editing else '' }}</textarea>
-<input type="hidden" name="vis_short_description" value="on">
-</div>
-
-<!-- Full Content -->
-<div class="form-group"><label>Long Description [History, Significance etc] <span class="red-star">*</span></label>
+<textarea name="short_description" class="form-control" rows="3" placeholder="Brief overview...">{{ place.short_description if editing else '' }}</textarea><input type="hidden" name="vis_short_description" value="on"><input type="hidden" name="vis_title" value="on"></div>
+<div class="form-group"><label>Long Description <span class="red-star">*</span></label>
 <input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
-<div class="rich-editor" data-target="full_content" style="background:white;min-height:200px"></div>
-<input type="hidden" name="vis_full_content" value="on">
-</div>
-
-<!-- Featured Image -->
-<div class="field-row">
-<div class="field-main"><div class="form-group"><label>Featured Image</label>
-{% if editing and place.featured_image %}
-<input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}">
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><img src="/static/uploads/{{ place.featured_image }}" class="img-preview" onerror="this.style.display='none'"><span style="font-size:12px;color:var(--text-light)">{{ place.featured_image }}</span></div>
-{% endif %}
-<input type="file" name="featured_image_file" class="form-control" accept="image/*">
-<input type="hidden" name="vis_featured_image" value="on">
-</div></div>
-</div>
-
-<!-- Lat / Long -->
+<div class="rich-editor" data-target="full_content" style="background:white;min-height:200px"></div><input type="hidden" name="vis_full_content" value="on"></div>
+<div class="field-row"><div class="field-main"><div class="form-group"><label>Featured Image</label>
+{% if editing and place.featured_image %}<input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><img src="/static/uploads/{{ place.featured_image }}" class="img-preview" onerror="this.style.display='none'"><span style="font-size:12px;color:var(--text-light)">{{ place.featured_image }}</span></div>{% endif %}
+<input type="file" name="featured_image_file" class="form-control" accept="image/*"><input type="hidden" name="vis_featured_image" value="on">
+</div></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-<div class="form-group"><label>Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}" placeholder="e.g. 27.5830"><input type="hidden" name="vis_latitude" value="on"></div>
-<div class="form-group"><label>Longitude</label><input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}" placeholder="e.g. 77.6950"><input type="hidden" name="vis_longitude" value="on"></div>
+<div class="form-group"><label>Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}"><input type="hidden" name="vis_latitude" value="on"></div>
+<div class="form-group"><label>Longitude</label><input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}"><input type="hidden" name="vis_longitude" value="on"></div>
 </div>
-
-<!-- Tags -->
 <div class="form-group"><label>Tags</label>
-<div style="display:flex;flex-wrap:wrap;gap:8px">
-{% for tag in tags %}
-<label style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;border:2px solid {{ tag.color }}30;background:{{ tag.color }}08;font-size:13px;cursor:pointer;transition:all .2s;user-select:none" onmouseover="this.style.background='{{ tag.color }}15'" onmouseout="this.style.background='{{ tag.color }}08'">
+<div style="display:flex;flex-wrap:wrap;gap:8px">{% for tag in tags %}
+<label style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;border:2px solid {{ tag.color }}30;background:{{ tag.color }}08;font-size:13px;cursor:pointer">
 <input type="checkbox" name="tags" value="{{ tag.id }}" {{ 'checked' if tag.id in place_tags }} style="accent-color:{{ tag.color }}">
-<span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span>
-<span style="font-weight:500;color:var(--text-dark)">{{ tag.name }}</span></label>
-{% endfor %}</div>
-<input type="hidden" name="vis_tags" value="on">
-</div>
-
+<span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span>{{ tag.name }}</label>{% endfor %}</div><input type="hidden" name="vis_tags" value="on"></div>
 </div></div>
 
-<!-- RIGHT COLUMN: Custom Fields + Publishing -->
+<!-- RIGHT: Custom Fields & Publishing -->
 <div class="admin-card" style="border-top:3px solid #C76B8F">
-<div class="admin-card-header"><h3>⚙️ Custom Fields & Publishing</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px;letter-spacing:1px">TIER 1</span></div>
+<div class="admin-card-header"><h3>⚙️ Settings & Publishing</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px">TIER 1</span></div>
 <div class="admin-card-body">
-
-<!-- Custom Fields -->
 {% if custom_fields %}
-<div style="margin-bottom:20px">
-<h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Custom Fields</h4>
-{% for cf in custom_fields %}
-{% if cf.name != 'entry_fee' %}
-{% set cv = custom_values.get(cf.id, {}) %}
-<div class="field-row">
-<div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
+<div style="margin-bottom:20px"><h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Custom Fields</h4>
+{% for cf in custom_fields %}{% if cf.name != 'entry_fee' %}{% set cv = custom_values.get(cf.id, {}) %}
+<div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
 {% if cf.field_type in ('text','url','number') %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
 {% elif cf.field_type in ('textarea','richtext') %}<textarea name="cf_{{ cf.id }}" class="form-control" rows="3">{{ cv.get('value','') }}</textarea>
-{% elif cf.field_type in ('image','audio','video') %}
-{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ cv.get('value','') }}</div>{% endif %}
-<input type="file" name="cf_file_{{ cf.id }}" class="form-control" accept="{{ 'image/*' if cf.field_type=='image' else 'audio/*' if cf.field_type=='audio' else 'video/*' }}">
-{% elif cf.field_type == 'images' %}
-{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ cv.get('value','').split(',')|length }} files</div>{% endif %}
-<input type="file" name="cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple>
-{% else %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}">
-{% endif %}
+{% elif cf.field_type in ('image','audio','video') %}{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ cv.get('value','') }}</div>{% endif %}<input type="file" name="cf_file_{{ cf.id }}" class="form-control" accept="{{ 'image/*' if cf.field_type=='image' else 'audio/*' if cf.field_type=='audio' else 'video/*' }}">
+{% elif cf.field_type == 'images' %}{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ cv.get('value','').split(',')|length }} files</div>{% endif %}<input type="file" name="cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple>
+{% else %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}">{% endif %}
 </div></div>
-<div class="field-toggle" style="padding-top:28px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if cv.get('is_visible',1) else 'Off' }}</span></label></div>
-</div>
-{% endif %}
-{% endfor %}
-</div>{% endif %}
-
-<!-- Publishing -->
+<div class="field-toggle" style="padding-top:28px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if cv.get('is_visible',1) else 'Off' }}</span></label></div></div>
+{% endif %}{% endfor %}</div>{% endif %}
 <div style="border-top:2px solid var(--border);padding-top:16px;margin-top:auto">
 <h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Publishing</h4>
-
-<div class="form-group"><label>Status</label>
-<select name="status" class="form-control">
-<option value="draft" {{ 'selected' if not editing or place.status=='draft' }}>📝 Draft</option>
-<option value="published" {{ 'selected' if editing and place.status=='published' }}>✅ Published</option>
-<option value="archived" {{ 'selected' if editing and place.status=='archived' }}>📦 Archived</option>
-</select></div>
-
-<div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-<input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }} style="accent-color:var(--warning)">
-<span>⭐ Featured on Homepage</span></label></div>
-
+<div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if not editing or place.status=='draft' }}>📝 Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>✅ Published</option><option value="archived" {{ 'selected' if editing and place.status=='archived' }}>📦 Archived</option></select></div>
+<div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }} style="accent-color:var(--warning)">⭐ Featured on Homepage</label></div>
 <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px"><i class="fas fa-save"></i> {{ 'Update Holy Dham' if editing else 'Create Holy Dham' }}</button>
 </div>
-
 </div></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!-- TIER 2 SECTION: KEY PLACES -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="tier-section-header tier-2-bg">
-<span style="width:44px;height:44px;background:#2E86AB20;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📍</span>
-<div>
-<span class="tier-label" style="background:#2E86AB;color:white;margin-bottom:4px">Tier 2</span>
-<h3 style="color:#1A6B8A">Key Places</h3>
-</div>
-<span class="tier-count">Major zones within this Holy Dham for geographical and leela-based grouping</span>
-</div>
+</div><!-- end tier-1-content -->
 
-<!-- Tier 2 → 3 → 4 Flow Explanation -->
-<div style="background:linear-gradient(135deg,#f7f9fc,#eef4f8);border:1px solid #2E86AB20;border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#2E86AB">
-<span style="width:26px;height:26px;background:#2E86AB;color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">T2</span>
-Key Place
+<!-- ════════════════════════════════════════════ -->
+<!-- TIER 2 CONTENT: KEY PLACES -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tier-content" id="tier-2-content">
+
+<div class="back-btn-row"><a href="javascript:switchTier(1)" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Tier 1 · Holy Dham</a></div>
+
+<div class="tier-def" style="background:#2E86AB0A;border:1.5px solid #2E86AB20">
+<div class="tier-def-icon" style="background:#2E86AB15">📍</div>
+<div class="tier-def-body">
+<h4 style="color:#1A6B8A"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:2px 10px;background:#2E86AB;color:white;border-radius:50px;margin-right:8px">Tier 2</span> Key Places</h4>
+<div class="def-text">Major locations within the dham where important categories of pastimes or historical events occurred. Represents clusters of leelas or thematic zones.</div>
+<div class="def-chars">
+<span class="def-char" style="background:#2E86AB15;color:#2E86AB">Recognized pilgrimage stops</span>
+<span class="def-char" style="background:#2E86AB15;color:#2E86AB">Distinct identity or mood</span>
+<span class="def-char" style="background:#2E86AB15;color:#2E86AB">Large temples, kunds, forests</span>
 </div>
-<i class="fas fa-arrow-right" style="color:#ccc;font-size:11px"></i>
-<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#E74845">
-<span style="width:26px;height:26px;background:#E74845;color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">T3</span>
-Key Spots <span style="font-size:10px;font-weight:400;color:var(--text-light)">(managed separately)</span>
-</div>
-<i class="fas fa-arrow-right" style="color:#ccc;font-size:11px"></i>
-<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#9C27B0">
-<span style="width:26px;height:26px;background:#9C27B0;color:white;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">T4</span>
-Sub-Spots <span style="font-size:10px;font-weight:400;color:var(--text-light)">(managed separately)</span>
-</div>
-<div style="margin-left:auto;font-size:11px;color:var(--text-light)">
-<i class="fas fa-info-circle"></i> Save the dham first, then manage deeper tiers via buttons below
 </div>
 </div>
 
 <div class="admin-card" style="border-top:3px solid #2E86AB">
 <div class="admin-card-header"><h3>📍 Key Places (Tier 2)</h3><span style="font-size:12px;color:var(--text-light)">{{ key_places|length }} key place{{ 's' if key_places|length != 1 }}</span></div>
 <div class="admin-card-body" id="keyPlacesContainer">
-
 {% for kp in key_places %}
 {% set ki = loop.index0 %}
-{% set accent_colors = ['blue','purple','orange','green','indigo','red'] %}
-<div class="kp-accordion" data-index="{{ ki }}" data-color="{{ accent_colors[ki % 6] }}">
+<div class="kp-accordion" data-index="{{ ki }}">
 <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
-<h4>
-<span class="kp-num">{{ loop.index }}</span>
-<span class="kp-tier-badge">Tier 2</span>
-<span class="kp-title-display">{{ kp.title }}</span>
-</h4>
+<h4><span class="kp-num">{{ loop.index }}</span> <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#2E86AB15;color:#2E86AB;border-radius:50px;font-weight:700;border:1px solid #2E86AB25">Tier 2</span> <span class="kp-title-display">{{ kp.title }}</span></h4>
 <div class="kp-actions">
-<label class="toggle-label" onclick="event.stopPropagation()" style="font-size:11px">
-<label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_is_visible" {{ 'checked' if kp.is_visible }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label>
-<span class="status-text {{ 'on' if kp.is_visible else 'off' }}" style="font-size:11px">{{ 'On' if kp.is_visible else 'Off' }}</span>
-</label>
+<label class="toggle-label" onclick="event.stopPropagation()"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_is_visible" {{ 'checked' if kp.is_visible }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kp.is_visible else 'off' }}" style="font-size:11px">{{ 'On' if kp.is_visible else 'Off' }}</span></label>
 <span class="chevron"><i class="fas fa-chevron-down"></i></span>
 <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()" title="Remove"><i class="fas fa-trash"></i></button>
 </div>
 </div>
-<div class="kp-accordion-body">
-<div class="kp-accordion-body-inner">
+<div class="kp-accordion-body"><div class="kp-accordion-body-inner">
 <input type="hidden" name="kp_{{ ki }}_id" value="{{ kp.id }}">
 <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_{{ ki }}_title" class="form-control" value="{{ kp.title }}" required onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value"></div>
 <div class="form-group"><label>Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
-<div class="form-group"><label>Long Description [History, Significance etc]</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
+<div class="form-group"><label>Long Description</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
 <div class="form-group"><label>Featured Image</label>{% if kp.featured_image %}<input type="hidden" name="kp_{{ ki }}_featured_image_existing" value="{{ kp.featured_image }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ kp.featured_image }}</div>{% endif %}<input type="file" name="kp_{{ ki }}_featured_image_file" class="form-control" accept="image/*"></div>
 <div class="form-group"><label>Latitude</label><input name="kp_{{ ki }}_latitude" class="form-control" type="number" step="any" value="{{ kp.latitude or '' }}"></div>
@@ -349,123 +273,196 @@ Sub-Spots <span style="font-size:10px;font-weight:400;color:var(--text-light)">(
 
 {% if custom_fields %}
 <details style="margin-top:8px"><summary style="font-size:13px;font-weight:600;cursor:pointer;color:var(--primary)">⚙️ Custom Fields for {{ kp.title }}</summary>
-<div style="padding:12px 0">
-{% set kpc = key_place_customs.get(kp.id, {}) %}
-{% for cf in custom_fields %}
-{% if cf.applies_to in ('both','key_place') and cf.name != 'entry_fee' %}
-<div class="field-row">
-<div class="field-main"><div class="form-group"><label style="font-size:12px">{{ cf.label }} <span style="font-size:9px;color:var(--text-light)">{{ cf.field_type }}</span></label>
-{% set kcv = kpc.get(cf.id, {}) %}
-{% if cf.field_type in ('text','url') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px">
-{% elif cf.field_type == 'textarea' %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="2" style="font-size:13px">{{ kcv.get('value','') }}</textarea>
-{% elif cf.field_type in ('image','audio','video') %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ kcv.get('value','') }}</div>{% endif %}<input type="file" name="kp_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" accept="{{ 'image/*' if cf.field_type=='image' else 'audio/*' if cf.field_type=='audio' else 'video/*' }}" style="font-size:13px">
-{% else %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">
-{% endif %}
-</div></div>
-<div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div>
-</div>
-{% endif %}
-{% endfor %}
-</div></details>
+<div style="padding:12px 0">{% set kpc = key_place_customs.get(kp.id, {}) %}{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name != 'entry_fee' %}<div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px">{{ cf.label }}</label>{% set kcv = kpc.get(cf.id, {}) %}{% if cf.field_type in ('text','url') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% elif cf.field_type == 'textarea' %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="2" style="font-size:13px">{{ kcv.get('value','') }}</textarea>{% elif cf.field_type in ('image','audio','video') %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}">{% endif %}<input type="file" name="kp_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" style="font-size:13px">{% else %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% endif %}</div></div><div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div></div>{% endif %}{% endfor %}</div></details>
 {% endif %}
 
-<!-- Manage Deeper Tiers -->
-<div style="margin-top:14px;padding:14px 16px;background:linear-gradient(135deg,#fdf5f5,#f8f0f8);border:1px solid #E7484520;border-radius:12px">
-<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-<div style="flex:1;min-width:200px">
-<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Deeper Tiers for {{ kp.title }}</div>
-<div style="font-size:13px;color:var(--text-mid)">Manage the Key Spots (Tier 3) and Sub-Spots (Tier 4) within this Key Place</div>
-</div>
 {% if kp.id %}
-<a href="{{ url_for('admin_key_place_spots', kp_id=kp.id) }}" class="manage-spots-btn" onclick="event.stopPropagation()">
-<i class="fas fa-layer-group"></i>
-<span>Manage Key Spots</span>
-<span style="background:#E74845;color:white;padding:2px 8px;border-radius:50px;font-size:9px;font-weight:700;letter-spacing:.5px">TIER 3</span>
-{% if kp_spot_counts and kp_spot_counts.get(kp.id, 0) > 0 %}<span class="spot-count">{{ kp_spot_counts[kp.id] }}</span>{% endif %}
-</a>
-{% else %}
-<span style="font-size:12px;color:var(--text-light);font-style:italic"><i class="fas fa-info-circle"></i> Save this dham first to manage Key Spots</span>
-{% endif %}
+<div style="margin-top:14px;padding:14px;background:linear-gradient(135deg,#fdf5f5,#f8f0f8);border:1px solid #E7484520;border-radius:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light)">Deeper Tiers</div><div style="font-size:13px;color:var(--text-mid)">Manage spots & points within {{ kp.title }}</div></div>
+<a href="{{ url_for('admin_key_place_spots', kp_id=kp.id) }}" class="btn btn-sm" style="background:#E7484508;color:#E74845;border:1.5px solid #E7484530;font-weight:700" onclick="event.stopPropagation()"><i class="fas fa-layer-group"></i> Manage Key Spots <span style="font-size:9px;padding:1px 6px;background:#E74845;color:white;border-radius:50px">T3</span> {% if kp_spot_counts and kp_spot_counts.get(kp.id, 0) > 0 %}<span style="background:#E74845;color:white;padding:1px 7px;border-radius:50px;font-size:10px;margin-left:2px">{{ kp_spot_counts[kp.id] }}</span>{% endif %}</a>
+</div>{% endif %}
+
+<div class="section-save"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save All Changes</button></div>
+</div></div>
+</div>
+{% endfor %}
+{% if not key_places %}<div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">📍</div><p>No Key Places yet. Add major zones within this Dham.</p></div>{% endif %}
+</div></div>
+
+<div style="display:flex;gap:12px;margin-top:16px;align-items:center">
+<button type="button" class="add-kp-btn" onclick="addKeyPlace()" style="flex:1"><i class="fas fa-plus-circle"></i> Add Key Place (Tier 2)</button>
+<button type="submit" class="btn btn-primary" style="min-width:200px"><i class="fas fa-save"></i> Save All Changes</button>
+</div>
+
+<div class="back-btn-row" style="margin-top:16px"><a href="javascript:switchTier(1)" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Tier 1 · Holy Dham</a></div>
+</div><!-- end tier-2-content -->
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TIER 3 CONTENT: KEY SPOTS OVERVIEW -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tier-content" id="tier-3-content">
+
+<div class="back-btn-row">
+<a href="javascript:switchTier(1)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 1 · Holy Dham</a>
+<a href="javascript:switchTier(2)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 2 · Key Places</a>
+</div>
+
+<div class="tier-def" style="background:#E748450A;border:1.5px solid #E7484520">
+<div class="tier-def-icon" style="background:#E7484515">🔸</div>
+<div class="tier-def-body">
+<h4 style="color:#C73A38"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:2px 10px;background:#E74845;color:white;border-radius:50px;margin-right:8px">Tier 3</span> Key Spots</h4>
+<div class="def-text">Specific sites within a Key Place where a particular pastime, event, or spiritual activity is centered. A precise location of a known leela or event. Pilgrims visit for focused remembrance.</div>
+<div class="def-chars">
+<span class="def-char" style="background:#E7484515;color:#E74845">Identifiable physical spot</span>
+<span class="def-char" style="background:#E7484515;color:#E74845">Specific pastimes</span>
+<span class="def-char" style="background:#E7484515;color:#E74845">15 categories</span>
+</div>
 </div>
 </div>
 
-<div class="section-save" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save All Changes</button>
+{% if editing and all_spots %}
+{% set current_kp = namespace(id=0) %}
+{% for spot in all_spots %}
+{% if spot.kp_id != current_kp.id %}
+{% set current_kp.id = spot.kp_id %}
+<div style="display:flex;align-items:center;gap:10px;margin:{{ '20px' if not loop.first else '0' }} 0 12px;padding:10px 16px;background:#2E86AB08;border-radius:10px;border:1px solid #2E86AB15">
+<span style="width:22px;height:22px;background:#2E86AB;color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">T2</span>
+<span style="font-size:14px;font-weight:700;color:#2E86AB">{{ spot.kp_title }}</span>
+<a href="{{ url_for('admin_key_place_spots', kp_id=spot.kp_id) }}" class="btn btn-sm" style="margin-left:auto;font-size:11px;background:#E7484510;color:#E74845;border:1px solid #E7484525"><i class="fas fa-edit"></i> Manage Spots</a>
 </div>
+{% endif %}
+<div class="overview-card" style="border-color:{{ spot.cat_color or '#E74845' }}">
+<div class="ov-icon" style="background:{{ spot.cat_color or '#E74845' }}12">{{ spot.cat_icon or '📍' }}</div>
+<div class="ov-body">
+<div class="hier-bc">
+<span class="bc-pill" style="background:#C76B8F15;color:#C76B8F">🙏 T1</span><span class="bc-arrow">›</span>
+<span class="bc-pill" style="background:#2E86AB15;color:#2E86AB">📍 {{ spot.kp_title }}</span><span class="bc-arrow">›</span>
+<span class="bc-pill" style="background:{{ spot.cat_color or '#E74845' }}15;color:{{ spot.cat_color or '#E74845' }}">{{ spot.cat_icon or '🔸' }} T3</span>
 </div>
+<div class="ov-cat" style="color:{{ spot.cat_color or '#E74845' }}">{{ spot.cat_name or 'Uncategorized' }}</div>
+<div class="ov-title">{{ spot.title }}</div>
+{% if spot.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px">{{ spot.short_description }}</div>{% endif %}
+</div>
+<div class="ov-actions">
+<a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-secondary btn-sm" style="font-size:10px"><i class="fas fa-sitemap"></i> Key Points <span style="font-size:8px;padding:1px 5px;background:#9C27B0;color:white;border-radius:50px">T4</span></a>
 </div>
 </div>
 {% endfor %}
-
-{% if not key_places %}
-<div style="padding:32px;text-align:center;color:var(--text-light)">
-<div style="font-size:36px;margin-bottom:8px;opacity:.3">📍</div>
-<p style="font-size:14px;margin-bottom:4px">No Key Places added yet</p>
-<p style="font-size:12px;opacity:.7">Add major zones within this Holy Dham (e.g., Vrindavan Town, Barsana, Govardhan)</p>
-</div>
+{% elif editing %}
+<div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">🔸</div><p>No Key Spots yet. Go to Tier 2, open a Key Place, and click "Manage Key Spots" to add Tier 3 entries.</p></div>
+{% else %}
+<div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">🔸</div><p>Save this Holy Dham first, then add Key Places (Tier 2) to start building Tier 3.</p></div>
 {% endif %}
 
-</div></div>
+<div class="back-btn-row" style="margin-top:16px">
+<a href="javascript:switchTier(1)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 1 · Holy Dham</a>
+<a href="javascript:switchTier(2)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 2 · Key Places</a>
+</div>
+</div><!-- end tier-3-content -->
 
-<div style="margin-top:16px">
-<button type="button" class="add-kp-btn" onclick="addKeyPlace()"><i class="fas fa-plus-circle"></i> Add Key Place (Tier 2)</button>
+<!-- ════════════════════════════════════════════ -->
+<!-- TIER 4 CONTENT: KEY POINTS OVERVIEW -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tier-content" id="tier-4-content">
+
+<div class="back-btn-row">
+<a href="javascript:switchTier(1)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 1</a>
+<a href="javascript:switchTier(2)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 2</a>
+<a href="javascript:switchTier(3)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 3</a>
 </div>
 
-<div class="section-save" style="margin-top:20px">
-<button type="submit" class="btn btn-primary" style="min-width:240px"><i class="fas fa-save"></i> {{ 'Update All & Save' if editing else 'Create Holy Dham' }}</button>
+<div class="tier-def" style="background:#9C27B00A;border:1.5px solid #9C27B020">
+<div class="tier-def-icon" style="background:#9C27B015">✦</div>
+<div class="tier-def-body">
+<h4 style="color:#7B1FA2"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:2px 10px;background:#9C27B0;color:white;border-radius:50px;margin-right:8px">Tier 4</span> Key Points</h4>
+<div class="def-text">Exact micro-locations or meditation points within a Key Spot that highlight a very specific moment, action, or detail of a pastime. The finest level of devotional focus — may be a tree, rock, step, samadhi, footprint, or platform.</div>
+<div class="def-chars">
+<span class="def-char" style="background:#9C27B015;color:#9C27B0">Subtle or locally indicated</span>
+<span class="def-char" style="background:#9C27B015;color:#9C27B0">Deep meditation</span>
+<span class="def-char" style="background:#9C27B015;color:#9C27B0">10 categories</span>
 </div>
+</div>
+</div>
+
+{% if editing and all_points %}
+{% set current_ks = namespace(id=0) %}
+{% for pt in all_points %}
+{% if pt.ks_id != current_ks.id %}
+{% set current_ks.id = pt.ks_id %}
+<div style="display:flex;align-items:center;gap:10px;margin:{{ '20px' if not loop.first else '0' }} 0 12px;padding:10px 16px;background:#E7484508;border-radius:10px;border:1px solid #E7484515">
+<span style="width:22px;height:22px;background:#E74845;color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">T3</span>
+<span style="font-size:14px;font-weight:700;color:#E74845">{{ pt.ks_title }}</span>
+<span style="font-size:11px;color:var(--text-light)">in {{ pt.kp_title }}</span>
+<a href="{{ url_for('admin_key_spot_subs', ks_id=pt.ks_id) }}" class="btn btn-sm" style="margin-left:auto;font-size:11px;background:#9C27B010;color:#9C27B0;border:1px solid #9C27B025"><i class="fas fa-edit"></i> Manage Points</a>
+</div>
+{% endif %}
+<div class="overview-card" style="border-color:{{ pt.cat_color or '#9C27B0' }}">
+<div class="ov-icon" style="background:{{ pt.cat_color or '#9C27B0' }}12">{{ pt.cat_icon or '✦' }}</div>
+<div class="ov-body">
+<div class="hier-bc">
+<span class="bc-pill" style="background:#C76B8F15;color:#C76B8F">🙏 T1</span><span class="bc-arrow">›</span>
+<span class="bc-pill" style="background:#2E86AB15;color:#2E86AB">📍 {{ pt.kp_title }}</span><span class="bc-arrow">›</span>
+<span class="bc-pill" style="background:#E7484515;color:#E74845">{{ pt.ks_cat_icon or '🔸' }} {{ pt.ks_title }}</span><span class="bc-arrow">›</span>
+<span class="bc-pill" style="background:{{ pt.cat_color or '#9C27B0' }}15;color:{{ pt.cat_color or '#9C27B0' }}">{{ pt.cat_icon or '✦' }} T4</span>
+</div>
+<div class="ov-cat" style="color:{{ pt.cat_color or '#9C27B0' }}">{{ pt.cat_name or 'Uncategorized' }}</div>
+<div class="ov-title">{{ pt.title }}</div>
+{% if pt.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px">{{ pt.short_description }}</div>{% endif %}
+</div>
+</div>
+{% endfor %}
+{% elif editing %}
+<div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">✦</div><p>No Key Points yet. Go to a Key Spot's page and add Tier 4 entries there.</p></div>
+{% else %}
+<div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">✦</div><p>Save this Holy Dham first to build the hierarchy.</p></div>
+{% endif %}
+
+<div class="back-btn-row" style="margin-top:16px">
+<a href="javascript:switchTier(1)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 1</a>
+<a href="javascript:switchTier(2)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 2</a>
+<a href="javascript:switchTier(3)" class="back-btn"><i class="fas fa-arrow-left"></i> Tier 3</a>
+</div>
+</div><!-- end tier-4-content -->
 
 </form>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function switchTier(n) {
+    document.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.tier-tab[data-tier="${n}"]`).classList.add('active');
+    document.getElementById(`tier-${n}-content`).classList.add('active');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
 function updateToggleText(cb) {
     const lbl = cb.closest('.toggle-label');
     if (!lbl) return;
     const st = lbl.querySelector('.status-text');
-    if (!st) return;
-    st.textContent = cb.checked ? 'On' : 'Off';
-    st.className = 'status-text ' + (cb.checked ? 'on' : 'off');
+    if (st) { st.textContent = cb.checked ? 'On' : 'Off'; st.className = 'status-text ' + (cb.checked ? 'on' : 'off'); }
 }
 
 let kpIndex = {{ key_places|length }};
 function addKeyPlace() {
     const container = document.getElementById('keyPlacesContainer');
-    const colors = ['blue','purple','orange','green','indigo','red'];
-    const colorClass = colors[kpIndex % colors.length];
     const div = document.createElement('div');
     div.className = 'kp-accordion open';
-    div.dataset.index = kpIndex;
-    div.dataset.color = colorClass;
-    div.innerHTML = `
-        <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
-            <h4><span class="kp-num">${kpIndex+1}</span> <span class="kp-tier-badge">Tier 2</span> <span class="kp-title-display">New Key Place</span></h4>
-            <div class="kp-actions">
-                <label class="toggle-label" onclick="event.stopPropagation()" style="font-size:11px">
-                    <label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_${kpIndex}_is_visible" checked onchange="updateToggleText(this)"><span class="toggle-slider"></span></label>
-                    <span class="status-text on" style="font-size:11px">On</span>
-                </label>
-                <span class="chevron"><i class="fas fa-chevron-down"></i></span>
-                <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()" title="Remove"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-        <div class="kp-accordion-body" style="max-height:3000px">
-            <div class="kp-accordion-body-inner">
-            <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Vrindavan Town, Barsana, Govardhan" onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
-            <div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2" placeholder="Brief description of this zone..."></textarea></div>
-            <div class="form-group"><label>Long Description [History, Significance etc]</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4" placeholder="Detailed content..."></textarea></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-                <div class="form-group"><label>Featured Image</label><input type="file" name="kp_${kpIndex}_featured_image_file" class="form-control" accept="image/*"></div>
-                <div class="form-group"><label>Latitude</label><input name="kp_${kpIndex}_latitude" class="form-control" type="number" step="any"></div>
-                <div class="form-group"><label>Longitude</label><input name="kp_${kpIndex}_longitude" class="form-control" type="number" step="any"></div>
-            </div>
-            <div style="margin-top:14px;padding:12px 16px;background:#f7f7f2;border-radius:10px;font-size:12px;color:var(--text-light)">
-                <i class="fas fa-info-circle" style="color:#2E86AB"></i> <strong>Tip:</strong> Save this dham first. Then you'll see a "Manage Key Spots (Tier 3)" button appear here to add Tier 3 and Tier 4 entries.
-            </div>
-            <div class="section-save"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save All Changes</button></div>
-            </div>
-        </div>`;
+    div.innerHTML = `<div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
+<h4><span class="kp-num">${kpIndex+1}</span> <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#2E86AB15;color:#2E86AB;border-radius:50px;font-weight:700;border:1px solid #2E86AB25">Tier 2</span> <span class="kp-title-display">New Key Place</span></h4>
+<div class="kp-actions"><span class="chevron"><i class="fas fa-chevron-down"></i></span><button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()"><i class="fas fa-trash"></i></button></div></div>
+<div class="kp-accordion-body" style="max-height:3000px"><div class="kp-accordion-body-inner">
+<div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Vrindavan Town" onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
+<div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2"></textarea></div>
+<div class="form-group"><label>Long Description</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4"></textarea></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div class="form-group"><label>Featured Image</label><input type="file" name="kp_${kpIndex}_featured_image_file" class="form-control" accept="image/*"></div>
+<div class="form-group"><label>Latitude</label><input name="kp_${kpIndex}_latitude" class="form-control" type="number" step="any"></div>
+<div class="form-group"><label>Longitude</label><input name="kp_${kpIndex}_longitude" class="form-control" type="number" step="any"></div></div>
+<div style="padding:12px;background:#f7f7f2;border-radius:10px;font-size:12px;color:var(--text-light);margin-top:8px"><i class="fas fa-info-circle" style="color:#2E86AB"></i> Save first → then "Manage Key Spots (T3)" button appears</div>
+<div class="section-save"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save</button></div>
+</div></div>`;
     container.appendChild(div);
     kpIndex++;
 }

@@ -458,7 +458,11 @@ def admin_place_edit(place_id):
     kp_spot_counts={}
     for kp in kps:
         kp_spot_counts[kp['id']]=db.execute("SELECT COUNT(*) FROM key_spots WHERE key_place_id=?",(kp['id'],)).fetchone()[0]
-    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts)
+    # Fetch ALL key_spots for this dham (for Tier 3 tab)
+    all_spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color,kp.title as kp_title,kp.id as kp_id,kp.slug as kp_slug FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order",(place_id,)).fetchall()
+    # Fetch ALL sub_spots (key points) for this dham (for Tier 4 tab)
+    all_points=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color,ks.title as ks_title,ks.id as ks_id,ks.slug as ks_slug,sc2.name as ks_cat_name,sc2.icon as ks_cat_icon,kp.title as kp_title,kp.id as kp_id FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id JOIN key_spots ks ON ss.key_spot_id=ks.id LEFT JOIN spot_categories sc2 ON ks.category_id=sc2.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order",(place_id,)).fetchall()
+    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points)
 
 def _save_place(place_id):
     db=get_db(); f=request.form; title=f['title']; slug=slugify(title)
@@ -621,7 +625,7 @@ def admin_sub_spots_save(ks_id):
         i+=1
     for oid in existing:
         if oid not in submitted: db.execute("DELETE FROM sub_spots WHERE id=?",(oid,))
-    db.commit(); flash('Sub-Spots saved!','success'); return redirect(url_for('admin_key_spot_subs',ks_id=ks_id))
+    db.commit(); flash('Key Points saved!','success'); return redirect(url_for('admin_key_spot_subs',ks_id=ks_id))
 
 # ─── Modules ───
 @app.route('/admin/modules')

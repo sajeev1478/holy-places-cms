@@ -54,7 +54,7 @@
 <span class="badge" style="background:{{ spot.cat_color or '#E74C3C' }}15;color:{{ spot.cat_color or '#E74C3C' }};font-size:11px;border:1px solid {{ spot.cat_color or '#E74C3C' }}25">{{ spot.cat_name or 'No Category' }}</span>
 </div>
 <div style="display:flex;align-items:center;gap:8px">
-<a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-secondary btn-sm" onclick="event.stopPropagation()" style="background:#9C27B008;color:#9C27B0;border:1px solid #9C27B030;font-size:11px;font-weight:700"><i class="fas fa-layer-group"></i> Sub-Spots <span style="font-size:9px;padding:1px 6px;background:#9C27B0;color:white;border-radius:50px;letter-spacing:.5px">T4</span></a>
+<a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-secondary btn-sm" onclick="event.stopPropagation()" style="background:#9C27B008;color:#9C27B0;border:1px solid #9C27B030;font-size:11px;font-weight:700"><i class="fas fa-layer-group"></i> Key Points <span style="font-size:9px;padding:1px 6px;background:#9C27B0;color:white;border-radius:50px;letter-spacing:.5px">T4</span></a>
 <i class="fas fa-chevron-down ks-chevron" style="transition:transform .3s;color:var(--text-light)"></i>
 </div>
 </div>
@@ -80,7 +80,7 @@
 <div class="form-group"><label><input type="checkbox" name="ks_{{ loop.index0 }}_is_visible" {{ 'checked' if spot.is_visible }}> Visible on frontend</label></div>
 <div style="display:flex;gap:12px;margin-top:8px;align-items:center">
 <button type="button" class="btn btn-sm" style="background:#e74c3c15;color:#e74c3c;border:1px solid #e74c3c30" onclick="this.closest('.ks-item').remove()"><i class="fas fa-trash"></i> Remove</button>
-<a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-sm" style="background:#9C27B008;color:#9C27B0;border:1px solid #9C27B030" onclick="event.stopPropagation()"><i class="fas fa-sitemap"></i> Manage Tier 4 Sub-Spots →</a>
+<a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-sm" style="background:#9C27B008;color:#9C27B0;border:1px solid #9C27B030" onclick="event.stopPropagation()"><i class="fas fa-sitemap"></i> Manage Tier 4 Key Points →</a>
 </div>
 </div>
 </div>
