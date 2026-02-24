@@ -325,21 +325,50 @@ def home():
         (SELECT COUNT(*) FROM sub_spots ss JOIN key_spots ks2 ON ss.key_spot_id=ks2.id JOIN key_places kp3 ON ks2.key_place_id=kp3.id WHERE kp3.parent_place_id=p.id AND ss.is_visible=1) as ss_count
         FROM places p LEFT JOIN place_tags pt ON p.id=pt.place_id LEFT JOIN tags t ON pt.tag_id=t.id
         WHERE p.status='published' GROUP BY p.id ORDER BY p.is_featured DESC,p.updated_at DESC LIMIT 16""").fetchall()
-    # Collect all gallery images from all tiers for hero slider
+    # Collect images from ALL tiers — featured_image AND gallery_images
     hero_images=[]
-    for row in db.execute("SELECT featured_image,title,slug,'T1' as tier,'dham' as tier_label FROM places WHERE status='published' AND featured_image IS NOT NULL AND featured_image!='' LIMIT 3").fetchall():
-        hero_images.append(dict(row))
-    for row in db.execute("""SELECT kp.featured_image,kp.title,p.slug as dham_slug,kp.slug,p.title as dham_title,'T2' as tier,'key-place' as tier_label
-        FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.featured_image IS NOT NULL AND kp.featured_image!='' AND kp.is_visible=1 AND p.status='published' LIMIT 3""").fetchall():
-        hero_images.append(dict(row))
-    for row in db.execute("""SELECT ks.featured_image,ks.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug,p.title as dham_title,kp.title as kp_title,'T3' as tier,'key-spot' as tier_label,sc.icon as cat_icon
-        FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id LEFT JOIN spot_categories sc ON ks.category_id=sc.id
-        WHERE ks.featured_image IS NOT NULL AND ks.featured_image!='' AND ks.is_visible=1 AND p.status='published' LIMIT 3""").fetchall():
-        hero_images.append(dict(row))
-    for row in db.execute("""SELECT ss.featured_image,ss.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug as ks_slug,ss.slug,p.title as dham_title,kp.title as kp_title,ks.title as ks_title,'T4' as tier,'key-point' as tier_label,ssc.icon as cat_icon
-        FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id
-        WHERE ss.featured_image IS NOT NULL AND ss.featured_image!='' AND ss.is_visible=1 AND p.status='published' LIMIT 3""").fetchall():
-        hero_images.append(dict(row))
+    def add_hero(img_path, row_dict):
+        if img_path and img_path.strip():
+            d = dict(row_dict)
+            d['image'] = img_path.split(',')[0].strip()  # take first if comma-separated
+            hero_images.append(d)
+    # T1 Holy Dhams
+    for row in db.execute("SELECT featured_image,title,slug,'T1' as tier FROM places WHERE status='published' ORDER BY is_featured DESC LIMIT 6").fetchall():
+        add_hero(row['featured_image'], row)
+    # Also check place_media for T1 gallery images
+    for row in db.execute("""SELECT m.filename as gimg, p.title, p.slug, 'T1' as tier
+        FROM media m JOIN place_media pm ON m.id=pm.media_id JOIN places p ON pm.place_id=p.id
+        WHERE m.file_type='image' AND p.status='published' LIMIT 4""").fetchall():
+        d = dict(row); d['image'] = row['gimg']; hero_images.append(d)
+    # T2 Key Places
+    for row in db.execute("""SELECT kp.featured_image,kp.gallery_images,kp.title,p.slug as dham_slug,kp.slug,p.title as dham_title,'T2' as tier
+        FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.is_visible=1 AND p.status='published' LIMIT 6""").fetchall():
+        add_hero(row['featured_image'], row)
+        if row['gallery_images']:
+            for gf in row['gallery_images'].split(',')[:1]:
+                add_hero(gf, row)
+    # T3 Key Spots
+    for row in db.execute("""SELECT ks.featured_image,ks.gallery_images,ks.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug,p.title as dham_title,kp.title as kp_title,'T3' as tier
+        FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id
+        WHERE ks.is_visible=1 AND p.status='published' LIMIT 6""").fetchall():
+        add_hero(row['featured_image'], row)
+        if row['gallery_images']:
+            for gf in row['gallery_images'].split(',')[:1]:
+                add_hero(gf, row)
+    # T4 Key Points
+    for row in db.execute("""SELECT ss.featured_image,ss.gallery_images,ss.title,p.slug as dham_slug,kp.slug as kp_slug,ks.slug as ks_slug,ss.slug,p.title as dham_title,kp.title as kp_title,ks.title as ks_title,'T4' as tier
+        FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id
+        WHERE ss.is_visible=1 AND p.status='published' LIMIT 6""").fetchall():
+        add_hero(row['featured_image'], row)
+        if row['gallery_images']:
+            for gf in row['gallery_images'].split(',')[:1]:
+                add_hero(gf, row)
+    # Deduplicate by image path
+    seen=set(); unique=[]
+    for h in hero_images:
+        if h['image'] not in seen:
+            seen.add(h['image']); unique.append(h)
+    hero_images=unique[:12]
     modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
     stories=db.execute("SELECT me.*,m.name as module_name,m.icon as module_icon FROM module_entries me JOIN modules m ON me.module_id=m.id WHERE me.status='published' AND m.slug='sacred-stories' ORDER BY me.created_at DESC LIMIT 4").fetchall()
     stats={'places':db.execute("SELECT COUNT(*) FROM places WHERE status='published'").fetchone()[0],'entries':db.execute("SELECT COUNT(*) FROM module_entries WHERE status='published'").fetchone()[0],'modules':db.execute("SELECT COUNT(*) FROM modules WHERE is_active=1").fetchone()[0]}

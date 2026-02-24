@@ -8,16 +8,15 @@
 .hero-blob-1{width:600px;height:600px;background:var(--rose-pale);top:-100px;right:-100px}
 .hero-blob-2{width:400px;height:400px;background:var(--sage-light);bottom:-50px;left:-50px}
 .hero-blob-3{width:300px;height:300px;background:var(--cream-deep);top:50%;left:40%}
-.hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;position:relative;z-index:1}
+.hero-inner{display:grid;grid-template-columns:1fr 1.5fr;gap:48px;align-items:center;position:relative;z-index:1}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:white;border-radius:50px;padding:8px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--rose-deep);font-weight:500;margin-bottom:28px;box-shadow:0 4px 20px rgba(200,100,143,.1)}
 .hero-badge .pulse{width:8px;height:8px;background:var(--rose);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hero-title{font-family:'Josefin Sans',sans-serif;font-size:clamp(36px,5vw,64px);line-height:1.15;margin-bottom:20px}
 .hero-title em{color:var(--rose-deep);font-style:italic}
-.hero-desc{font-size:18px;color:var(--text-mid);line-height:1.8;margin-bottom:36px;max-width:480px}
-.hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+.hero-desc{font-size:18px;color:var(--text-mid);line-height:1.8;margin-bottom:20px;max-width:480px}
 /* ─── Hero Image Slider ─── */
-.hero-slider{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:4/5;max-height:520px}
+.hero-slider{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:3/2;width:100%}
 .hs-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease,transform 1.4s ease;transform:scale(1.06)}
 .hs-slide.active{opacity:1;transform:scale(1)}
 .hs-slide img{width:100%;height:100%;object-fit:cover}
@@ -27,6 +26,7 @@
 .hs-title{font-family:'Josefin Sans',sans-serif;font-size:20px;color:white;margin-bottom:10px;line-height:1.3;text-shadow:0 2px 8px rgba(0,0,0,.3)}
 .hs-cta{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.95);color:var(--text-dark);padding:8px 20px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;text-decoration:none;transition:all .3s}
 .hs-cta:hover{background:white;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2);color:var(--rose-deep)}
+.hs-breadcrumb{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:rgba(255,255,255,.7);margin-bottom:8px}
 .hs-dots{position:absolute;bottom:12px;right:20px;display:flex;gap:6px;z-index:3}
 .hs-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .3s;cursor:pointer}
 .hs-dot.active{background:white;transform:scale(1.4)}
@@ -73,7 +73,7 @@
 .newsletter-form{display:flex;gap:12px;max-width:440px;margin:0 auto}
 .newsletter-input{flex:1;padding:14px 20px;border:2px solid var(--cream-deep);border-radius:50px;background:white;font-family:'Nunito Sans',sans-serif;font-size:15px;outline:none}
 .newsletter-input:focus{border-color:var(--rose)}
-@media(max-width:1024px){.hero-inner{grid-template-columns:1fr;text-align:center}.hero-desc{margin:0 auto 36px}.hero-btns{justify-content:center}.hero-slider{max-height:360px;margin-top:20px}.dhams-grid{grid-template-columns:repeat(2,1fr)}.stories-grid{grid-template-columns:1fr}.audio-featured{grid-template-columns:1fr;text-align:center;justify-items:center}}
+@media(max-width:1024px){.hero-inner{grid-template-columns:1fr;text-align:center}.hero-desc{margin:0 auto 24px}.hero-slider{margin-top:20px;aspect-ratio:16/9}.dhams-grid{grid-template-columns:repeat(2,1fr)}.stories-grid{grid-template-columns:1fr}.audio-featured{grid-template-columns:1fr;text-align:center;justify-items:center}}
 @media(max-width:768px){.hero{padding:100px 0 40px}.dhams-grid{grid-template-columns:1fr 1fr}.newsletter{padding:36px 20px}.newsletter-form{flex-direction:column}}
 @media(max-width:480px){.dhams-grid{grid-template-columns:1fr}}
 </style>
@@ -90,10 +90,6 @@
 <div class="hero-badge"><span class="pulse"></span> Explore {{ stats.places }}+ Holy Dhams</div>
 <h1 class="hero-title">Your Journey to<br><em>Sacred India</em><br>Starts Here</h1>
 <p class="hero-desc">Discover temples, sacred stories, festivals, and spiritual practices through a beautifully curated devotional experience.</p>
-<div class="hero-btns">
-<a href="{{ url_for('all_dhams') }}" class="btn btn-primary">Explore Holy Dhams</a>
-<a href="#dhams" class="btn btn-secondary">▶ Browse All</a>
-</div>
 </div>
 <!-- Hero Image Slider -->
 <div class="hero-slider" id="heroSlider">
@@ -102,12 +98,15 @@
 {% if hero_images %}
 {% for img in hero_images %}
 <div class="hs-slide{% if loop.first %} active{% endif %}">
-<img src="/static/uploads/{{ img.featured_image }}" alt="{{ img.title }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}">
+<img src="/static/uploads/{{ img.image }}" alt="{{ img.title }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}">
 <div class="hs-overlay"></div>
 <div class="hs-info">
 <span class="hs-tier-badge" style="background:{{ tier_colors.get(img.tier,'#888') }}">{{ img.tier }} · {{ tier_labels.get(img.tier,'') }}</span>
 <div class="hs-title">{{ img.title }}</div>
-<a class="hs-cta" href="{% if img.tier=='T1' %}{{ url_for('place_detail',slug=img.slug) }}{% elif img.tier=='T2' %}{{ url_for('key_place_detail',slug=img.dham_slug,kp_slug=img.slug) }}{% elif img.tier=='T3' %}{{ url_for('key_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.slug) }}{% elif img.tier=='T4' %}{{ url_for('sub_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.ks_slug,ss_slug=img.slug) }}{% endif %}">Visit {{ tier_labels.get(img.tier,'') }} →</a>
+{% if img.tier == 'T2' and img.dham_title %}<div class="hs-breadcrumb">{{ img.dham_title }}</div>{% endif %}
+{% if img.tier == 'T3' and img.kp_title %}<div class="hs-breadcrumb">{{ img.kp_title }} › {{ img.dham_title }}</div>{% endif %}
+{% if img.tier == 'T4' and img.ks_title %}<div class="hs-breadcrumb">{{ img.ks_title }} › {{ img.kp_title }} › {{ img.dham_title }}</div>{% endif %}
+<a class="hs-cta" href="{% if img.tier=='T1' %}{{ url_for('place_detail',slug=img.slug) }}{% elif img.tier=='T2' %}{{ url_for('key_place_detail',slug=img.dham_slug,kp_slug=img.slug) }}{% elif img.tier=='T3' %}{{ url_for('key_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.slug) }}{% elif img.tier=='T4' %}{{ url_for('sub_spot_detail',slug=img.dham_slug,kp_slug=img.kp_slug,ks_slug=img.ks_slug,ss_slug=img.slug) }}{% endif %}">View {{ tier_labels.get(img.tier,'Place') }} →</a>
 </div>
 </div>
 {% endfor %}

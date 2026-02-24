@@ -216,7 +216,8 @@ nav{display:none}
 <a class="logo" href="{{ url_for('home') }}"><span class="logo-flower">🪷</span><span class="logo-text">Holy<span>Dham</span></span></a>
 <nav>
 <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' }}">Home</a>
-{% for mod in active_modules[:4] %}
+<a href="{{ url_for('all_dhams') }}" class="{{ 'active' if request.endpoint == 'all_dhams' }}">Holy Dhams</a>
+{% for mod in active_modules[:3] %}
 <a href="{{ url_for('module_page', slug=mod.slug) }}" class="{{ 'active' if request.endpoint == 'module_page' and request.view_args.get('slug') == mod.slug }}">{{ mod.name }}</a>
 {% endfor %}
 <a href="{{ url_for('contact') }}" class="{{ 'active' if request.endpoint == 'contact' }}">Contact</a>
@@ -238,6 +239,7 @@ nav{display:none}
 <div class="mobile-nav" id="mobileNav">
 <button class="mobile-nav-close" onclick="this.parentElement.classList.remove('open')">✕</button>
 <a href="{{ url_for('home') }}">🏠 Home</a>
+<a href="{{ url_for('all_dhams') }}">🛕 Holy Dhams</a>
 {% for mod in active_modules %}
 <a href="{{ url_for('module_page', slug=mod.slug) }}">{{ mod.icon }} {{ mod.name }}</a>
 {% endfor %}
