@@ -242,7 +242,9 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
   .breadcrumb-nav a,.breadcrumb-nav span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
   /* Report button */
-  .report-btn{font-size:13px!important;padding:10px 20px!important}
+  .report-btn{font-size:12px!important;padding:10px 18px!important}
+  .rm-type-options{flex-direction:column;gap:8px}
+  .rm-type-opt{padding:10px 14px}
 
   /* Back buttons row wrap */
   .back-btns{flex-wrap:wrap!important;gap:8px!important}
@@ -318,8 +320,22 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 .rm-success{text-align:center;padding:40px 20px}
 .rm-success .check{width:64px;height:64px;background:#4CAF50;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;color:white}
 .rm-errors{background:#FFF3F3;border:1px solid #FFCDD2;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#C62828}
-.report-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(231,72,69,.08);border:1.5px solid rgba(231,72,69,.2);color:#E74845;padding:8px 18px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .3s;text-decoration:none}
-.report-btn:hover{background:rgba(231,72,69,.15);transform:translateY(-1px)}
+.rm-type-options{display:flex;gap:12px;margin-top:6px}
+.rm-type-opt{flex:1;display:flex;align-items:center;gap:10px;padding:12px 16px;border:2px solid var(--cream-deep);border-radius:12px;cursor:pointer;transition:all .25s;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;background:white;user-select:none}
+.rm-type-opt:hover{border-color:rgba(199,107,143,.4);background:var(--cream)}
+.rm-type-opt.active-error{border-color:#E53935;background:#FFF3F3}
+.rm-type-opt.active-feedback{border-color:var(--rose-deep);background:rgba(199,107,143,.06)}
+.rm-type-check{width:20px;height:20px;border:2px solid #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s;font-size:12px;color:white}
+.rm-type-opt.active-error .rm-type-check{background:#E53935;border-color:#E53935}
+.rm-type-opt.active-feedback .rm-type-check{background:var(--rose-deep);border-color:var(--rose-deep)}
+.rm-type-opt .rm-type-label-error{color:#E53935}
+.rm-type-opt .rm-type-label-feedback{color:var(--rose-deep)}
+.report-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(199,107,143,.08),rgba(231,72,69,.08));border:1.5px solid rgba(199,107,143,.25);color:var(--text-dark);padding:10px 22px;border-radius:50px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .3s;text-decoration:none}
+.report-btn:hover{background:linear-gradient(135deg,rgba(199,107,143,.15),rgba(231,72,69,.15));transform:translateY(-1px);box-shadow:0 4px 16px rgba(199,107,143,.2)}
+.report-btn .rb-icon{font-size:15px}
+.report-btn .rb-feedback{color:var(--rose-deep)}
+.report-btn .rb-sep{color:var(--text-light);font-weight:400}
+.report-btn .rb-error{color:#E53935}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -521,14 +537,25 @@ document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('.
 <div class="report-modal-overlay" id="reportModal">
 <div class="report-modal">
 <div class="report-modal-head">
-<h3>🚩 Report / Feedback</h3>
+<h3>✏️ Give Feedback / Report Error</h3>
 <button class="report-modal-close" onclick="closeReportModal()">✕</button>
 </div>
 <div class="report-modal-body" id="reportModalBody">
 <div class="rm-tier-info" id="rmTierInfo"></div>
 <div id="rmErrors" class="rm-errors" style="display:none"></div>
 <div class="rm-field"><label>Type</label>
-<select id="rmType"><option value="error">🔴 Report an Error</option><option value="feedback">💬 General Feedback</option></select></div>
+<input type="hidden" id="rmType" value="error">
+<div class="rm-type-options">
+<div class="rm-type-opt active-error" data-value="error" onclick="selectReportType(this,'error')">
+<span class="rm-type-check">✓</span>
+<span class="rm-type-label-error">🔴 Report Error</span>
+</div>
+<div class="rm-type-opt" data-value="feedback" onclick="selectReportType(this,'feedback')">
+<span class="rm-type-check">✓</span>
+<span class="rm-type-label-feedback">💬 Give Feedback</span>
+</div>
+</div>
+</div>
 <div class="rm-field"><label>Your Name *</label><input id="rmName" placeholder="Your name"></div>
 <div class="rm-field"><label>Email Address *</label><input id="rmEmail" type="email" placeholder="your@email.com"></div>
 <div class="rm-field"><label>Message *</label><textarea id="rmMessage" rows="4" placeholder="Describe the error or share your feedback..."></textarea></div>
@@ -549,6 +576,11 @@ document.addEventListener('DOMContentLoaded', () => document.querySelectorAll('.
 
 <script>
 // Report Error Modal
+function selectReportType(el,val){
+  document.querySelectorAll('.rm-type-opt').forEach(function(o){o.classList.remove('active-error','active-feedback')});
+  el.classList.add(val==='error'?'active-error':'active-feedback');
+  document.getElementById('rmType').value=val;
+}
 function openReportModal(tierInfo){
   // Decode HTML entities from data attribute
   var tmp = document.createElement('div');
@@ -562,6 +594,9 @@ function openReportModal(tierInfo){
   document.getElementById('rmMessage').value='';
   document.getElementById('rmCaptchaA').value='';
   document.getElementById('rmType').value='error';
+  // Reset type selection to error
+  document.querySelectorAll('.rm-type-opt').forEach(function(o){o.classList.remove('active-error','active-feedback')});
+  document.querySelector('.rm-type-opt[data-value="error"]').classList.add('active-error');
   // Generate captcha
   var a=Math.floor(Math.random()*40)+10, b=Math.floor(Math.random()*20)+5;
   var op=Math.random()>.5?'+':'-';
