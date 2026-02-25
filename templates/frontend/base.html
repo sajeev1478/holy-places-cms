@@ -281,6 +281,7 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 .gallery-slider .gs-prev{left:12px}
 .gallery-slider .gs-next{right:12px}
 .gallery-slider .gs-dots{display:flex;justify-content:center;gap:7px;padding:14px 0;background:linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 100%);position:absolute;bottom:0;left:0;right:0;z-index:10}
+.gallery-slider .gs-caption{position:absolute;bottom:36px;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));color:white;padding:28px 16px 10px;font-size:13px;font-weight:500;text-align:center;z-index:8;pointer-events:none}
 .gallery-slider .gs-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1);border:none}
 .gallery-slider .gs-dot.active{background:white;transform:scale(1.4);box-shadow:0 0 8px rgba(255,255,255,.4)}
 .gallery-slider .gs-counter{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);color:white;font-size:11px;padding:5px 12px;border-radius:50px;z-index:10;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;letter-spacing:.5px}
@@ -335,6 +336,7 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 <a href="{{ url_for('module_page', slug=mod.slug) }}" class="{{ 'active' if request.endpoint == 'module_page' and request.view_args.get('slug') == mod.slug }}">{{ mod.name }}</a>
 {% endif %}{% endfor %}
 <a href="{{ url_for('contact') }}" class="{{ 'active' if request.endpoint == 'contact' }}">Contact</a>
+<a href="{{ url_for('about') }}" class="{{ 'active' if request.endpoint == 'about' }}">About</a>
 <!-- Inline Search -->
 <div class="nav-search-wrap">
 <div class="nav-search-box">

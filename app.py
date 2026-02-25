@@ -476,13 +476,31 @@ def all_dhams():
     places=db.execute(query,params).fetchall()
     return render_template('frontend/all_dhams.html',places=places,query=q)
 
-# ─── Static Pages ───
+# ─── Static Pages (with DB content override) ───
 @app.route('/about')
-def about(): return render_template('frontend/about.html')
+def about():
+    db=get_db()
+    content_row=db.execute("SELECT value FROM site_settings WHERE key='page_about'").fetchone()
+    image_row=db.execute("SELECT value FROM site_settings WHERE key='page_about_image'").fetchone()
+    custom_content=content_row['value'] if content_row and content_row['value'] else None
+    featured_image=image_row['value'] if image_row and image_row['value'] else None
+    return render_template('frontend/about.html', custom_content=custom_content, featured_image=featured_image)
 @app.route('/privacy')
-def privacy(): return render_template('frontend/privacy.html')
+def privacy():
+    db=get_db()
+    content_row=db.execute("SELECT value FROM site_settings WHERE key='page_privacy'").fetchone()
+    image_row=db.execute("SELECT value FROM site_settings WHERE key='page_privacy_image'").fetchone()
+    custom_content=content_row['value'] if content_row and content_row['value'] else None
+    featured_image=image_row['value'] if image_row and image_row['value'] else None
+    return render_template('frontend/privacy.html', custom_content=custom_content, featured_image=featured_image)
 @app.route('/terms')
-def terms(): return render_template('frontend/terms.html')
+def terms():
+    db=get_db()
+    content_row=db.execute("SELECT value FROM site_settings WHERE key='page_terms'").fetchone()
+    image_row=db.execute("SELECT value FROM site_settings WHERE key='page_terms_image'").fetchone()
+    custom_content=content_row['value'] if content_row and content_row['value'] else None
+    featured_image=image_row['value'] if image_row and image_row['value'] else None
+    return render_template('frontend/terms.html', custom_content=custom_content, featured_image=featured_image)
 
 @app.route('/contact', methods=['GET','POST'])
 def contact():
@@ -563,7 +581,10 @@ def key_place_detail(slug, kp_slug):
     siblings=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND is_visible=1 AND id!=? ORDER BY sort_order",(place['id'],kp['id'])).fetchall()
     tags=db.execute("SELECT t.* FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?",(place['id'],)).fetchall()
     kp_gallery=[x.strip() for x in (kp['gallery_images'] or '').split(',') if x.strip()]
-    kp_captions=json.loads(kp['gallery_captions'] or '{}') if kp['gallery_captions'] else {}
+    try:
+        kp_captions=json.loads(kp['gallery_captions'] or '{}') if kp['gallery_captions'] else {}
+    except (KeyError, IndexError):
+        kp_captions={}
     return render_template('frontend/key_place.html',place=place,kp=kp,kp_customs=kp_customs,key_spots=spots_with_subs,siblings=siblings,tags=tags,kp_gallery=kp_gallery,kp_captions=kp_captions)
 
 @app.route('/place/<slug>/key/<kp_slug>/spot/<ks_slug>')
@@ -577,7 +598,10 @@ def key_spot_detail(slug, kp_slug, ks_slug):
     sub_spots=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.is_visible=1 ORDER BY ss.sort_order",(ks['id'],)).fetchall()
     ks_customs=db.execute("SELECT kscv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM key_spot_custom_values kscv JOIN custom_field_defs cfd ON kscv.field_def_id=cfd.id WHERE kscv.key_spot_id=? AND kscv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(ks['id'],)).fetchall()
     ks_gallery=[x.strip() for x in (ks['gallery_images'] or '').split(',') if x.strip()]
-    ks_captions=json.loads(ks['gallery_captions'] or '{}') if ks.get('gallery_captions') else {}
+    try:
+        ks_captions=json.loads(ks['gallery_captions'] or '{}') if ks['gallery_captions'] else {}
+    except (KeyError, IndexError):
+        ks_captions={}
     siblings=db.execute("SELECT ks2.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks2 LEFT JOIN spot_categories sc ON ks2.category_id=sc.id WHERE ks2.key_place_id=? AND ks2.is_visible=1 AND ks2.id!=? ORDER BY ks2.sort_order",(kp['id'],ks['id'])).fetchall()
     return render_template('frontend/key_spot.html',place=place,kp=kp,ks=ks,sub_spots=sub_spots,siblings=siblings,ks_customs=ks_customs,ks_gallery=ks_gallery,ks_captions=ks_captions)
 
@@ -593,8 +617,12 @@ def sub_spot_detail(slug, kp_slug, ks_slug, ss_slug):
     if not ss: abort(404)
     ss_customs=db.execute("SELECT sscv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM sub_spot_custom_values sscv JOIN custom_field_defs cfd ON sscv.field_def_id=cfd.id WHERE sscv.sub_spot_id=? AND sscv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(ss['id'],)).fetchall()
     ss_gallery=[x.strip() for x in (ss['gallery_images'] or '').split(',') if x.strip()]
+    try:
+        ss_captions=json.loads(ss['gallery_captions'] or '{}') if ss['gallery_captions'] else {}
+    except (KeyError, IndexError):
+        ss_captions={}
     siblings=db.execute("SELECT ss2.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss2 LEFT JOIN sub_spot_categories ssc ON ss2.category_id=ssc.id WHERE ss2.key_spot_id=? AND ss2.is_visible=1 AND ss2.id!=? ORDER BY ss2.sort_order",(ks['id'],ss['id'])).fetchall()
-    return render_template('frontend/sub_spot.html',place=place,kp=kp,ks=ks,ss=ss,siblings=siblings,ss_customs=ss_customs,ss_gallery=ss_gallery)
+    return render_template('frontend/sub_spot.html',place=place,kp=kp,ks=ks,ss=ss,siblings=siblings,ss_customs=ss_customs,ss_gallery=ss_gallery,ss_captions=ss_captions)
 
 @app.route('/explore')
 def explore():
@@ -1450,6 +1478,53 @@ def admin_user_update_role(uid):
     db.commit()
     flash(f'User #{uid} updated','success')
     return redirect(url_for('admin_users'))
+
+# ─── Admin: Site Pages (About, Privacy, Terms) ───
+SITE_PAGES = [
+    {'key': 'about', 'title': 'About Us', 'icon': 'ℹ️', 'url_endpoint': 'about'},
+    {'key': 'privacy', 'title': 'Privacy Policy', 'icon': '🔒', 'url_endpoint': 'privacy'},
+    {'key': 'terms', 'title': 'Terms of Service', 'icon': '📜', 'url_endpoint': 'terms'},
+]
+
+@app.route('/admin/pages')
+@login_required
+def admin_pages():
+    db=get_db()
+    pages=[]
+    for p in SITE_PAGES:
+        content_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{p['key']}",)).fetchone()
+        pages.append({**p, 'has_content': bool(content_row and content_row['value'])})
+    return render_template('admin/pages.html', pages=pages)
+
+@app.route('/admin/pages/<page_key>', methods=['GET','POST'])
+@login_required
+def admin_page_edit(page_key):
+    page_info = next((p for p in SITE_PAGES if p['key']==page_key), None)
+    if not page_info: abort(404)
+    db=get_db()
+    if request.method=='POST':
+        content=request.form.get('content','')
+        featured_image=request.form.get('existing_featured_image','')
+        if 'featured_image' in request.files:
+            f=request.files['featured_image']
+            if f and f.filename:
+                ext=f.filename.rsplit('.',1)[-1].lower()
+                if ext in ALLOWED_IMAGE_EXT:
+                    fname=f"page_{page_key}_{uuid.uuid4().hex[:8]}.{ext}"
+                    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                    f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
+                    featured_image=fname
+        db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{page_key}",content,content))
+        db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{page_key}_image",featured_image,featured_image))
+        db.commit()
+        log_action(session.get('user_id'), 'update_page', 'site_page', None, f"Updated {page_info['title']}")
+        flash(f"{page_info['title']} page updated successfully!",'success')
+        return redirect(url_for('admin_pages'))
+    content_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{page_key}",)).fetchone()
+    image_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{page_key}_image",)).fetchone()
+    content=content_row['value'] if content_row else ''
+    featured_image=image_row['value'] if image_row else ''
+    return render_template('admin/page_edit.html', page_info=page_info, content=content, featured_image=featured_image)
 
 # ─── API ───
 @app.route('/api/v1/places')

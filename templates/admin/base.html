@@ -262,6 +262,9 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 {% endif %}
 
 <div class="sidebar-section">
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_pages','admin_page_edit') }}" href="{{ url_for('admin_pages') }}">
+<i class="fas fa-file-alt"></i> Site Pages
+</a>
 <a class="sidebar-link" href="{{ url_for('home') }}" target="_blank">
 <i class="fas fa-external-link-alt"></i> View Website
 </a>

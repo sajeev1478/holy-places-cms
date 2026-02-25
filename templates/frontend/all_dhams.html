@@ -69,9 +69,9 @@
 <div class="dham-card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></div>
 <div class="dham-card-loc"><i class="fas fa-map-marker-alt" style="font-size:10px"></i> {{ place.city }}{% if place.state %}, {{ place.state }}{% endif %}{% if place.country %}, {{ place.country }}{% endif %}</div>
 <div class="dham-card-tiers">
-{% if place.kp_count %}<span class="dham-tier-chip dt-t2">T2 {{ place.kp_count }}</span>{% endif %}
-{% if place.ks_count %}<span class="dham-tier-chip dt-t3">T3 {{ place.ks_count }}</span>{% endif %}
-{% if place.ss_count %}<span class="dham-tier-chip dt-t4">T4 {{ place.ss_count }}</span>{% endif %}
+{% if place.kp_count %}<span class="dham-tier-chip dt-t2">T2 - {{ place.kp_count }}</span>{% endif %}
+{% if place.ks_count %}<span class="dham-tier-chip dt-t3">T3 - {{ place.ks_count }}</span>{% endif %}
+{% if place.ss_count %}<span class="dham-tier-chip dt-t4">T4 - {{ place.ss_count }}</span>{% endif %}
 </div>
 </div>
 </div>

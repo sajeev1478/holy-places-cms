@@ -104,7 +104,6 @@
 <img src="/static/uploads/{{ img.image }}" alt="{{ img.title }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}">
 <div class="hs-overlay"></div>
 <div class="hs-info">
-<span class="hs-tier-badge" style="background:{{ tier_colors.get(img.tier,'#888') }}">{{ img.tier }} · {{ tier_labels.get(img.tier,'') }}</span>
 <div class="hs-title">{{ img.title }}</div>
 {% if img.tier == 'T2' and img.dham_title %}<div class="hs-breadcrumb">{{ img.dham_title }}</div>{% endif %}
 {% if img.tier == 'T3' and img.kp_title %}<div class="hs-breadcrumb">{{ img.kp_title }} › {{ img.dham_title }}</div>{% endif %}
@@ -162,9 +161,9 @@
 <div class="dham-card-title"><a href="{{ url_for('place_detail', slug=place.slug) }}">{{ place.title }}</a></div>
 <div class="dham-card-loc"><i class="fas fa-map-marker-alt" style="font-size:10px"></i> {{ place.city }}{% if place.state %}, {{ place.state }}{% endif %}{% if place.country %}, {{ place.country }}{% endif %}</div>
 <div class="dham-card-tiers">
-{% if place.kp_count %}<span class="dham-tier-chip dt-t2">T2 {{ place.kp_count }}</span>{% endif %}
-{% if place.ks_count %}<span class="dham-tier-chip dt-t3">T3 {{ place.ks_count }}</span>{% endif %}
-{% if place.ss_count %}<span class="dham-tier-chip dt-t4">T4 {{ place.ss_count }}</span>{% endif %}
+{% if place.kp_count %}<span class="dham-tier-chip dt-t2">T2 - {{ place.kp_count }}</span>{% endif %}
+{% if place.ks_count %}<span class="dham-tier-chip dt-t3">T3 - {{ place.ks_count }}</span>{% endif %}
+{% if place.ss_count %}<span class="dham-tier-chip dt-t4">T4 - {{ place.ss_count }}</span>{% endif %}
 </div>
 </div>
 </div>

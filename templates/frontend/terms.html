@@ -19,6 +19,18 @@
 {% endblock %}
 
 {% block content %}
+{% if custom_content %}
+<section class="legal-hero">
+<div class="container">
+<h1>📋 Terms of Service</h1>
+<p>Last updated: {{ current_year }}</p>
+</div>
+</section>
+<div class="legal-body">
+{% if featured_image %}<img src="/static/uploads/{{ featured_image }}" alt="Terms of Service" style="width:100%;border-radius:16px;margin-bottom:24px">{% endif %}
+{{ custom_content|safe }}
+</div>
+{% else %}
 <section class="legal-hero">
 <div class="container">
 <h1>📋 Terms of Service</h1>
@@ -114,4 +126,5 @@
 </ul>
 <p>We appreciate your respect for these terms and your participation in preserving India's sacred heritage. 🙏</p>
 </div>
+{% endif %}
 {% endblock %}

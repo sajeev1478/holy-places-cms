@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block title %}Site Pages{% endblock %}
+{% block content %}
+<div class="content-header">
+<div>
+<h1>📄 Site Pages</h1>
+<p style="color:var(--text-light);margin-top:4px">Manage content for About Us, Privacy Policy, and Terms of Service pages.</p>
+</div>
+</div>
+
+<div class="card" style="padding:24px">
+<div style="display:grid;gap:16px">
+{% for page in pages %}
+<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;background:var(--bg);border-radius:12px;border:1px solid var(--border)">
+<div style="display:flex;align-items:center;gap:16px">
+<span style="font-size:28px">{{ page.icon }}</span>
+<div>
+<h3 style="font-size:16px;font-weight:700;margin-bottom:2px">{{ page.title }}</h3>
+<span style="font-size:12px;color:var(--text-light)">
+{% if page.has_content %}
+<span style="color:var(--success);font-weight:600">✅ Custom content saved</span>
+{% else %}
+<span style="color:var(--text-light)">Using default template</span>
+{% endif %}
+— <a href="{{ url_for(page.url_endpoint) }}" target="_blank" style="color:var(--primary)">View page ↗</a>
+</span>
+</div>
+</div>
+<div style="display:flex;gap:8px">
+<a href="{{ url_for('admin_page_edit', page_key=page.key) }}" class="btn btn-primary btn-sm">
+<i class="fas fa-edit"></i> Edit Content
+</a>
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+
+<div class="card" style="padding:20px;margin-top:20px;background:#f8f5f0;border:1px dashed var(--border)">
+<p style="font-size:13px;color:var(--text-light);margin:0"><strong>💡 Tip:</strong> When you save custom content for a page, it will replace the default template. If you clear all content and save, the page will revert to the default template.</p>
+</div>
+{% endblock %}
