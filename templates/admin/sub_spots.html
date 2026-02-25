@@ -53,6 +53,7 @@
 <span style="font-size:18px">{{ sub.cat_icon or '✦' }}</span>
 <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#9C27B010;color:#9C27B0;border-radius:50px;border:1px solid #9C27B020">Tier 4</span>
 <h3 class="ss-title-display" style="margin:0">{{ sub.title }}</h3>
+{% if sub.hierarchy_id %}<span class="hid-badge" onclick="event.stopPropagation();copyHid(this)" data-hid="{{ sub.hierarchy_id }}" style="font-size:10px">{{ sub.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}
 <span class="badge" style="background:{{ sub.cat_color or '#9C27B0' }}15;color:{{ sub.cat_color or '#9C27B0' }};font-size:11px;border:1px solid {{ sub.cat_color or '#9C27B0' }}25">{{ sub.cat_name or 'No Category' }}</span>
 </div>
 <i class="fas fa-chevron-down ss-chevron" style="transition:transform .3s;color:var(--text-light)"></i>

@@ -122,10 +122,10 @@ def init_db():
     db.executescript('''
     CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'editor', permissions TEXT DEFAULT '{}', is_active INTEGER DEFAULT 1, receive_reports INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, last_login TIMESTAMP);
     CREATE TABLE IF NOT EXISTS modules (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, description TEXT, icon TEXT DEFAULT '📁', sort_order INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1, fields_schema TEXT DEFAULT '[]', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-    CREATE TABLE IF NOT EXISTS places (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, short_description TEXT, full_content TEXT, state TEXT, city TEXT, country TEXT DEFAULT 'India', latitude REAL, longitude REAL, featured_image TEXT, status TEXT DEFAULT 'draft', is_featured INTEGER DEFAULT 0, view_count INTEGER DEFAULT 0, field_visibility TEXT DEFAULT '{}', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+    CREATE TABLE IF NOT EXISTS places (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, short_description TEXT, full_content TEXT, state TEXT, city TEXT, country TEXT DEFAULT 'India', latitude REAL, longitude REAL, featured_image TEXT, status TEXT DEFAULT 'draft', is_featured INTEGER DEFAULT 0, view_count INTEGER DEFAULT 0, field_visibility TEXT DEFAULT '{}', dham_code TEXT, hierarchy_id TEXT UNIQUE, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS custom_field_defs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, label TEXT NOT NULL, field_type TEXT NOT NULL DEFAULT 'text', placeholder TEXT DEFAULT '', icon TEXT DEFAULT '📋', is_active INTEGER DEFAULT 1, sort_order INTEGER DEFAULT 0, applies_to TEXT DEFAULT 'both', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS place_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, place_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(place_id, field_def_id));
-    CREATE TABLE IF NOT EXISTS key_places (id INTEGER PRIMARY KEY AUTOINCREMENT, parent_place_id INTEGER NOT NULL, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (parent_place_id) REFERENCES places(id) ON DELETE CASCADE);
+    CREATE TABLE IF NOT EXISTS key_places (id INTEGER PRIMARY KEY AUTOINCREMENT, parent_place_id INTEGER NOT NULL, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', hierarchy_id TEXT UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (parent_place_id) REFERENCES places(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS key_place_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(key_place_id, field_def_id));
 
     /* ─── NEW: Tier 3 & 4 Category Tables ─── */
@@ -133,11 +133,11 @@ def init_db():
     CREATE TABLE IF NOT EXISTS sub_spot_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT UNIQUE NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT DEFAULT '📍', color TEXT DEFAULT '#666');
 
     /* ─── NEW: Tier 3 Key Spots ─── */
-    CREATE TABLE IF NOT EXISTS key_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', state TEXT, city TEXT, country TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES spot_categories(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS key_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_place_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', state TEXT, city TEXT, country TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', hierarchy_id TEXT UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_place_id) REFERENCES key_places(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES spot_categories(id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS key_spot_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(key_spot_id, field_def_id));
 
     /* ─── NEW: Tier 4 Key Points ─── */
-    CREATE TABLE IF NOT EXISTS sub_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', state TEXT, city TEXT, country TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES sub_spot_categories(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS sub_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', state TEXT, city TEXT, country TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', hierarchy_id TEXT UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES sub_spot_categories(id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS sub_spot_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, sub_spot_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (sub_spot_id) REFERENCES sub_spots(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(sub_spot_id, field_def_id));
 
     CREATE TABLE IF NOT EXISTS module_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, module_id INTEGER NOT NULL, place_id INTEGER, title TEXT NOT NULL, slug TEXT NOT NULL, content TEXT, custom_fields TEXT DEFAULT '{}', featured_image TEXT, status TEXT DEFAULT 'draft', sort_order INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE SET NULL);
@@ -158,7 +158,115 @@ def init_db():
         cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
         if 'gallery_captions' not in cols:
             db.execute(f"ALTER TABLE {table} ADD COLUMN gallery_captions TEXT DEFAULT '{{}}'")
+    # Migration: add hierarchy_id columns if not exists
+    pcols=[c['name'] for c in db.execute("PRAGMA table_info(places)").fetchall()]
+    if 'dham_code' not in pcols:
+        db.execute("ALTER TABLE places ADD COLUMN dham_code TEXT")
+    if 'hierarchy_id' not in pcols:
+        db.execute("ALTER TABLE places ADD COLUMN hierarchy_id TEXT UNIQUE")
+    for table in ('key_places','key_spots','sub_spots'):
+        cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'hierarchy_id' not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN hierarchy_id TEXT UNIQUE")
+    # Backfill hierarchy_ids for existing data that lacks them
+    _backfill_hierarchy_ids(db)
     db.commit()
+
+def _generate_dham_code(title, db):
+    """Generate unique 3-letter dham code from title."""
+    # Try first 3 consonants, then first 3 chars, then abbreviation
+    t=title.upper().replace(' ','')
+    consonants=''.join(c for c in t if c.isalpha() and c not in 'AEIOU')
+    candidates=[]
+    if len(consonants)>=3: candidates.append(consonants[:3])
+    if len(t)>=3: candidates.append(t[:3])
+    # Try word initials
+    words=[w for w in title.upper().split() if w.isalpha()]
+    if len(words)>=3: candidates.append(words[0][0]+words[1][0]+words[2][0])
+    if len(words)>=2: candidates.append(words[0][:2]+words[1][0])
+    candidates.append(t[:3] if len(t)>=3 else t.ljust(3,'X'))
+    existing=set(r[0] for r in db.execute("SELECT dham_code FROM places WHERE dham_code IS NOT NULL").fetchall())
+    for code in candidates:
+        code=code[:3].upper()
+        if len(code)==3 and code.isalpha() and code not in existing:
+            return code
+    # Fallback: append number
+    base=t[:2].upper() if len(t)>=2 else 'DH'
+    for i in range(1,10):
+        code=base+str(i)
+        if code not in existing: return code[:3]
+    return uuid.uuid4().hex[:3].upper()
+
+def _gen_t1_id(dham_code):
+    return f"{dham_code}000000"
+
+def _gen_t2_id(dham_code, db, parent_place_id):
+    """Generate next T2 hierarchy_id: DHAMPP0000"""
+    rows=db.execute("SELECT hierarchy_id FROM key_places WHERE parent_place_id=? AND hierarchy_id IS NOT NULL",(parent_place_id,)).fetchall()
+    max_seq=0
+    for r in rows:
+        hid=r['hierarchy_id'] if isinstance(r,dict) else r[0]
+        if hid and len(hid)==10:
+            try: seq=int(hid[3:5]); max_seq=max(max_seq,seq)
+            except: pass
+    next_seq=max_seq+1
+    if next_seq>99: raise ValueError("Maximum 99 Key Places per Dham reached")
+    return f"{dham_code}{next_seq:02d}0000"
+
+def _gen_t3_id(dham_code, db, key_place_id):
+    """Generate next T3 hierarchy_id: DHAMPPSS00"""
+    kp=db.execute("SELECT hierarchy_id FROM key_places WHERE id=?",(key_place_id,)).fetchone()
+    if not kp or not kp['hierarchy_id']: return None
+    kp_prefix=kp['hierarchy_id'][:5]  # e.g. VRN01
+    rows=db.execute("SELECT hierarchy_id FROM key_spots WHERE key_place_id=? AND hierarchy_id IS NOT NULL",(key_place_id,)).fetchall()
+    max_seq=0
+    for r in rows:
+        hid=r['hierarchy_id'] if isinstance(r,dict) else r[0]
+        if hid and len(hid)==10:
+            try: seq=int(hid[5:7]); max_seq=max(max_seq,seq)
+            except: pass
+    next_seq=max_seq+1
+    if next_seq>99: raise ValueError("Maximum 99 Key Spots per Key Place reached")
+    return f"{kp_prefix}{next_seq:02d}00"
+
+def _gen_t4_id(dham_code, db, key_spot_id):
+    """Generate next T4 hierarchy_id: DHAMPPSSTT"""
+    ks=db.execute("SELECT hierarchy_id FROM key_spots WHERE id=?",(key_spot_id,)).fetchone()
+    if not ks or not ks['hierarchy_id']: return None
+    ks_prefix=ks['hierarchy_id'][:7]  # e.g. VRN0101
+    rows=db.execute("SELECT hierarchy_id FROM sub_spots WHERE key_spot_id=? AND hierarchy_id IS NOT NULL",(key_spot_id,)).fetchall()
+    max_seq=0
+    for r in rows:
+        hid=r['hierarchy_id'] if isinstance(r,dict) else r[0]
+        if hid and len(hid)==10:
+            try: seq=int(hid[7:9]); max_seq=max(max_seq,seq)
+            except: pass
+    next_seq=max_seq+1
+    if next_seq>99: raise ValueError("Maximum 99 Key Points per Key Spot reached")
+    return f"{ks_prefix}{next_seq:02d}"
+
+def _backfill_hierarchy_ids(db):
+    """Backfill hierarchy_ids for existing data that doesn't have them."""
+    # T1: Places without hierarchy_id
+    for p in db.execute("SELECT id,title FROM places WHERE hierarchy_id IS NULL OR hierarchy_id=''").fetchall():
+        code=_generate_dham_code(p['title'],db)
+        hid=_gen_t1_id(code)
+        db.execute("UPDATE places SET dham_code=?,hierarchy_id=? WHERE id=?",(code,hid,p['id']))
+    # T2: Key places
+    for kp in db.execute("SELECT kp.id,kp.parent_place_id,p.dham_code FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.hierarchy_id IS NULL OR kp.hierarchy_id=''").fetchall():
+        if kp['dham_code']:
+            hid=_gen_t2_id(kp['dham_code'],db,kp['parent_place_id'])
+            db.execute("UPDATE key_places SET hierarchy_id=? WHERE id=?",(hid,kp['id']))
+    # T3: Key spots
+    for ks in db.execute("SELECT ks.id,ks.key_place_id,kp.parent_place_id,p.dham_code FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.hierarchy_id IS NULL OR ks.hierarchy_id=''").fetchall():
+        if ks['dham_code']:
+            hid=_gen_t3_id(ks['dham_code'],db,ks['key_place_id'])
+            if hid: db.execute("UPDATE key_spots SET hierarchy_id=? WHERE id=?",(hid,ks['id']))
+    # T4: Sub spots
+    for ss in db.execute("SELECT ss.id,ss.key_spot_id,ks.key_place_id,kp.parent_place_id,p.dham_code FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ss.hierarchy_id IS NULL OR ss.hierarchy_id=''").fetchall():
+        if ss['dham_code']:
+            hid=_gen_t4_id(ss['dham_code'],db,ss['key_spot_id'])
+            if hid: db.execute("UPDATE sub_spots SET hierarchy_id=? WHERE id=?",(hid,ss['id']))
 
 def seed_db():
     db = get_db()
@@ -294,6 +402,9 @@ def seed_db():
     # Permissions
     for k,l,d,cat in [('manage_places','Manage Holy Dhams','Create/edit/delete dhams','content'),('manage_modules','Manage Modules','Configure modules','system'),('manage_entries','Manage Entries','Create/edit entries','content'),('manage_media','Manage Media','Upload media','media'),('publish_content','Publish Content','Publish/unpublish','content'),('manage_users','Manage Users','Manage accounts','system'),('manage_tags','Manage Tags','Manage categories','content'),('manage_fields','Manage Fields','Configure custom fields','system')]:
         db.execute("INSERT OR IGNORE INTO permission_definitions (permission_key,label,description,category) VALUES (?,?,?,?)", (k,l,d,cat))
+    db.commit()
+    # Backfill hierarchy IDs for all seeded data
+    _backfill_hierarchy_ids(db)
     db.commit()
 
 # ─── Helpers ───
@@ -732,7 +843,7 @@ def admin_places():
     db=get_db(); sf=request.args.get('status',''); q=request.args.get('q','')
     query="SELECT p.*,(SELECT COUNT(*) FROM key_places kp WHERE kp.parent_place_id=p.id) as kp_count FROM places p WHERE 1=1"; params=[]
     if sf: query+=" AND p.status=?"; params.append(sf)
-    if q: query+=" AND (p.title LIKE ? OR p.city LIKE ? OR p.state LIKE ?)"; params.extend([f'%{q}%']*3)
+    if q: query+=" AND (p.title LIKE ? OR p.city LIKE ? OR p.state LIKE ? OR p.hierarchy_id LIKE ? OR p.dham_code LIKE ?)"; params.extend([f'%{q}%']*5)
     return render_template('admin/places.html',places=db.execute(query+" ORDER BY p.updated_at DESC",params).fetchall(),current_status=sf,query=q)
 
 @app.route('/admin/places/new', methods=['GET','POST'])
@@ -788,8 +899,10 @@ def _save_place(place_id):
             (title,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),place_id))
     else:
         if db.execute("SELECT id FROM places WHERE slug=?",(slug,)).fetchone(): slug+='-'+uuid.uuid4().hex[:6]
-        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,status,is_featured,field_visibility,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (title,slug,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),session['user_id']))
+        dham_code=_generate_dham_code(title,db)
+        hid=_gen_t1_id(dham_code)
+        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,status,is_featured,field_visibility,dham_code,hierarchy_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (title,slug,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),dham_code,hid,session['user_id']))
         place_id=db.execute("SELECT last_insert_rowid()").fetchone()[0]
     db.execute("DELETE FROM place_tags WHERE place_id=?",(place_id,))
     for tid in f.getlist('tags'): db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)",(place_id,tid))
@@ -843,6 +956,9 @@ def _save_place(place_id):
         db.execute("INSERT OR REPLACE INTO place_custom_values (place_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(place_id,cf['id'],val,iv))
     # Key Places (Tier 2)
     existing_kpids=[r['id'] for r in db.execute("SELECT id FROM key_places WHERE parent_place_id=?",(place_id,)).fetchall()]
+    # Get dham_code for hierarchy ID generation
+    _place_row=db.execute("SELECT dham_code FROM places WHERE id=?",(place_id,)).fetchone()
+    _dham_code=_place_row['dham_code'] if _place_row and _place_row['dham_code'] else None
     submitted_kpids=[]; kpi=0
     while True:
         kt=f.get(f'kp_{kpi}_title')
@@ -900,8 +1016,9 @@ def _save_place(place_id):
             db.execute("UPDATE key_places SET title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
                 (kt,ks,ksd,kfc,kimg,kgallery,kp_captions_json,klat,klng,kpi,kv,kpid)); submitted_kpids.append(kpid)
         else:
-            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                (place_id,kt,ks,ksd,kfc,kimg,kgallery,kp_captions_json,klat,klng,kpi,kv))
+            kp_hid=_gen_t2_id(_dham_code,db,place_id) if _dham_code else None
+            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (place_id,kt,ks,ksd,kfc,kimg,kgallery,kp_captions_json,klat,klng,kpi,kv,kp_hid))
             kpid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted_kpids.append(kpid)
         for cf in cfs:
             kcv=''; kcfk=f"kp_{kpi}_cf_file_{cf['id']}"
@@ -942,6 +1059,9 @@ def admin_key_spots_save(kp_id):
     db=get_db(); f=request.form
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     existing=[r['id'] for r in db.execute("SELECT id FROM key_spots WHERE key_place_id=?",(kp_id,)).fetchall()]
+    # Get dham_code for hierarchy ID
+    _kp_row=db.execute("SELECT kp.parent_place_id,p.dham_code FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
+    _dham_code=_kp_row['dham_code'] if _kp_row else None
     submitted=[]; i=0
     while True:
         t=f.get(f'ks_{i}_title')
@@ -1004,8 +1124,9 @@ def admin_key_spots_save(kp_id):
             db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
                 (catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
         else:
-            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (kp_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis))
+            ks_hid=_gen_t3_id(_dham_code,db,kp_id) if _dham_code else None
+            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (kp_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,ks_hid))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
         # Save custom fields for this spot
         for cf in cfs:
@@ -1050,6 +1171,9 @@ def admin_sub_spots_save(ks_id):
     db=get_db(); f=request.form
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     existing=[r['id'] for r in db.execute("SELECT id FROM sub_spots WHERE key_spot_id=?",(ks_id,)).fetchall()]
+    # Get dham_code for hierarchy ID
+    _ks_row=db.execute("SELECT p.dham_code FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
+    _dham_code=_ks_row['dham_code'] if _ks_row else None
     submitted=[]; i=0
     while True:
         t=f.get(f'ss_{i}_title')
@@ -1109,8 +1233,9 @@ def admin_sub_spots_save(ks_id):
             db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
                 (catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
         else:
-            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (ks_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis))
+            ss_hid=_gen_t4_id(_dham_code,db,ks_id) if _dham_code else None
+            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (ks_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,ss_hid))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
         for cf in cfs:
             cv=''; cfk=f"ss_{i}_cf_file_{cf['id']}"

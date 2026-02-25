@@ -53,6 +53,7 @@
 <span style="font-size:18px">{{ spot.cat_icon or '📍' }}</span>
 <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#E7484510;color:#E74845;border-radius:50px;border:1px solid #E7484520">Tier 3</span>
 <h3 class="ks-title-display" style="margin:0">{{ spot.title }}</h3>
+{% if spot.hierarchy_id %}<span class="hid-badge" onclick="event.stopPropagation();copyHid(this)" data-hid="{{ spot.hierarchy_id }}" style="font-size:10px">{{ spot.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}
 <span class="badge" style="background:{{ spot.cat_color or '#E74C3C' }}15;color:{{ spot.cat_color or '#E74C3C' }};font-size:11px;border:1px solid {{ spot.cat_color or '#E74C3C' }}25">{{ spot.cat_name or 'No Category' }}</span>
 </div>
 <div style="display:flex;align-items:center;gap:8px">

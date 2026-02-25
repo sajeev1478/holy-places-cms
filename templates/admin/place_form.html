@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
 {% block title %}{{ 'Edit' if editing else 'New' }} Holy Dham{% endblock %}
-{% block page_title %}{{ 'Edit' if editing else 'Create New' }} Holy Dham{% endblock %}
+{% block page_title %}{{ 'Edit' if editing else 'Create New' }} Holy Dham{% if editing and place.hierarchy_id %} <span class="hid-badge" onclick="copyHid(this)" data-hid="{{ place.hierarchy_id }}" style="font-size:12px;vertical-align:middle">{{ place.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}{% endblock %}
 {% block topbar_actions %}
 <a href="{{ url_for('admin_places') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to All Dhams</a>
 {% if editing %}<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary"><i class="fas fa-eye"></i> View Live</a>{% endif %}
@@ -308,7 +308,7 @@
 {% set ki = loop.index0 %}
 <div class="kp-accordion" data-index="{{ ki }}">
 <div class="kp-accordion-header" onclick="this.parentElement.classList.toggle('open')">
-<h4><span class="kp-num">{{ loop.index }}</span> <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#2E86AB15;color:#2E86AB;border-radius:50px;font-weight:700;border:1px solid #2E86AB25">Tier 2</span> <span class="kp-title-display">{{ kp.title }}</span></h4>
+<h4><span class="kp-num">{{ loop.index }}</span> <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;background:#2E86AB15;color:#2E86AB;border-radius:50px;font-weight:700;border:1px solid #2E86AB25">Tier 2</span> <span class="kp-title-display">{{ kp.title }}</span>{% if kp.hierarchy_id %}<span class="hid-badge" onclick="event.stopPropagation();copyHid(this)" data-hid="{{ kp.hierarchy_id }}" style="font-size:10px;margin-left:4px">{{ kp.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}</h4>
 <div class="kp-actions">
 <label class="toggle-label" onclick="event.stopPropagation()"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_is_visible" {{ 'checked' if kp.is_visible }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kp.is_visible else 'off' }}" style="font-size:11px">{{ 'On' if kp.is_visible else 'Off' }}</span></label>
 <span class="chevron"><i class="fas fa-chevron-down"></i></span>
@@ -445,7 +445,7 @@
 <span class="bc-pill" style="background:{{ spot.cat_color or '#E74845' }}15;color:{{ spot.cat_color or '#E74845' }}">{{ spot.cat_icon or '🔸' }} T3</span>
 </div>
 <div class="ov-cat" style="color:{{ spot.cat_color or '#E74845' }}">{{ spot.cat_name or 'Uncategorized' }}</div>
-<div class="ov-title">{{ spot.title }}</div>
+<div class="ov-title">{{ spot.title }}{% if spot.hierarchy_id %} <span class="hid-badge" onclick="copyHid(this)" data-hid="{{ spot.hierarchy_id }}" style="font-size:9px;vertical-align:middle">{{ spot.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}</div>
 {% if spot.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px">{{ spot.short_description }}</div>{% endif %}
 </div>
 <div class="ov-actions">
@@ -511,7 +511,7 @@
 <span class="bc-pill" style="background:{{ pt.cat_color or '#9C27B0' }}15;color:{{ pt.cat_color or '#9C27B0' }}">{{ pt.cat_icon or '✦' }} T4</span>
 </div>
 <div class="ov-cat" style="color:{{ pt.cat_color or '#9C27B0' }}">{{ pt.cat_name or 'Uncategorized' }}</div>
-<div class="ov-title">{{ pt.title }}</div>
+<div class="ov-title">{{ pt.title }}{% if pt.hierarchy_id %} <span class="hid-badge" onclick="copyHid(this)" data-hid="{{ pt.hierarchy_id }}" style="font-size:9px;vertical-align:middle">{{ pt.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}</div>
 {% if pt.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px">{{ pt.short_description }}</div>{% endif %}
 </div>
 </div>

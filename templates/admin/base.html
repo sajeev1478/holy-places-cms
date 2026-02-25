@@ -557,6 +557,15 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 
 /* ═══ Camera Capture (Mobile/Tablet Only) ═══ */
 .cam-capture-wrap{display:none}
+
+/* ═══ Hierarchy ID Badges ═══ */
+.hid-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#F3E5F5;border:1px solid #CE93D8;border-radius:6px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;color:#6A1B9A;letter-spacing:.5px;cursor:pointer;transition:all .2s;user-select:all}
+.hid-badge:hover{background:#E1BEE7;border-color:#AB47BC}
+.hid-badge .hid-copy{font-size:10px;opacity:.5;transition:opacity .2s}
+.hid-badge:hover .hid-copy{opacity:1}
+.hid-badge.copied{background:#C8E6C9!important;border-color:#66BB6A!important;color:#2E7D32!important}
+.hid-label{font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.hid-readonly{background:#F5F0EB;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Courier New',monospace;font-size:13px;font-weight:700;color:#6A1B9A;letter-spacing:1px;width:100%;cursor:default}
 @media(hover:none) and (pointer:coarse){
   .cam-capture-wrap{display:block;margin-top:8px}
 }
@@ -1266,6 +1275,17 @@ function locationPickerHTML(id, latName, lngName, latVal, lngVal){
     '<div class="loc-coords-row"><div class="form-group"><label>📍 Latitude</label><input type="number" class="form-control" name="'+latName+'" value="'+latVal+'" step="any" placeholder="e.g. 27.5835"></div><div class="form-group"><label>📍 Longitude</label><input type="number" class="form-control" name="'+lngName+'" value="'+lngVal+'" step="any" placeholder="e.g. 77.6949"></div></div>'+
     '<div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map to place pin · Drag pin to adjust · Or use GPS/Search</div>'+
   '</div>';
+// ═══ Hierarchy ID Copy ═══
+function copyHid(el){
+  var id=el.dataset.hid||el.textContent.trim().replace('📋','').trim();
+  navigator.clipboard.writeText(id).then(function(){
+    el.classList.add('copied');
+    var orig=el.innerHTML;
+    el.innerHTML='✅ Copied!';
+    setTimeout(function(){el.classList.remove('copied');el.innerHTML=orig},1500);
+  });
+}
+
 // ═══ Camera Capture for Mobile/Tablet ═══
 function camCaptureHTML(inputName, mode, opts){
   opts=opts||{};

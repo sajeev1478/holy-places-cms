@@ -49,6 +49,7 @@
 <a href="#tiers">🏛️ Tier Structure</a>
 <a href="#location">📍 Location Picker</a>
 <a href="#camera">📸 Camera Capture</a>
+<a href="#hierarchy-ids">🔢 Hierarchy IDs</a>
 <a href="#modules">📦 Modules</a>
 <a href="#tags-cats">🏷️ Tags & Categories</a>
 <a href="#json">📋 JSON</a>
@@ -275,10 +276,54 @@
 </div>
 </div>
 
+<!-- ═══ HIERARCHY IDS ═══ -->
+<div class="help-section" id="hierarchy-ids">
+<div class="help-section-head">
+<h2>🔢 4. Hierarchy IDs</h2>
+<p>Unique structured identifiers for every entry across all 4 tiers</p>
+</div>
+<div class="help-body">
+<p>Every entry in the system is automatically assigned a <strong>Hierarchy ID</strong> — a 10-character code that encodes exactly where the entry sits in the tier structure. These IDs are for <strong>admin use only</strong> and are never shown to visitors.</p>
+
+<h3>ID Format</h3>
+<table class="ft-table">
+<tr><th>Level</th><th>Format</th><th>Example</th><th>Meaning</th></tr>
+<tr><td><strong style="color:#C76B8F">T1 Dham</strong></td><td>DHAM000000</td><td>VRN000000</td><td>Vrindavan Dham</td></tr>
+<tr><td><strong style="color:#2E86AB">T2 Key Place</strong></td><td>DHAMPP0000</td><td>VRN010000</td><td>1st Key Place in VRN</td></tr>
+<tr><td><strong style="color:#E74845">T3 Key Spot</strong></td><td>DHAMPPSS00</td><td>VRN010100</td><td>1st Spot in VRN01</td></tr>
+<tr><td><strong style="color:#9C27B0">T4 Key Point</strong></td><td>DHAMPPSSTT</td><td>VRN010101</td><td>1st Point in VRN0101</td></tr>
+</table>
+
+<h3>How IDs are Generated</h3>
+<ul>
+<li><strong>T1:</strong> A unique 3-letter Dham Code is auto-generated from the title (e.g. VRN for Vrindavan, MAY for Mayapur)</li>
+<li><strong>T2–T4:</strong> Sequential 2-digit numbers (01–99) are assigned within each parent, based on the highest existing number + 1</li>
+<li><strong>IDs are permanent</strong> — once assigned, they never change, even if the title is edited</li>
+<li><strong>Deleted IDs are never reused</strong> — if VRN02 is deleted, the next Key Place gets VRN05 (not VRN02)</li>
+</ul>
+
+<h3>Where IDs Appear</h3>
+<ul>
+<li><strong>Places list:</strong> ID column in the Holy Dhams table</li>
+<li><strong>Edit pages:</strong> ID badge in the page header and accordion titles</li>
+<li><strong>T3/T4 overview cards:</strong> ID badge next to each entry name</li>
+<li><strong>Dashboard:</strong> ID column in the Recent Dhams table</li>
+</ul>
+
+<h3>Copying IDs</h3>
+<p>Click any <strong style="font-family:monospace;background:#F3E5F5;padding:2px 8px;border-radius:4px;color:#6A1B9A">VRN010101 📋</strong> badge to copy the ID to your clipboard. The badge turns green to confirm.</p>
+
+<h3>Searching by ID</h3>
+<p>In the Holy Dhams list, type any part of a hierarchy ID in the search bar to find matching entries (e.g. search "VRN" to find all Vrindavan entries).</p>
+
+<div class="help-warn">⚠️ <strong>Important:</strong> IDs cannot be edited manually. They are generated automatically and are immutable. Maximum 99 entries per level per parent.</div>
+</div>
+</div>
+
 <!-- ═══ 2. MODULES ═══ -->
 <div class="help-section" id="modules">
 <div class="help-section-head">
-<h2>📦 4. Modules</h2>
+<h2>📦 5. Modules</h2>
 <p>What modules are and how they organize content features</p>
 </div>
 <div class="help-body">
@@ -313,7 +358,7 @@
 <!-- ═══ 3. TAGS & CATEGORIES ═══ -->
 <div class="help-section" id="tags-cats">
 <div class="help-section-head">
-<h2>🏷️ 5. Tags and Categories</h2>
+<h2>🏷️ 6. Tags and Categories</h2>
 <p>How to organize and filter content effectively</p>
 </div>
 <div class="help-body">
@@ -357,7 +402,7 @@
 <!-- ═══ 4. JSON ═══ -->
 <div class="help-section" id="json">
 <div class="help-section-head">
-<h2>📋 6. JSON (JavaScript Object Notation)</h2>
+<h2>📋 7. JSON (JavaScript Object Notation)</h2>
 <p>What JSON is and how it's used in the system</p>
 </div>
 <div class="help-body">
@@ -398,7 +443,7 @@
 <!-- ═══ 5. CUSTOM FIELDS ═══ -->
 <div class="help-section" id="custom-fields">
 <div class="help-section-head">
-<h2>⚙️ 7. Custom Fields</h2>
+<h2>⚙️ 8. Custom Fields</h2>
 <p>Adding extra information to any tier with custom fields</p>
 </div>
 <div class="help-body">
@@ -464,7 +509,7 @@
 <!-- ═══ 6. IMAGES & GALLERY ═══ -->
 <div class="help-section" id="images">
 <div class="help-section-head">
-<h2>📸 8. Images & Gallery</h2>
+<h2>📸 9. Images & Gallery</h2>
 <p>How to manage images across all tiers</p>
 </div>
 <div class="help-body">
@@ -503,7 +548,7 @@
 <!-- ═══ 7. TIPS ═══ -->
 <div class="help-section" id="tips">
 <div class="help-section-head">
-<h2>💡 9. Tips & Best Practices</h2>
+<h2>💡 10. Tips & Best Practices</h2>
 <p>Helpful advice for managing content effectively</p>
 </div>
 <div class="help-body">

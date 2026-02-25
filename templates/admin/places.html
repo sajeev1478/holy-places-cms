@@ -9,7 +9,7 @@
 <a class="btn btn-sm {{ 'btn-primary' if current_status=='published' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='published') }}">Published</a>
 <a class="btn btn-sm {{ 'btn-primary' if current_status=='draft' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='draft') }}">Drafts</a>
 <form action="{{ url_for('admin_places') }}" method="GET" style="margin-left:auto;display:flex;gap:8px">
-<input name="q" value="{{ query }}" placeholder="Search dhams..." class="form-control" style="width:240px;padding:8px 14px">
+<input name="q" value="{{ query }}" placeholder="Search dhams or IDs..." class="form-control" style="width:240px;padding:8px 14px">
 <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i></button>
 </form>
 </div>
@@ -18,13 +18,14 @@
 {% if places %}
 <div style="overflow-x:auto">
 <table class="admin-table">
-<thead><tr><th>Dham Name</th><th>Location</th><th>Key Places</th><th>Status</th><th>Featured</th><th>Views</th><th>Updated</th><th>Actions</th></tr></thead>
+<thead><tr><th>ID</th><th>Dham Name</th><th>Location</th><th>Key Places</th><th>Status</th><th>Featured</th><th>Views</th><th>Updated</th><th>Actions</th></tr></thead>
 <tbody>
 {% for place in places %}
 <tr>
+<td><span class="hid-badge" onclick="copyHid(this)" data-hid="{{ place.hierarchy_id or '—' }}" title="Click to copy">{{ place.hierarchy_id or '—' }} <span class="hid-copy">📋</span></span></td>
 <td>
 <a href="{{ url_for('admin_place_edit', place_id=place.id) }}" style="font-weight:600;color:var(--text)">{{ place.title }}</a>
-<div style="font-size:11px;color:var(--text-light);margin-top:2px">🙏 Tier 1 · Holy Dham</div>
+<div style="font-size:11px;color:var(--text-light);margin-top:2px">🙏 Tier 1 · {{ place.dham_code or '' }}</div>
 </td>
 <td style="font-size:13px;color:var(--text-light)">{{ place.city }}{% if place.city and place.state %}, {% endif %}{{ place.state }}</td>
 <td><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--primary-light);color:var(--primary);border-radius:50px;font-size:12px;font-weight:600">📍 {{ place.kp_count }}</span></td>
