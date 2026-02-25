@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <!-- Quill Editor -->
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<!-- Leaflet Maps -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -208,6 +210,40 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 .help-accordion-inner .code-block .key{color:#89b4fa}
 .help-accordion-inner .code-block .val{color:#a6e3a1}
 .help-accordion-inner .code-block .str{color:#f9e2af}
+/* ═══ Location Picker Widget ═══ */
+.loc-picker{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:8px}
+.loc-picker-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
+.loc-picker-title .loc-badge{font-size:9px;padding:3px 8px;background:var(--primary);color:white;border-radius:50px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.loc-saved{display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border:1px solid var(--border);border-radius:10px;margin-bottom:12px;font-size:12px;flex-wrap:wrap}
+.loc-saved .loc-coords-display{font-family:monospace;font-size:13px;font-weight:600;color:var(--primary-dark);background:var(--primary-light);padding:4px 10px;border-radius:6px}
+.loc-saved .loc-no-data{color:var(--text-light);font-style:italic}
+.loc-saved .loc-accuracy{font-size:11px;color:var(--success);display:flex;align-items:center;gap:4px}
+.loc-saved .loc-updated{font-size:10px;color:var(--text-light);margin-left:auto}
+.loc-map-container{position:relative;height:260px;border-radius:12px;overflow:hidden;border:2px solid var(--border);margin-bottom:12px;background:#e8e0d8}
+.loc-map-container .leaflet-container{height:100%;width:100%;z-index:1}
+.loc-search-bar{display:flex;gap:8px;margin-bottom:12px}
+.loc-search-bar input{flex:1;padding:9px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border .2s}
+.loc-search-bar input:focus{border-color:var(--primary)}
+.loc-search-bar button{padding:9px 16px;background:var(--primary);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.loc-search-bar button:hover{background:var(--primary-dark)}
+.loc-actions-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.loc-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;border:1.5px solid}
+.loc-btn-gps{background:#E8F5E9;border-color:#81C784;color:#2E7D32}
+.loc-btn-gps:hover{background:#C8E6C9}
+.loc-btn-gps.loading{opacity:.6;cursor:wait}
+.loc-btn-clear{background:#FFF3E0;border-color:#FFB74D;color:#E65100}
+.loc-btn-clear:hover{background:#FFE0B2}
+.loc-coords-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.loc-coords-row .form-group{margin-bottom:0}
+.loc-status{padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:10px;display:none;align-items:center;gap:6px}
+.loc-status.info{display:flex;background:#E3F2FD;border:1px solid #90CAF9;color:#1565C0}
+.loc-status.success{display:flex;background:#E8F5E9;border:1px solid #A5D6A7;color:#2E7D32}
+.loc-status.error{display:flex;background:#FFEBEE;border:1px solid #EF9A9A;color:#C62828}
+.loc-search-results{position:absolute;top:100%;left:0;right:0;background:white;border:2px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.12);display:none}
+.loc-search-results.active{display:block}
+.loc-search-result{padding:10px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border);transition:background .15s}
+.loc-search-result:hover{background:var(--primary-light)}
+.loc-search-result:last-child{border-bottom:none}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
@@ -638,5 +674,148 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% block extra_js %}{% endblock %}
+<!-- Leaflet Maps -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ═══ Location Picker Widget ═══
+var _locPickers={};
+function initLocationPicker(id, latName, lngName, opts){
+  opts=opts||{};
+  var container=document.getElementById(id);
+  if(!container||container.dataset.lpInit) return;
+  container.dataset.lpInit='1';
+  var latInput=container.querySelector('input[name="'+latName+'"]');
+  var lngInput=container.querySelector('input[name="'+lngName+'"]');
+  var mapDiv=container.querySelector('.loc-map-wrap');
+  var statusEl=container.querySelector('.loc-status');
+  var savedEl=container.querySelector('.loc-saved-info');
+  var searchInput=container.querySelector('.loc-search-input');
+  var searchResults=container.querySelector('.loc-search-results');
+  var curLat=parseFloat(latInput.value)||null;
+  var curLng=parseFloat(lngInput.value)||null;
+  var defaultLat=opts.defaultLat||27.5;
+  var defaultLng=opts.defaultLng||77.7;
+
+  // Init map
+  var map=L.map(mapDiv,{scrollWheelZoom:true}).setView([curLat||defaultLat,curLng||defaultLng],curLat?16:6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:19
+  }).addTo(map);
+
+  var marker=null;
+  if(curLat&&curLng){
+    marker=L.marker([curLat,curLng],{draggable:true}).addTo(map);
+    marker.on('dragend',function(){var p=marker.getLatLng();updateCoords(p.lat,p.lng,'Pin moved')});
+    updateSavedDisplay(curLat,curLng);
+  }
+
+  // Click on map to place pin
+  map.on('click',function(e){
+    updateCoords(e.latlng.lat,e.latlng.lng,'Pin placed on map');
+  });
+
+  function updateCoords(lat,lng,msg){
+    lat=Math.round(lat*1000000)/1000000;
+    lng=Math.round(lng*1000000)/1000000;
+    latInput.value=lat;lngInput.value=lng;
+    if(marker){marker.setLatLng([lat,lng])}
+    else{marker=L.marker([lat,lng],{draggable:true}).addTo(map);marker.on('dragend',function(){var p=marker.getLatLng();updateCoords(p.lat,p.lng,'Pin moved')})}
+    map.setView([lat,lng],Math.max(map.getZoom(),16));
+    updateSavedDisplay(lat,lng);
+    showStatus('success','✓ '+(msg||'Location updated')+' — '+lat+', '+lng);
+  }
+
+  function updateSavedDisplay(lat,lng,acc){
+    savedEl.innerHTML='<span class="loc-coords-display">'+lat+', '+lng+'</span>'+(acc?'<span class="loc-accuracy">± '+Math.round(acc)+'m</span>':'');
+  }
+
+  function showStatus(type,msg){
+    statusEl.className='loc-status '+type;statusEl.innerHTML=msg;statusEl.style.display='flex';
+    clearTimeout(statusEl._t);statusEl._t=setTimeout(function(){statusEl.style.display='none'},5000);
+  }
+
+  // Search with Nominatim
+  var searchBtn=container.querySelector('.loc-search-btn');
+  function doSearch(){
+    var q=searchInput.value.trim();if(!q)return;
+    showStatus('info','🔍 Searching...');
+    searchResults.innerHTML='';searchResults.classList.remove('active');
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&q='+encodeURIComponent(q))
+    .then(function(r){return r.json()}).then(function(data){
+      statusEl.style.display='none';
+      if(!data.length){showStatus('error','No results found');return}
+      if(data.length===1){
+        updateCoords(parseFloat(data[0].lat),parseFloat(data[0].lon),'Found: '+data[0].display_name.split(',')[0]);
+        return;
+      }
+      searchResults.innerHTML='';
+      data.forEach(function(r){
+        var d=document.createElement('div');d.className='loc-search-result';
+        d.textContent=r.display_name;
+        d.onclick=function(){updateCoords(parseFloat(r.lat),parseFloat(r.lon),'Selected: '+r.display_name.split(',')[0]);searchResults.classList.remove('active')};
+        searchResults.appendChild(d);
+      });
+      searchResults.classList.add('active');
+    }).catch(function(){showStatus('error','Search failed — check your connection')});
+  }
+  searchBtn.onclick=doSearch;
+  searchInput.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();doSearch()}};
+  // Close results on outside click
+  document.addEventListener('click',function(e){if(!container.contains(e.target))searchResults.classList.remove('active')});
+
+  // GPS Button
+  container.querySelector('.loc-btn-gps').onclick=function(){
+    var btn=this;
+    if(!navigator.geolocation){showStatus('error','Geolocation not supported');return}
+    btn.classList.add('loading');btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Getting location...';
+    showStatus('info','📡 Requesting GPS...');
+    navigator.geolocation.getCurrentPosition(function(pos){
+      btn.classList.remove('loading');btn.innerHTML='📡 Use My Current Location';
+      updateCoords(pos.coords.latitude,pos.coords.longitude,'GPS location captured');
+      updateSavedDisplay(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy);
+      showStatus('success','✓ GPS location captured — Accuracy: ±'+Math.round(pos.coords.accuracy)+'m');
+    },function(err){
+      btn.classList.remove('loading');btn.innerHTML='📡 Use My Current Location';
+      var msgs={1:'Permission denied — please allow location access',2:'Position unavailable',3:'Request timed out'};
+      showStatus('error',msgs[err.code]||'Could not get location');
+    },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+  };
+
+  // Clear button
+  var clearBtn=container.querySelector('.loc-btn-clear');
+  if(clearBtn) clearBtn.onclick=function(){
+    latInput.value='';lngInput.value='';
+    if(marker){map.removeLayer(marker);marker=null}
+    savedEl.innerHTML='<span class="loc-no-data">No location set</span>';
+    showStatus('info','Location cleared');
+    map.setView([defaultLat,defaultLng],6);
+  };
+
+  // Fix map rendering in collapsed sections
+  setTimeout(function(){map.invalidateSize()},300);
+  // Observe for visibility changes (accordion expand)
+  var observer=new MutationObserver(function(){setTimeout(function(){map.invalidateSize()},200)});
+  var parent=container.closest('.kp-body,.ks-body,.ss-body,.admin-card-body');
+  if(parent)observer.observe(parent,{attributes:true,attributeFilter:['style','class']});
+
+  _locPickers[id]=map;
+}
+
+// Helper to generate location picker HTML
+function locationPickerHTML(id, latName, lngName, latVal, lngVal){
+  latVal=latVal||''; lngVal=lngVal||'';
+  var hasSaved=(latVal!==''&&lngVal!=='');
+  return '<div class="loc-picker" id="'+id+'">'+
+    '<div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Location Picker <span class="loc-badge">Map</span></div>'+
+    '<div class="loc-saved" style="margin-bottom:10px"><span style="font-size:12px;color:var(--text-light);margin-right:4px">📍 Current:</span><span class="loc-saved-info">'+(hasSaved?'<span class="loc-coords-display">'+latVal+', '+lngVal+'</span>':'<span class="loc-no-data">No location set</span>')+'</span></div>'+
+    '<div class="loc-status"></div>'+
+    '<div class="loc-map-container"><div class="loc-map-wrap" style="height:100%"></div></div>'+
+    '<div style="position:relative"><div class="loc-search-bar"><input class="loc-search-input" placeholder="🔍 Search for a place (e.g. Banke Bihari Temple)"><button class="loc-search-btn" type="button"><i class="fas fa-search"></i> Search</button></div><div class="loc-search-results"></div></div>'+
+    '<div class="loc-actions-row"><button type="button" class="loc-btn loc-btn-gps">📡 Use My Current Location</button><button type="button" class="loc-btn loc-btn-clear">🗑️ Clear</button></div>'+
+    '<div class="loc-coords-row"><div class="form-group"><label>📍 Latitude</label><input type="number" class="form-control" name="'+latName+'" value="'+latVal+'" step="any" placeholder="e.g. 27.5835"></div><div class="form-group"><label>📍 Longitude</label><input type="number" class="form-control" name="'+lngName+'" value="'+lngVal+'" step="any" placeholder="e.g. 77.6949"></div></div>'+
+    '<div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map to place pin · Drag pin to adjust · Or use GPS/Search</div>'+
+  '</div>';
+}
+</script>
 </body>
 </html>
