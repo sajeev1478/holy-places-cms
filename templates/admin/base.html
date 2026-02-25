@@ -153,93 +153,313 @@ select.form-control:focus{border-color:var(--primary);box-shadow:0 4px 16px rgba
 .sidebar-toggle{display:block}
 .content{padding:20px}
 .form-row{grid-template-columns:1fr}
+/* Dashboard 1.5fr+1fr layout → stack on tablet */
+[style*="grid-template-columns:1.5fr 1fr"]{grid-template-columns:1fr!important}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   TABLET (max-width: 768px) — Covers ALL admin panel pages
+   ═══════════════════════════════════════════════════════════ */
 @media(max-width:768px){
-.content{padding:12px}
-.content-header{flex-direction:column;gap:10px;align-items:stretch!important}
-.content-header h1{font-size:20px!important}
-.content-header .btn{width:100%;text-align:center;justify-content:center}
-/* Force ALL inline grid layouts to single column */
+
+/* ─── Global Layout ─── */
+.content{padding:10px!important}
+.topbar{padding:10px 14px!important}
+.topbar h1{font-size:17px!important}
+.topbar-actions{gap:4px!important}
+.topbar-actions .btn{padding:7px 10px!important;font-size:11px!important}
+
+/* ─── Global Typography & Spacing ─── */
+h1{font-size:20px!important}
+h2{font-size:17px!important}
+h3{font-size:15px!important}
+
+/* ─── Buttons (Global) ─── */
+.btn{font-size:12px!important;padding:8px 14px!important}
+.btn-sm{font-size:11px!important;padding:6px 10px!important}
+.btn-icon{padding:6px 8px!important;min-width:32px!important}
+
+/* ─── Form Controls (Global) ─── */
+.form-control{font-size:13px!important;padding:10px 12px!important}
+select.form-control{font-size:13px!important}
+.form-group{margin-bottom:10px!important}
+.form-group label{font-size:12px!important}
+textarea.form-control{min-height:60px}
+input[type="file"]{font-size:11px!important}
+input[type="file"]::file-selector-button{padding:6px 12px!important;font-size:11px!important;margin-right:8px!important}
+
+/* ─── Admin Cards (Global) ─── */
+.admin-card{border-radius:12px!important}
+.admin-card-header{padding:12px 14px!important;flex-wrap:wrap;gap:8px}
+.admin-card-header h3{font-size:14px!important}
+.admin-card-body{padding:12px!important}
+
+/* ─── Tables (Global — all admin pages) ─── */
+.admin-table,.ft-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:12px!important}
+.admin-table th{padding:8px 10px!important;font-size:10px!important;white-space:nowrap}
+.admin-table td{padding:10px!important;font-size:12px!important}
+.admin-table .actions{gap:4px!important}
+/* Make tables more compact on mobile */
+.admin-table td a{font-size:12px!important}
+.admin-table .badge{font-size:10px!important;padding:2px 8px!important}
+
+/* ─── Force ALL inline grids → single column ─── */
 [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
 [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
 [style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
-/* Admin cards */
-.admin-card{border-radius:12px}
-.admin-card-header{padding:12px 14px!important;flex-wrap:wrap;gap:8px}
-.admin-card-header h3{font-size:14px!important}
-.admin-card-body{padding:14px!important}
-/* Form controls */
-.form-control{font-size:13px!important;padding:9px 12px!important}
-.form-group label{font-size:12px!important}
-.form-group{margin-bottom:10px!important}
-/* Buttons */
-.btn{font-size:12px!important;padding:8px 14px!important}
-.btn-sm{font-size:11px!important;padding:6px 10px!important}
-/* Place form two-col */
-.place-two-col{grid-template-columns:1fr!important;gap:16px!important}
-/* Tier tabs */
+[style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
+[style*="grid-template-columns:repeat(3"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns:1.5fr"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns: 1fr 320px"]{grid-template-columns:1fr!important}
+
+/* ─── Force inline fixed widths to be flexible ─── */
+[style*="width:240px"]{width:100%!important}
+[style*="width:200px"]{width:100%!important}
+[style*="width:180px"]{width:100%!important}
+[style*="width:160px"]{width:100%!important}
+[style*="width:150px"]{width:100%!important}
+[style*="width:140px"]{width:100%!important}
+[style*="width:100px"]{width:100%!important}
+[style*="width:90px"]{width:100%!important}
+[style*="width:70px"]{width:80px!important}
+[style*="width:60px"]{width:70px!important}
+[style*="max-width:700px"]{max-width:100%!important}
+[style*="max-width:300px"]{max-width:100%!important}
+
+/* ─── Inline flex forms → column stack on mobile ─── */
+form[style*="display:flex"][style*="align-items:end"]{flex-direction:column!important;align-items:stretch!important}
+form[style*="display:flex"][style*="align-items:end"] .form-group{width:100%!important;min-width:0!important}
+form[style*="display:flex"][style*="align-items:end"] .btn{width:100%!important;justify-content:center}
+
+/* ═══ DASHBOARD PAGE ═══ */
+/* Hero stats gradient box */
+[style*="background:linear-gradient(135deg,#2D1F2E"]{padding:16px!important;border-radius:12px!important}
+[style*="background:linear-gradient(135deg,#2D1F2E"] h3{font-size:11px!important;margin-bottom:10px!important}
+[style*="background:linear-gradient(135deg,#2D1F2E"] [style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}
+[style*="background:rgba(255,255,255,.08)"]{padding:12px!important;border-radius:10px!important}
+[style*="background:rgba(255,255,255,.08)"] [style*="font-size:28px"]{font-size:22px!important}
+/* Stat cards grid */
+.stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}
+.stat-card{padding:14px!important;gap:10px!important}
+.stat-icon{width:38px!important;height:38px!important;font-size:16px!important;border-radius:10px!important}
+.stat-num{font-size:22px!important}
+.stat-label{font-size:11px!important}
+/* Help accordion */
+.help-accordion-toggle{padding:12px 14px!important}
+.help-accordion-toggle h4{font-size:13px!important}
+.help-accordion-inner{padding:0 14px 14px!important;font-size:12px!important}
+.help-accordion-inner h5{font-size:13px!important}
+.help-accordion-inner .ha-tier-flow{flex-direction:column!important;gap:4px!important;align-items:stretch!important}
+.help-accordion-inner .ha-tier-box{padding:8px 12px!important;font-size:11px!important;border-radius:8px}
+.help-accordion-inner .ha-tier-arrow{transform:rotate(90deg);text-align:center;margin:0!important;font-size:14px}
+.help-accordion-inner table{display:block;overflow-x:auto;font-size:11px}
+.help-accordion-inner .ha-tip{font-size:11px!important;padding:8px 12px!important}
+
+/* ═══ PLACES LIST PAGE ═══ */
+/* Search bar */
+[style*="margin-left:auto"][style*="display:flex"][style*="gap:8px"]{margin-left:0!important;width:100%!important}
+[style*="margin-left:auto"][style*="display:flex"][style*="gap:8px"] input{flex:1!important}
+
+/* ═══ TAGS & CATEGORIES PAGE ═══ */
+/* Section headers */
+[style*="font-size:18px"][style*="font-weight:700"][style*="display:flex"]{font-size:15px!important;flex-wrap:wrap}
+/* Category edit modal */
+#catEditModal > div{width:92vw!important;padding:20px!important}
+#catEditModal [style*="display:flex"][style*="gap:12px"]{flex-direction:column!important}
+#catEditModal [style*="width:70px"]{width:80px!important}
+#catEditModal [style*="width:120px"]{width:100%!important}
+
+/* ═══ CUSTOM FIELDS PAGE ═══ */
+/* Icon picker dropdown */
+.icon-picker-dropdown{width:280px!important;left:-10px!important}
+.icon-grid{grid-template-columns:repeat(7,1fr)!important}
+
+/* ═══ MEDIA LIBRARY PAGE ═══ */
+/* Media grid */
+[style*="grid-template-columns:repeat(auto-fill,minmax(200px"]{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))!important;gap:10px!important}
+/* Filter buttons */
+[style*="display:flex"][style*="gap:8px"][style*="margin-bottom:20px"]{gap:6px!important}
+[style*="display:flex"][style*="gap:8px"][style*="margin-bottom:20px"] .btn{padding:6px 10px!important;font-size:11px!important}
+
+/* ═══ REPORTS PAGE ═══ */
+[style*="padding:16px 20px"]{padding:12px!important}
+.report-actions,.ov-actions{flex-wrap:wrap}
+
+/* ═══ PAGES/SECTIONS PAGE ═══ */
+.sec-head{padding:10px 14px!important;gap:8px!important}
+.sec-title-text{font-size:13px!important}
+.sec-actions{gap:2px!important}
+.sec-actions .btn{padding:4px 8px!important;font-size:10px!important}
+.sec-field{margin-bottom:8px!important}
+.sec-field label{font-size:11px!important}
+.sec-field input,.sec-field textarea,.sec-field select{font-size:13px!important;padding:8px 10px!important}
+.sec-preview{max-width:180px!important;font-size:10px!important}
+.add-section-bar{flex-direction:column!important;gap:8px!important;padding:12px!important}
+.add-section-bar input,.add-section-bar select{width:100%!important}
+.item-row{flex-direction:column!important;gap:6px!important;padding:8px 10px!important}
+/* Page edit sidebar → stack */
+form > [style*="grid-template-columns: 1fr 320px"]{grid-template-columns:1fr!important}
+
+/* ═══ EMAIL SETTINGS PAGE ═══ */
+[style*="grid-template-columns:1fr 1fr"][style*="gap:14px"]{grid-template-columns:1fr!important}
+form[style*="max-width:700px"]{max-width:100%!important}
+
+/* ═══ USERS PAGE ═══ */
+/* User avatar row in table */
+td[style*="display:flex"]{display:flex!important;gap:8px!important}
+td[style*="display:flex"] [style*="width:36px"]{width:28px!important;height:28px!important;font-size:11px!important;border-radius:8px!important}
+
+/* ═══ USER FORM PAGE ═══ */
+[style*="grid-template-columns:1fr 1fr"][style*="gap:8px"]{grid-template-columns:1fr!important}
+
+/* ═══ MODULES PAGE ═══ */
+[style*="grid-template-columns:repeat(auto-fill,minmax(300px"]{grid-template-columns:1fr!important}
+[style*="min-height:200px"][style*="border:2px dashed"]{min-height:80px!important}
+
+/* ═══ ENTRIES PAGE ═══ */
+/* Filter buttons row */
+[style*="display:flex"][style*="gap:8px"][style*="flex-wrap:wrap"] .btn{font-size:11px!important;padding:6px 10px!important}
+
+/* ═══ PLACE FORM (T1/T2 Edit) ═══ */
+.place-two-col{grid-template-columns:1fr!important;gap:14px!important}
 .tier-tabs-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}
 .tier-tabs-grid .tier-tab{padding:10px 8px!important;font-size:11px!important}
-/* KP/KS/SS accordions */
+.tier-def{flex-direction:column!important;gap:10px!important;padding:14px!important}
+.tier-def-icon{width:40px!important;height:40px!important;font-size:22px!important}
+.field-row{flex-direction:column!important}
+.field-row .field-toggle{padding-top:0!important}
+/* KP accordions */
 .kp-accordion-header{padding:12px 14px!important}
 .kp-accordion-header h4{font-size:13px!important;flex-wrap:wrap}
+.kp-accordion-header .kp-actions{width:100%;justify-content:flex-end}
 .kp-accordion-body-inner{padding:14px!important}
 .kp-num{width:24px!important;height:24px!important;font-size:10px!important}
 /* Overview cards */
-.overview-card{flex-direction:column;align-items:flex-start!important;gap:8px!important;padding:12px!important}
+.overview-card{flex-direction:column!important;align-items:flex-start!important;gap:8px!important;padding:12px!important}
+.overview-card .ov-icon{width:34px!important;height:34px!important;font-size:16px!important}
 .overview-card .ov-actions{width:100%;justify-content:flex-start}
-/* Key spot / sub spot items */
-.ks-body,.ss-body{padding:14px!important}
-/* Location picker mobile */
-.loc-picker{padding:12px!important}
+/* Section save */
+.section-save{justify-content:stretch!important}
+.section-save .btn{width:100%;justify-content:center}
+/* Back button row */
+.back-btn-row{flex-direction:column!important}
+.back-btn-row .btn,.back-btn-row a{width:100%;text-align:center;justify-content:center}
+/* Gallery items */
+.gal-item{flex-direction:column!important;align-items:stretch!important}
+.gal-item .gal-thumb{width:100%!important;height:auto!important}
+.gal-item .gal-thumb img{width:100%!important;height:120px!important;object-fit:cover!important}
+.gal-new-item{flex-direction:column!important}
+/* Hier breadcrumbs */
+.hier-bc{font-size:10px!important}
+/* Quick info row */
+.quick-info-row{flex-wrap:wrap!important;gap:4px!important}
+
+/* ═══ KEY SPOTS (T3) & SUB SPOTS (T4) ═══ */
+.ks-body,.ss-body{padding:12px!important}
+
+/* ═══ LOCATION PICKER (all tiers) ═══ */
+.loc-picker{padding:10px!important}
+.loc-picker-title{font-size:13px!important;flex-wrap:wrap;gap:6px}
 .loc-map-container{height:200px!important}
 .loc-search-bar{flex-direction:column}
+.loc-search-bar input{font-size:12px!important}
 .loc-search-bar button{width:100%}
 .loc-actions-row{flex-direction:column}
 .loc-actions-row .loc-btn{width:100%;justify-content:center}
 .loc-coords-row{grid-template-columns:1fr!important}
-.loc-saved{flex-direction:column;gap:6px!important}
-/* Tier definition */
-.tier-def{flex-direction:column!important;gap:10px!important;padding:14px!important}
-/* Tables */
-.ft-table,.admin-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:12px}
-/* Help page */
+.loc-saved{flex-direction:column;gap:6px!important;font-size:11px!important}
+
+/* ═══ CAMERA CAPTURE ═══ */
+.cam-btn{font-size:12px!important;padding:9px 14px!important}
+.cam-desc input{font-size:11px!important}
+
+/* ═══ HELP GUIDE PAGE ═══ */
+.help-hero{padding:12px 0 20px!important}
+.help-hero h1{font-size:22px!important}
+.help-hero p{font-size:13px!important}
 .help-nav{gap:6px!important;padding:10px!important}
 .help-nav a{font-size:11px!important;padding:6px 12px!important}
 .help-section-head{padding:16px!important}
-.help-section-head h2{font-size:16px!important}
-.help-body{padding:16px!important}
+.help-section-head h2{font-size:15px!important}
+.help-section-head p{font-size:12px!important}
+.help-body{padding:14px!important}
 .help-body h3{font-size:14px!important}
-.help-body p,.help-body li{font-size:13px!important}
+.help-body p,.help-body li{font-size:12px!important}
+.help-body ul{padding-left:16px!important}
 .help-tier-flow{flex-direction:column;align-items:stretch!important;gap:4px!important}
 .help-tier-box{min-width:auto!important;padding:10px!important;font-size:12px!important}
 .help-tier-arrow{transform:rotate(90deg);text-align:center;margin:0!important}
-/* Back button row */
-.back-btn-row{flex-direction:column!important}
-.back-btn-row .btn,.back-btn-row a{width:100%;text-align:center;justify-content:center}
-/* Section save */
-.section-save{justify-content:stretch!important}
-.section-save .btn{width:100%;justify-content:center}
-/* Dashboard grid */
-[style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
-[style*="grid-template-columns:repeat(3"]{grid-template-columns:1fr!important}
-/* Sidebar overlay */
+.help-example{font-size:12px!important;padding:10px!important}
+.code-block{font-size:10px!important;padding:10px!important}
+.help-tip,.help-warn{font-size:11px!important;padding:10px 12px!important}
+
+/* ═══ INFO POPUP (location & camera) ═══ */
+.loc-info-popup{max-width:95vw!important;max-height:90vh!important}
+.loc-info-popup-head{padding:14px 16px 10px!important}
+.loc-info-popup-head h3{font-size:15px!important}
+.loc-info-popup-body{padding:14px 16px 18px!important}
+.loc-info-popup-body h4{font-size:13px!important}
+.loc-info-popup-body p{font-size:12px!important}
+.loc-info-popup-body .info-step{padding:6px 10px!important;font-size:11px!important}
+
+/* ═══ MODALS & OVERLAYS ═══ */
+.dbl-confirm-box{width:90vw!important;padding:20px!important}
+.lightbox-overlay img{max-width:95vw!important;max-height:85vh!important}
+
+/* ═══ SIDEBAR OVERLAY ═══ */
 .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none}
 .sidebar-overlay.active{display:block}
-/* Quick info row wrapping */
-.quick-info-row{flex-wrap:wrap!important;gap:4px!important}
-/* Fields page grids */
-.field-row{flex-direction:column!important}
-.field-row .field-toggle{padding-top:0!important}
-/* Hier breadcrumbs */
-.hier-bc{font-size:10px!important}
-/* Help hero */
-.help-hero h1{font-size:22px!important}
-.help-hero p{font-size:13px!important}
-/* Help example */
-.help-example{font-size:12px!important;padding:12px!important}
-/* Code blocks */
-.code-block{font-size:10px!important;padding:10px!important}
+
+/* ═══ EMPTY STATES ═══ */
+.empty{padding:30px 16px!important}
+.empty .icon{font-size:36px!important}
+.empty h3{font-size:16px!important}
+.empty p{font-size:12px!important}
+
+/* ═══ BADGES ═══ */
+.badge{font-size:10px!important;padding:3px 8px!important}
+
+/* ═══ FORM FOOTERS (entry, module, user forms) ═══ */
+[style*="padding:16px 24px"][style*="border-top"][style*="justify-content:flex-end"]{padding:12px!important;flex-direction:column!important;gap:8px!important}
+[style*="padding:16px 24px"][style*="border-top"][style*="justify-content:flex-end"] .btn{width:100%!important;justify-content:center!important}
+
+/* ═══ GENERAL INLINE PADDING FIXES ═══ */
+[style*="padding:24px 28px"]{padding:14px!important}
+[style*="padding:24px"]:not(.admin-card-body):not(.stat-card){padding:14px!important}
+[style*="padding:20px"]:not(.admin-card-header){padding:12px!important}
+
+} /* end @media(max-width:768px) */
+
+/* ═══════════════════════════════════════════════════════════
+   SMALL PHONE (max-width: 420px) — Extra compact
+   ═══════════════════════════════════════════════════════════ */
+@media(max-width:420px){
+.content{padding:8px!important}
+.topbar{padding:8px 10px!important}
+.topbar h1{font-size:15px!important}
+.topbar-actions .btn span{display:none}
+/* Dashboard tier stats → single column */
+[style*="background:linear-gradient(135deg,#2D1F2E"] [style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr!important}
+[style*="background:rgba(255,255,255,.08)"] [style*="font-size:28px"]{font-size:20px!important}
+.stats-grid{grid-template-columns:1fr!important}
+.stat-card{padding:12px!important}
+.stat-num{font-size:20px!important}
+/* Admin cards tighter */
+.admin-card-header{padding:10px 12px!important}
+.admin-card-body{padding:10px!important}
+/* Buttons tighter */
+.btn{padding:7px 10px!important;font-size:11px!important}
+/* Tables even more compact */
+.admin-table th{padding:6px 8px!important;font-size:9px!important}
+.admin-table td{padding:8px!important;font-size:11px!important}
+/* Tier tabs → single col */
+.tier-tabs-grid{grid-template-columns:1fr!important}
+/* Module cards → single */
+[style*="grid-template-columns:repeat(auto-fill,minmax(300px"]{grid-template-columns:1fr!important}
+/* Location picker even smaller */
+.loc-map-container{height:170px!important}
+/* Help guide tighter */
+.help-nav a{padding:5px 8px!important;font-size:10px!important}
 }
 /* ─── Beautiful File Upload ─── */
 input[type="file"]{font-family:inherit;font-size:13px;color:#555}
