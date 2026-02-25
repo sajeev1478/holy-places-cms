@@ -164,47 +164,29 @@ def seed_db():
     db = get_db()
     if db.execute("SELECT id FROM users LIMIT 1").fetchone(): return
 
-    # ─── Generate seed placeholder images ───
-    def make_seed_image(filename, color1, color2, text, size=(800,500)):
-        try:
-            from PIL import Image, ImageDraw, ImageFont
-            img = Image.new('RGB', size)
-            draw = ImageDraw.Draw(img)
-            r1,g1,b1 = int(color1[1:3],16), int(color1[3:5],16), int(color1[5:7],16)
-            r2,g2,b2 = int(color2[1:3],16), int(color2[3:5],16), int(color2[5:7],16)
-            for y in range(size[1]):
-                f = y / size[1]
-                r = int(r1 + (r2-r1)*f); g = int(g1 + (g2-g1)*f); b = int(b1 + (b2-b1)*f)
-                draw.line([(0,y),(size[0],y)], fill=(r,g,b))
-            # Add text
-            try:
-                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-            except: font = ImageFont.load_default()
-            bbox = draw.textbbox((0,0), text, font=font)
-            tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
-            draw.text(((size[0]-tw)//2, (size[1]-th)//2), text, fill=(255,255,255,200), font=font)
-            fp = os.path.join(app.config['UPLOAD_FOLDER'], 'images', filename)
-            os.makedirs(os.path.dirname(fp), exist_ok=True)
-            img.save(fp, 'JPEG', quality=85)
-            return f'images/{filename}'
-        except Exception as e:
-            print(f'Seed image error: {e}')
-            return None
-
+    # ─── Real photo images (pre-downloaded, free-use from Unsplash) ───
     seed_images = {
-        'vrindavan': make_seed_image('seed_vrindavan.jpg', '#C76B8F', '#8B4870', '🛕 Vrindavan Dham'),
-        'mayapur': make_seed_image('seed_mayapur.jpg', '#2E86AB', '#1A5276', '🛕 Mayapur Dham'),
-        'kedarnath': make_seed_image('seed_kedarnath.jpg', '#8BAB8A', '#3D6B3D', '⛰️ Kedarnath Dham'),
-        'jagannath': make_seed_image('seed_jagannath.jpg', '#E89B4F', '#B8752F', '🛕 Jagannath Puri'),
-        'vrindavan_town': make_seed_image('seed_vrindavan_town.jpg', '#D4A876', '#A07850', '🏘️ Vrindavan Town'),
-        'barsana': make_seed_image('seed_barsana.jpg', '#E8A0BF', '#C06898', '🌸 Barsana'),
-        'nandgaon': make_seed_image('seed_nandgaon.jpg', '#C8A44E', '#957830', '🐄 Nandgaon'),
-        'govardhan': make_seed_image('seed_govardhan.jpg', '#6B8AB5', '#3D5A7D', '⛰️ Govardhan'),
-        'iskcon': make_seed_image('seed_iskcon.jpg', '#E74845', '#B03030', '🙏 ISKCON Mandir'),
-        'banke_bihari': make_seed_image('seed_banke_bihari.jpg', '#9C27B0', '#6A1B82', '🪔 Banke Bihari'),
-        'kesi_ghat': make_seed_image('seed_kesi_ghat.jpg', '#2196F3', '#1565C0', '🌊 Kesi Ghat'),
-        'samadhi': make_seed_image('seed_samadhi.jpg', '#FF6F00', '#E65100', '🙏 Prabhupada Samadhi'),
-        'altar': make_seed_image('seed_altar.jpg', '#AD1457', '#880E4F', '🪔 Krishna-Balaram Altar'),
+        'vrindavan': 'images/vrindavan_dham.jpg',
+        'mayapur': 'images/mayapur_dham.jpg',
+        'kedarnath': 'images/kedarnath_dham.jpg',
+        'jagannath': 'images/jagannath_puri.jpg',
+        'vrindavan_town': 'images/vrindavan_town.jpg',
+        'barsana': 'images/barsana.jpg',
+        'nandgaon': 'images/nandgaon.jpg',
+        'govardhan': 'images/govardhan.jpg',
+        'iskcon': 'images/iskcon_vrindavan.jpg',
+        'banke_bihari': 'images/banke_bihari.jpg',
+        'kesi_ghat': 'images/kesi_ghat.jpg',
+        'samadhi': 'images/prabhupada_samadhi.jpg',
+        'altar': 'images/krishna_balaram_altar.jpg',
+        'nidhivan': 'images/nidhivan.jpg',
+        'govardhan_hill': 'images/govardhan_hill.jpg',
+        'radha_kund': 'images/radha_kund.jpg',
+        'radha_raman': 'images/radha_raman.jpg',
+        'kusum_sarovar': 'images/kusum_sarovar.jpg',
+        'parikrama': 'images/parikrama_path.jpg',
+        'quarters': 'images/prabhupada_quarters.jpg',
+        'courtyard': 'images/temple_courtyard.jpg',
     }
 
     # ─── Seed Tier-3 Spot Categories ───
@@ -278,12 +260,6 @@ def seed_db():
     ]
     ks_ids = {}
     # Generate additional seed images for T3 spots
-    seed_images['nidhivan'] = make_seed_image('seed_nidhivan.jpg', '#1B5E20', '#2E7D32', '🌳 Nidhivan')
-    seed_images['govardhan_hill'] = make_seed_image('seed_govardhan_hill.jpg', '#4E342E', '#795548', '⛰️ Govardhan Hill')
-    seed_images['radha_kund'] = make_seed_image('seed_radha_kund.jpg', '#D81B60', '#F06292', '💧 Radha Kund')
-    seed_images['radha_raman'] = make_seed_image('seed_radha_raman.jpg', '#FF6F00', '#FFA726', '🪔 Radha Raman')
-    seed_images['kusum_sarovar'] = make_seed_image('seed_kusum_sarovar.jpg', '#0D47A1', '#42A5F5', '🏛️ Kusum Sarovar')
-    seed_images['parikrama'] = make_seed_image('seed_parikrama.jpg', '#33691E', '#8BC34A', '🚶 Parikrama')
     ks_images = {'iskcon-krishna-balaram': seed_images.get('iskcon'), 'banke-bihari': seed_images.get('banke_bihari'), 'radha-raman': seed_images.get('radha_raman'), 'kesi-ghat': seed_images.get('kesi_ghat'), 'nidhivan': seed_images.get('nidhivan'), 'govardhan-hill': seed_images.get('govardhan_hill'), 'radha-kund': seed_images.get('radha_kund'), 'kusum-sarovar': seed_images.get('kusum_sarovar'), 'govardhan-parikrama': seed_images.get('parikrama')}
     for kpid,catid,t,s,sd,fc,lat,lng,o in ks_data:
         db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,ks_images.get(s),'Uttar Pradesh','Mathura','India',lat,lng,o))
@@ -301,8 +277,6 @@ def seed_db():
         (ks_ids['iskcon-krishna-balaram'],altar_cat,'Krishna-Balaram Altar','krishna-balaram-altar','The main altar with the presiding deities.','<p>The central altar features the beautiful deities of Sri Sri Krishna-Balaram, Radha-Shyamasundar, and Gaura-Nitai.</p>',3),
         (ks_ids['iskcon-krishna-balaram'],courtyard_cat,'Temple Courtyard','temple-courtyard','Open gathering space for kirtans.','<p>The spacious courtyard hosts daily kirtans, festivals, and spiritual programs.</p>',4),
     ]
-    seed_images['quarters'] = make_seed_image('seed_quarters.jpg', '#5D4037', '#8D6E63', '🏠 Prabhupada Quarters')
-    seed_images['courtyard'] = make_seed_image('seed_courtyard.jpg', '#1565C0', '#64B5F6', '🏛️ Temple Courtyard')
     ss_images = {'prabhupada-samadhi': seed_images.get('samadhi'), 'krishna-balaram-altar': seed_images.get('altar'), 'prabhupada-quarters': seed_images.get('quarters'), 'temple-courtyard': seed_images.get('courtyard')}
     for ksid,catid,t,s,sd,fc,o in ss_data:
         db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,state,city,country,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,ss_images.get(s),'Uttar Pradesh','Vrindavan','India',o))
@@ -1486,45 +1460,48 @@ SITE_PAGES = [
     {'key': 'terms', 'title': 'Terms of Service', 'icon': '📜', 'url_endpoint': 'terms'},
 ]
 
-@app.route('/admin/pages')
+@app.route('/admin/pages', methods=['GET','POST'])
 @login_required
 def admin_pages():
     db=get_db()
+    selected_key=request.args.get('page','')
+    # Handle POST (save page content)
+    if request.method=='POST':
+        selected_key=request.form.get('page_key','')
+        page_info=next((p for p in SITE_PAGES if p['key']==selected_key), None)
+        if page_info:
+            content=request.form.get('content','')
+            featured_image=request.form.get('existing_featured_image','')
+            if 'featured_image' in request.files:
+                f=request.files['featured_image']
+                if f and f.filename:
+                    ext=f.filename.rsplit('.',1)[-1].lower()
+                    if ext in ALLOWED_IMAGE_EXT:
+                        fname=f"page_{selected_key}_{uuid.uuid4().hex[:8]}.{ext}"
+                        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+                        f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
+                        featured_image=fname
+            db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{selected_key}",content,content))
+            db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{selected_key}_image",featured_image,featured_image))
+            db.commit()
+            log_action(session.get('user_id'), 'update_page', 'site_page', None, f"Updated {page_info['title']}")
+            flash(f"{page_info['title']} page updated successfully!",'success')
+            return redirect(url_for('admin_pages', page=selected_key))
+    # Build pages list with status
     pages=[]
     for p in SITE_PAGES:
         content_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{p['key']}",)).fetchone()
         pages.append({**p, 'has_content': bool(content_row and content_row['value'])})
-    return render_template('admin/pages.html', pages=pages)
-
-@app.route('/admin/pages/<page_key>', methods=['GET','POST'])
-@login_required
-def admin_page_edit(page_key):
-    page_info = next((p for p in SITE_PAGES if p['key']==page_key), None)
-    if not page_info: abort(404)
-    db=get_db()
-    if request.method=='POST':
-        content=request.form.get('content','')
-        featured_image=request.form.get('existing_featured_image','')
-        if 'featured_image' in request.files:
-            f=request.files['featured_image']
-            if f and f.filename:
-                ext=f.filename.rsplit('.',1)[-1].lower()
-                if ext in ALLOWED_IMAGE_EXT:
-                    fname=f"page_{page_key}_{uuid.uuid4().hex[:8]}.{ext}"
-                    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                    f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
-                    featured_image=fname
-        db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{page_key}",content,content))
-        db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{page_key}_image",featured_image,featured_image))
-        db.commit()
-        log_action(session.get('user_id'), 'update_page', 'site_page', None, f"Updated {page_info['title']}")
-        flash(f"{page_info['title']} page updated successfully!",'success')
-        return redirect(url_for('admin_pages'))
-    content_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{page_key}",)).fetchone()
-    image_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{page_key}_image",)).fetchone()
-    content=content_row['value'] if content_row else ''
-    featured_image=image_row['value'] if image_row else ''
-    return render_template('admin/page_edit.html', page_info=page_info, content=content, featured_image=featured_image)
+    # Load selected page data if any
+    content=''; featured_image=''; selected_page=None
+    if selected_key:
+        selected_page=next((p for p in pages if p['key']==selected_key), None)
+        if selected_page:
+            content_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{selected_key}",)).fetchone()
+            image_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{selected_key}_image",)).fetchone()
+            content=content_row['value'] if content_row else ''
+            featured_image=image_row['value'] if image_row else ''
+    return render_template('admin/pages.html', pages=pages, selected_key=selected_key, selected_page=selected_page, content=content, featured_image=featured_image)
 
 # ─── API ───
 @app.route('/api/v1/places')

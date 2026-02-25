@@ -1,42 +1,96 @@
 {% extends "admin/base.html" %}
-{% block title %}Site Pages{% endblock %}
-{% block content %}
-<div class="content-header">
-<div>
-<h1>📄 Site Pages</h1>
-<p style="color:var(--text-light);margin-top:4px">Manage content for About Us, Privacy Policy, and Terms of Service pages.</p>
+{% block page_title %}Site Pages{% endblock %}
+{% block admin_content %}
+<div style="margin-bottom:24px">
+<p style="color:var(--text-light);font-size:14px">Edit content for About Us, Privacy Policy, and Terms of Service pages using the rich text editor below.</p>
+</div>
+
+<!-- Page Selector Dropdown -->
+<div class="card" style="padding:20px 24px;margin-bottom:20px">
+<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+<label style="font-size:14px;font-weight:700;white-space:nowrap"><i class="fas fa-file-alt" style="margin-right:6px;color:var(--primary)"></i> Select Page:</label>
+<select id="pageSelector" class="form-control" style="max-width:320px;font-size:14px" onchange="switchPage(this.value)">
+<option value="">— Choose a page to edit —</option>
+{% for page in pages %}
+<option value="{{ page.key }}" {{ 'selected' if selected_key == page.key }}>{{ page.icon }} {{ page.title }} {% if page.has_content %}✅{% else %}(default){% endif %}</option>
+{% endfor %}
+</select>
+{% if selected_key %}
+<a href="{{ url_for(selected_page.url_endpoint) }}" target="_blank" class="btn btn-secondary btn-sm" style="margin-left:auto"><i class="fas fa-external-link-alt"></i> Preview Page</a>
+{% endif %}
 </div>
 </div>
 
+{% if selected_key %}
+<!-- Editor for selected page -->
+<form method="POST" enctype="multipart/form-data">
+<input type="hidden" name="page_key" value="{{ selected_key }}">
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start">
+<!-- Main Content Editor -->
 <div class="card" style="padding:24px">
-<div style="display:grid;gap:16px">
-{% for page in pages %}
-<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;background:var(--bg);border-radius:12px;border:1px solid var(--border)">
-<div style="display:flex;align-items:center;gap:16px">
-<span style="font-size:28px">{{ page.icon }}</span>
+<h3 style="font-size:16px;font-weight:700;margin-bottom:4px">{{ selected_page.icon }} {{ selected_page.title }}</h3>
+<p style="font-size:12px;color:var(--text-light);margin-bottom:16px">
+{% if selected_page.has_content %}<span style="color:var(--success)">✅ Custom content is active</span>{% else %}Currently using default built-in template{% endif %}
+</p>
+<input type="hidden" name="content" id="page_content" value="{{ content }}">
+<div class="rich-editor" data-target="page_content" style="min-height:380px"></div>
+</div>
+
+<!-- Sidebar -->
 <div>
-<h3 style="font-size:16px;font-weight:700;margin-bottom:2px">{{ page.title }}</h3>
-<span style="font-size:12px;color:var(--text-light)">
-{% if page.has_content %}
-<span style="color:var(--success);font-weight:600">✅ Custom content saved</span>
-{% else %}
-<span style="color:var(--text-light)">Using default template</span>
+<div class="card" style="padding:18px;margin-bottom:14px">
+<h4 style="font-size:13px;font-weight:700;margin-bottom:12px">Featured Image</h4>
+<input type="hidden" name="existing_featured_image" value="{{ featured_image }}">
+{% if featured_image %}
+<div style="margin-bottom:10px;border-radius:8px;overflow:hidden"><img src="/static/uploads/{{ featured_image }}" style="width:100%;display:block" alt="Featured image"></div>
+<p style="font-size:10px;color:var(--text-light);margin-bottom:8px">{{ featured_image }}</p>
 {% endif %}
-— <a href="{{ url_for(page.url_endpoint) }}" target="_blank" style="color:var(--primary)">View page ↗</a>
+<input type="file" name="featured_image" accept="image/*" class="form-control" style="font-size:12px">
+<p style="font-size:10px;color:var(--text-light);margin-top:4px">Optional banner image for this page.</p>
+</div>
+
+<div class="card" style="padding:18px;margin-bottom:14px">
+<button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px"><i class="fas fa-save"></i> Save Changes</button>
+<a href="{{ url_for(selected_page.url_endpoint) }}" target="_blank" class="btn btn-secondary" style="width:100%;justify-content:center"><i class="fas fa-eye"></i> Preview</a>
+</div>
+
+<div style="padding:12px;background:#fef9f3;border-radius:8px;border:1px dashed var(--border)">
+<p style="font-size:11px;color:var(--text-light);margin:0"><strong>💡</strong> Leave content empty and save to revert to default template.</p>
+</div>
+</div>
+</div>
+</form>
+{% else %}
+<!-- No page selected - show overview -->
+<div class="card" style="padding:24px">
+<div style="display:grid;gap:14px">
+{% for page in pages %}
+<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+<div style="display:flex;align-items:center;gap:14px">
+<span style="font-size:24px">{{ page.icon }}</span>
+<div>
+<h3 style="font-size:15px;font-weight:700;margin-bottom:2px">{{ page.title }}</h3>
+<span style="font-size:11px;color:var(--text-light)">
+{% if page.has_content %}<span style="color:var(--success);font-weight:600">✅ Custom content</span>{% else %}Default template{% endif %}
+— <a href="{{ url_for(page.url_endpoint) }}" target="_blank" style="color:var(--primary)">View ↗</a>
 </span>
 </div>
 </div>
-<div style="display:flex;gap:8px">
-<a href="{{ url_for('admin_page_edit', page_key=page.key) }}" class="btn btn-primary btn-sm">
-<i class="fas fa-edit"></i> Edit Content
-</a>
-</div>
+<a href="{{ url_for('admin_pages', page=page.key) }}" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i> Edit</a>
 </div>
 {% endfor %}
 </div>
 </div>
+{% endif %}
 
-<div class="card" style="padding:20px;margin-top:20px;background:#f8f5f0;border:1px dashed var(--border)">
-<p style="font-size:13px;color:var(--text-light);margin:0"><strong>💡 Tip:</strong> When you save custom content for a page, it will replace the default template. If you clear all content and save, the page will revert to the default template.</p>
-</div>
+<script>
+function switchPage(key) {
+  if (key) window.location.href = '{{ url_for("admin_pages") }}?page=' + key;
+  else window.location.href = '{{ url_for("admin_pages") }}';
+}
+</script>
+<style>
+.rich-editor .ql-editor{min-height:340px;font-size:15px;line-height:1.7}
+@media(max-width:768px){form>div{grid-template-columns:1fr!important}}
+</style>
 {% endblock %}
