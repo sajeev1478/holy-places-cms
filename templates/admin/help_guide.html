@@ -47,6 +47,7 @@
 
 <div class="help-nav">
 <a href="#tiers">🏛️ Tier Structure</a>
+<a href="#location">📍 Location Picker</a>
 <a href="#modules">📦 Modules</a>
 <a href="#tags-cats">🏷️ Tags & Categories</a>
 <a href="#json">📋 JSON</a>
@@ -119,10 +120,86 @@
 </div>
 </div>
 
+<!-- ═══ LOCATION PICKER ═══ -->
+<div class="help-section" id="location">
+<div class="help-section-head">
+<h2>📍 2. Location Picker (Maps & GPS)</h2>
+<p>How to capture accurate latitude and longitude for pilgrims to navigate to exact sacred spots</p>
+</div>
+<div class="help-body">
+<p>Every tier (T1 to T4) has an interactive <strong>Location Picker</strong> built into its edit form. This replaces the old manual lat/lng number inputs with a visual map-based tool. Pilgrims rely on this data to navigate to exact locations.</p>
+
+<h3>Where to Find It</h3>
+<p>The Location Picker appears in the <strong>same pages where you already edit entries</strong> — no new pages were created:</p>
+<table class="ft-table">
+<tr><th>Tier</th><th>Where to Find</th></tr>
+<tr><td><strong style="color:#C76B8F">T1 Holy Dham</strong></td><td>Admin → Places → Edit any Dham → scroll past gallery images</td></tr>
+<tr><td><strong style="color:#2E86AB">T2 Key Places</strong></td><td>Same edit page → Key Places section → expand any Key Place accordion</td></tr>
+<tr><td><strong style="color:#E74845">T3 Key Spots</strong></td><td>Click "Manage Key Spots (T3)" on any Key Place → each spot has a picker</td></tr>
+<tr><td><strong style="color:#9C27B0">T4 Key Points</strong></td><td>Click "Key Points (T4)" on any Key Spot → each point has a picker</td></tr>
+</table>
+<p>Look for the <strong>ℹ️ info icon</strong> next to each Location Picker title — click it anytime for a quick reference guide.</p>
+
+<h3>Option 1: Search for a Place</h3>
+<p>Best for when you know the place name but aren't physically there.</p>
+<div class="help-example">
+<div class="ex-title">📌 Steps</div>
+<strong>Step 1:</strong> Type a place name in the search bar (e.g. "Banke Bihari Temple Vrindavan")<br>
+<strong>Step 2:</strong> Click <strong>Search</strong> or press Enter<br>
+<strong>Step 3:</strong> If multiple results appear, click the correct one<br>
+<strong>Step 4:</strong> Pin drops on the map and latitude/longitude auto-fill<br>
+<strong>Step 5:</strong> Drag the pin if you need to fine-tune the exact position
+</div>
+
+<h3>Option 2: GPS — Capture Current Location (On-Site)</h3>
+<p>Best for when you are physically standing at the location (e.g. at a temple or samadhi).</p>
+<div class="help-example">
+<div class="ex-title">📌 Steps</div>
+<strong>Step 1:</strong> Visit the actual physical location with your phone or laptop<br>
+<strong>Step 2:</strong> Open the admin edit page for that entry<br>
+<strong>Step 3:</strong> Click the green <strong>"📡 Use My Current Location"</strong> button<br>
+<strong>Step 4:</strong> Your browser will ask for permission — tap <strong>Allow</strong><br>
+<strong>Step 5:</strong> GPS coordinates are captured automatically<br>
+<strong>Step 6:</strong> Accuracy is displayed (e.g. ±5m) so you know how precise it is
+</div>
+<div class="help-tip">💡 <strong>GPS Tip:</strong> For best accuracy, use your phone outdoors with clear sky. Avoid capturing inside buildings or caves where GPS signal is weak. If accuracy shows >50m, try stepping outside and capturing again.</div>
+
+<h3>Option 3: Click on Map</h3>
+<p>Best for quickly placing a pin when you can visually identify the location on a map.</p>
+<div class="help-example">
+<div class="ex-title">📌 Steps</div>
+<strong>Step 1:</strong> Zoom and pan the map to find the location<br>
+<strong>Step 2:</strong> Click anywhere on the map to drop a pin<br>
+<strong>Step 3:</strong> Drag the pin to fine-tune the position<br>
+<strong>Step 4:</strong> Coordinates update automatically as you move the pin
+</div>
+
+<h3>Other Features</h3>
+<ul>
+<li><strong>Current Location Display:</strong> At the top of each picker, you'll see "📍 Current:" with the saved coordinates (or "No location set" if empty)</li>
+<li><strong>Clear Button:</strong> The <strong>🗑️ Clear</strong> button removes the pin and clears both coordinates</li>
+<li><strong>Manual Editing:</strong> Raw lat/lng fields are still visible below the map for direct number entry</li>
+<li><strong>Status Messages:</strong> Colored bars appear: blue (searching), green (success), red (error)</li>
+<li><strong>Re-editing:</strong> You can update the location anytime by re-opening the edit page</li>
+</ul>
+
+<h3>Which Tier Should Have Which Location?</h3>
+<table class="ft-table">
+<tr><th>Tier</th><th>What to Capture</th><th>Example</th></tr>
+<tr><td><strong style="color:#C76B8F">T1 Holy Dham</strong></td><td>Center point of the entire sacred region</td><td>Vrindavan town center (27.5835, 77.6949)</td></tr>
+<tr><td><strong style="color:#2E86AB">T2 Key Places</strong></td><td>Center of each major area within the dham</td><td>Govardhan Hill area center</td></tr>
+<tr><td><strong style="color:#E74845">T3 Key Spots</strong></td><td>Exact location of each temple/ghat/site</td><td>Front entrance of Banke Bihari Temple</td></tr>
+<tr><td><strong style="color:#9C27B0">T4 Key Points</strong></td><td>Precise micro-point (samadhi, tree, step)</td><td>Exact spot of Swami Haridas Samadhi inside temple</td></tr>
+</table>
+
+<div class="help-warn">⚠️ <strong>Important:</strong> The more accurate the coordinates, the better pilgrims can navigate. For T3 and T4 especially, try to use GPS capture when physically present at the location rather than searching.</div>
+</div>
+</div>
+
 <!-- ═══ 2. MODULES ═══ -->
 <div class="help-section" id="modules">
 <div class="help-section-head">
-<h2>📦 2. Modules</h2>
+<h2>📦 3. Modules</h2>
 <p>What modules are and how they organize content features</p>
 </div>
 <div class="help-body">
@@ -157,7 +234,7 @@
 <!-- ═══ 3. TAGS & CATEGORIES ═══ -->
 <div class="help-section" id="tags-cats">
 <div class="help-section-head">
-<h2>🏷️ 3. Tags and Categories</h2>
+<h2>🏷️ 4. Tags and Categories</h2>
 <p>How to organize and filter content effectively</p>
 </div>
 <div class="help-body">
@@ -201,7 +278,7 @@
 <!-- ═══ 4. JSON ═══ -->
 <div class="help-section" id="json">
 <div class="help-section-head">
-<h2>📋 4. JSON (JavaScript Object Notation)</h2>
+<h2>📋 5. JSON (JavaScript Object Notation)</h2>
 <p>What JSON is and how it's used in the system</p>
 </div>
 <div class="help-body">
@@ -242,7 +319,7 @@
 <!-- ═══ 5. CUSTOM FIELDS ═══ -->
 <div class="help-section" id="custom-fields">
 <div class="help-section-head">
-<h2>⚙️ 5. Custom Fields</h2>
+<h2>⚙️ 6. Custom Fields</h2>
 <p>Adding extra information to any tier with custom fields</p>
 </div>
 <div class="help-body">
@@ -308,7 +385,7 @@
 <!-- ═══ 6. IMAGES & GALLERY ═══ -->
 <div class="help-section" id="images">
 <div class="help-section-head">
-<h2>📸 6. Images & Gallery</h2>
+<h2>📸 7. Images & Gallery</h2>
 <p>How to manage images across all tiers</p>
 </div>
 <div class="help-body">
@@ -347,7 +424,7 @@
 <!-- ═══ 7. TIPS ═══ -->
 <div class="help-section" id="tips">
 <div class="help-section-head">
-<h2>💡 7. Tips & Best Practices</h2>
+<h2>💡 8. Tips & Best Practices</h2>
 <p>Helpful advice for managing content effectively</p>
 </div>
 <div class="help-body">

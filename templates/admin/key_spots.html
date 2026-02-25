@@ -82,7 +82,7 @@
 <div class="form-group"><label>🌍 Country</label><input type="text" class="form-control" name="ks_{{ ki }}_country" value="{{ spot.country or '' }}" placeholder="India"></div>
 </div>
 <div id="loc_ks_{{ ki }}" class="loc-picker">
-<div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:#E74845"></i> Location Picker <span class="loc-badge" style="background:#E74845">T3</span></div>
+<div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:#E74845"></i> Location Picker <span class="loc-badge" style="background:#E74845">T3</span><button class="loc-info-btn" type="button" onclick="document.getElementById('locInfoPopup').classList.add('active')" title="How to use"><i class="fas fa-info"></i></button></div>
 <div class="loc-saved" style="margin-bottom:10px"><span style="font-size:12px;color:var(--text-light);margin-right:4px">📍 Current:</span><span class="loc-saved-info">{% if spot.latitude and spot.longitude %}<span class="loc-coords-display">{{ spot.latitude }}, {{ spot.longitude }}</span>{% else %}<span class="loc-no-data">No location set</span>{% endif %}</span></div>
 <div class="loc-status"></div>
 <div class="loc-map-container"><div class="loc-map-wrap" style="height:100%"></div></div>

@@ -154,6 +154,93 @@ select.form-control:focus{border-color:var(--primary);box-shadow:0 4px 16px rgba
 .content{padding:20px}
 .form-row{grid-template-columns:1fr}
 }
+@media(max-width:768px){
+.content{padding:12px}
+.content-header{flex-direction:column;gap:10px;align-items:stretch!important}
+.content-header h1{font-size:20px!important}
+.content-header .btn{width:100%;text-align:center;justify-content:center}
+/* Force ALL inline grid layouts to single column */
+[style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
+/* Admin cards */
+.admin-card{border-radius:12px}
+.admin-card-header{padding:12px 14px!important;flex-wrap:wrap;gap:8px}
+.admin-card-header h3{font-size:14px!important}
+.admin-card-body{padding:14px!important}
+/* Form controls */
+.form-control{font-size:13px!important;padding:9px 12px!important}
+.form-group label{font-size:12px!important}
+.form-group{margin-bottom:10px!important}
+/* Buttons */
+.btn{font-size:12px!important;padding:8px 14px!important}
+.btn-sm{font-size:11px!important;padding:6px 10px!important}
+/* Place form two-col */
+.place-two-col{grid-template-columns:1fr!important;gap:16px!important}
+/* Tier tabs */
+.tier-tabs-grid{grid-template-columns:1fr 1fr!important;gap:6px!important}
+.tier-tabs-grid .tier-tab{padding:10px 8px!important;font-size:11px!important}
+/* KP/KS/SS accordions */
+.kp-accordion-header{padding:12px 14px!important}
+.kp-accordion-header h4{font-size:13px!important;flex-wrap:wrap}
+.kp-accordion-body-inner{padding:14px!important}
+.kp-num{width:24px!important;height:24px!important;font-size:10px!important}
+/* Overview cards */
+.overview-card{flex-direction:column;align-items:flex-start!important;gap:8px!important;padding:12px!important}
+.overview-card .ov-actions{width:100%;justify-content:flex-start}
+/* Key spot / sub spot items */
+.ks-body,.ss-body{padding:14px!important}
+/* Location picker mobile */
+.loc-picker{padding:12px!important}
+.loc-map-container{height:200px!important}
+.loc-search-bar{flex-direction:column}
+.loc-search-bar button{width:100%}
+.loc-actions-row{flex-direction:column}
+.loc-actions-row .loc-btn{width:100%;justify-content:center}
+.loc-coords-row{grid-template-columns:1fr!important}
+.loc-saved{flex-direction:column;gap:6px!important}
+/* Tier definition */
+.tier-def{flex-direction:column!important;gap:10px!important;padding:14px!important}
+/* Tables */
+.ft-table,.admin-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:12px}
+/* Help page */
+.help-nav{gap:6px!important;padding:10px!important}
+.help-nav a{font-size:11px!important;padding:6px 12px!important}
+.help-section-head{padding:16px!important}
+.help-section-head h2{font-size:16px!important}
+.help-body{padding:16px!important}
+.help-body h3{font-size:14px!important}
+.help-body p,.help-body li{font-size:13px!important}
+.help-tier-flow{flex-direction:column;align-items:stretch!important;gap:4px!important}
+.help-tier-box{min-width:auto!important;padding:10px!important;font-size:12px!important}
+.help-tier-arrow{transform:rotate(90deg);text-align:center;margin:0!important}
+/* Back button row */
+.back-btn-row{flex-direction:column!important}
+.back-btn-row .btn,.back-btn-row a{width:100%;text-align:center;justify-content:center}
+/* Section save */
+.section-save{justify-content:stretch!important}
+.section-save .btn{width:100%;justify-content:center}
+/* Dashboard grid */
+[style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,1fr)!important}
+[style*="grid-template-columns:repeat(3"]{grid-template-columns:1fr!important}
+/* Sidebar overlay */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;display:none}
+.sidebar-overlay.active{display:block}
+/* Quick info row wrapping */
+.quick-info-row{flex-wrap:wrap!important;gap:4px!important}
+/* Fields page grids */
+.field-row{flex-direction:column!important}
+.field-row .field-toggle{padding-top:0!important}
+/* Hier breadcrumbs */
+.hier-bc{font-size:10px!important}
+/* Help hero */
+.help-hero h1{font-size:22px!important}
+.help-hero p{font-size:13px!important}
+/* Help example */
+.help-example{font-size:12px!important;padding:12px!important}
+/* Code blocks */
+.code-block{font-size:10px!important;padding:10px!important}
+}
 /* ─── Beautiful File Upload ─── */
 input[type="file"]{font-family:inherit;font-size:13px;color:#555}
 input[type="file"]::file-selector-button{background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:8px 18px;border-radius:50px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;margin-right:12px;transition:all .25s;box-shadow:0 2px 8px rgba(99,102,241,.2)}
@@ -244,12 +331,31 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 .loc-search-result{padding:10px 14px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border);transition:background .15s}
 .loc-search-result:hover{background:var(--primary-light)}
 .loc-search-result:last-child{border-bottom:none}
+/* Location Picker Info Popup */
+.loc-info-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0;color:var(--primary)}
+.loc-info-btn:hover{background:var(--primary);color:white;border-color:var(--primary)}
+.loc-info-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}
+.loc-info-popup-overlay.active{display:flex}
+.loc-info-popup{background:white;border-radius:18px;max-width:540px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:locInfoSlide .3s ease}
+@keyframes locInfoSlide{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+.loc-info-popup-head{padding:20px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.loc-info-popup-head h3{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px;margin:0}
+.loc-info-popup-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.loc-info-popup-close:hover{background:var(--danger);color:white}
+.loc-info-popup-body{padding:20px 24px 24px}
+.loc-info-popup-body h4{font-size:14px;font-weight:700;margin:14px 0 6px;color:var(--text);display:flex;align-items:center;gap:6px}
+.loc-info-popup-body h4:first-child{margin-top:0}
+.loc-info-popup-body p{font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:8px}
+.loc-info-popup-body .info-step{display:flex;gap:10px;padding:8px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px;font-size:12px;align-items:flex-start}
+.loc-info-popup-body .info-step .step-num{width:22px;height:22px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.loc-info-popup-body .info-step .step-text{color:var(--text-mid);line-height:1.5}
 </style>
 {% block extra_css %}{% endblock %}
 </head>
 <body>
 
 <!-- Sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('active')"></div>
 <aside class="sidebar" id="sidebar">
 <div class="sidebar-brand">
 <a href="{{ url_for('admin_dashboard') }}"><span>🪷</span> Holy Dham CMS</a>
@@ -331,7 +437,7 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 <div class="main">
 <div class="topbar">
 <div style="display:flex;align-items:center;gap:12px">
-<button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+<button class="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('active')">☰</button>
 <h1>{% block page_title %}Dashboard{% endblock %}</h1>
 </div>
 <div class="topbar-actions">
@@ -350,6 +456,49 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 {% endif %}
 {% endwith %}
 {% block admin_content %}{% endblock %}
+</div>
+</div>
+
+<!-- Location Picker Info Popup -->
+<div class="loc-info-popup-overlay" id="locInfoPopup" onclick="if(event.target===this)this.classList.remove('active')">
+<div class="loc-info-popup">
+<div class="loc-info-popup-head">
+<h3>📍 Location Picker Guide</h3>
+<button class="loc-info-popup-close" onclick="document.getElementById('locInfoPopup').classList.remove('active')">✕</button>
+</div>
+<div class="loc-info-popup-body">
+<p>The Location Picker helps you capture accurate latitude and longitude for any tier. Pilgrims use this data to navigate to exact spots on maps.</p>
+
+<h4>🔍 Option 1: Search for a Place</h4>
+<div class="info-step"><span class="step-num">1</span><span class="step-text">Type the place name in the search bar (e.g. "Banke Bihari Temple Vrindavan")</span></div>
+<div class="info-step"><span class="step-num">2</span><span class="step-text">Click <strong>Search</strong> or press Enter</span></div>
+<div class="info-step"><span class="step-num">3</span><span class="step-text">If multiple results appear, click the correct one</span></div>
+<div class="info-step"><span class="step-num">4</span><span class="step-text">Pin drops on the map and coordinates auto-fill</span></div>
+
+<h4>📡 Option 2: Use GPS (On-Site)</h4>
+<div class="info-step"><span class="step-num">1</span><span class="step-text">Visit the actual physical location with your phone</span></div>
+<div class="info-step"><span class="step-num">2</span><span class="step-text">Click the green <strong>"📡 Use My Current Location"</strong> button</span></div>
+<div class="info-step"><span class="step-num">3</span><span class="step-text">Allow location permission when browser asks</span></div>
+<div class="info-step"><span class="step-num">4</span><span class="step-text">GPS coordinates are captured with accuracy display (e.g. ±5m)</span></div>
+
+<h4>🗺️ Option 3: Click on Map</h4>
+<div class="info-step"><span class="step-num">1</span><span class="step-text">Zoom and pan the map to find the location</span></div>
+<div class="info-step"><span class="step-num">2</span><span class="step-text">Click anywhere to drop a pin</span></div>
+<div class="info-step"><span class="step-num">3</span><span class="step-text">Drag the pin to fine-tune the position</span></div>
+
+<h4>💡 Tips</h4>
+<p>• The <strong>🗑️ Clear</strong> button removes the pin and clears coordinates<br>
+• Raw lat/lng fields below the map allow manual editing<br>
+• Status messages show in colored bars (blue=info, green=success, red=error)<br>
+• For best GPS accuracy, use your phone outdoors with a clear sky<br>
+• You can update the location anytime by re-editing the entry</p>
+
+<h4>📊 Tier Usage</h4>
+<p>• <strong style="color:#C76B8F">T1 Holy Dham</strong> — Center point of the entire sacred region<br>
+• <strong style="color:#2E86AB">T2 Key Places</strong> — Center of each major area within the dham<br>
+• <strong style="color:#E74845">T3 Key Spots</strong> — Exact location of each temple/ghat/site<br>
+• <strong style="color:#9C27B0">T4 Key Points</strong> — Precise micro-location (samadhi, tree, step, etc.)</p>
+</div>
 </div>
 </div>
 
