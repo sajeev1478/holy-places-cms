@@ -89,6 +89,10 @@ SPOT_CATEGORIES = [
     ('garden','Garden / Nikunj','Sacred grove','🌺','#E91E63'),
     ('cave','Cave / Guha','Meditation or leela cave','🕳️','#795548'),
     ('river','River','Sacred flowing water','🏞️','#0097A7'),
+    ('teerth','Teerth','Sacred pilgrimage spot or tank','🙏','#00897B'),
+    ('shakti_peeth','Shakti Peeth','Sacred seat of the Goddess','🔱','#AD1457'),
+    ('sacred_site','Sacred Site','Site of divine significance','⭐','#FF6F00'),
+    ('sacred_throne','Sacred Throne','Divine throne or singhasan','👑','#FFD600'),
 ]
 
 # ─── Tier-4 Sub-Spot Categories ───
@@ -310,31 +314,6 @@ def seed_db():
     db = get_db()
     if db.execute("SELECT id FROM users LIMIT 1").fetchone(): return
 
-    # ─── Real photo images (pre-downloaded, free-use from Unsplash) ───
-    seed_images = {
-        'vrindavan': 'images/vrindavan_dham.jpg',
-        'mayapur': 'images/mayapur_dham.jpg',
-        'kedarnath': 'images/kedarnath_dham.jpg',
-        'jagannath': 'images/jagannath_puri.jpg',
-        'vrindavan_town': 'images/vrindavan_town.jpg',
-        'barsana': 'images/barsana.jpg',
-        'nandgaon': 'images/nandgaon.jpg',
-        'govardhan': 'images/govardhan.jpg',
-        'iskcon': 'images/iskcon_vrindavan.jpg',
-        'banke_bihari': 'images/banke_bihari.jpg',
-        'kesi_ghat': 'images/kesi_ghat.jpg',
-        'samadhi': 'images/prabhupada_samadhi.jpg',
-        'altar': 'images/krishna_balaram_altar.jpg',
-        'nidhivan': 'images/nidhivan.jpg',
-        'govardhan_hill': 'images/govardhan_hill.jpg',
-        'radha_kund': 'images/radha_kund.jpg',
-        'radha_raman': 'images/radha_raman.jpg',
-        'kusum_sarovar': 'images/kusum_sarovar.jpg',
-        'parikrama': 'images/parikrama_path.jpg',
-        'quarters': 'images/prabhupada_quarters.jpg',
-        'courtyard': 'images/temple_courtyard.jpg',
-    }
-
     # ─── Seed Tier-3 Spot Categories ───
     for slug,name,desc,icon,color in SPOT_CATEGORIES:
         db.execute("INSERT INTO spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slug,name,desc,icon,color))
@@ -355,95 +334,162 @@ def seed_db():
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_user',''))
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_pass',''))
     # Modules
-    for name,slug,desc,icon,order in [('Holy Dhams','holy-dhams','Sacred destinations','🛕',1),('Temples','temples','Temple profiles','🏛️',2),('Sacred Stories','sacred-stories','Mythological tales','📖',3),('Festivals','festivals','Religious events','🎪',4),('Pilgrimage Guides','pilgrimage-guides','Travel guides','🚶',5),('Events','events','Spiritual events','📅',6),('Bhajans & Kirtans','bhajans-kirtans','Devotional music','🎵',7),('Spiritual Articles','spiritual-articles','Spiritual writings','📝',8)]:
+    for name,slug,desc,icon,order in [('Holy Dhams','holy-dhams','Sacred destinations','\U0001f6d5',1),('Temples','temples','Temple profiles','\U0001f3db\ufe0f',2),('Sacred Stories','sacred-stories','Mythological tales','\U0001f4d6',3),('Festivals','festivals','Religious events','\U0001f3ea',4),('Pilgrimage Guides','pilgrimage-guides','Travel guides','\U0001f6b6',5),('Events','events','Spiritual events','\U0001f4c5',6),('Bhajans & Kirtans','bhajans-kirtans','Devotional music','\U0001f3b5',7),('Spiritual Articles','spiritual-articles','Spiritual writings','\U0001f4dd',8)]:
         db.execute("INSERT INTO modules (name,slug,description,icon,sort_order,is_active,created_by) VALUES (?,?,?,?,?,1,1)", (name,slug,desc,icon,order))
     # Tags
-    for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843'),('Braj Dham','braj-dham','#E84855'),('Gaudiya Vaishnava','gaudiya-vaishnava','#6C5CE7')]:
+    for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843'),('Braj Dham','braj-dham','#E84855'),('Gaudiya Vaishnava','gaudiya-vaishnava','#6C5CE7'),('Sapta Puri','sapta-puri','#FF6B35'),('Ram Bhakti','ram-bhakti','#E53935'),('Sapt Hari','sapt-hari','#1E88E5')]:
         db.execute("INSERT INTO tags (name,slug,color) VALUES (?,?,?)", (name,slug,color))
     # Custom Fields with icons
-    for name,label,ftype,ph,order,applies,icon in [('audio_narration','Audio Narration','audio','Upload audio',1,'both','🎵'),('video_tour','Video Tour','video','Upload or paste URL',2,'both','🎬'),('gallery_images','Gallery Images','images','Upload photos',3,'both','🖼️'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both','🕐'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both','🌤️'),('how_to_reach','How to Reach','textarea','Directions',6,'place','🚗'),('accommodation','Accommodation','textarea','Stay options',7,'place','🏨'),('history','History & Significance','richtext','Detailed history',8,'both','📜'),('dress_code','Dress Code','text','If any',9,'both','🥻'),('external_audio_url','External Audio Link','url','Audio URL',11,'both','🔗'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both','🔗')]:
+    for name,label,ftype,ph,order,applies,icon in [('audio_narration','Audio Narration','audio','Upload audio',1,'both','\U0001f3b5'),('video_tour','Video Tour','video','Upload or paste URL',2,'both','\U0001f3ac'),('gallery_images','Gallery Images','images','Upload photos',3,'both','\U0001f5bc\ufe0f'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both','\U0001f550'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both','\U0001f324\ufe0f'),('how_to_reach','How to Reach','textarea','Directions',6,'place','\U0001f697'),('accommodation','Accommodation','textarea','Stay options',7,'place','\U0001f3e8'),('history','History & Significance','richtext','Detailed history',8,'both','\U0001f4dc'),('dress_code','Dress Code','text','If any',9,'both','\U0001f97b'),('external_audio_url','External Audio Link','url','Audio URL',11,'both','\U0001f517'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both','\U0001f517')]:
         db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon) VALUES (?,?,?,?,?,?,?)", (name,label,ftype,ph,order,applies,icon))
 
-    # ─── SAMPLE: Vrindavan Dham (Tier 1) ───
-    db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)",
-        ('Vrindavan Dham','vrindavan-dham','The divine land of Radha-Krishna leelas, one of the holiest Dhams in Gaudiya Vaishnavism.',
-         '<h2>The Eternal Abode of Krishna</h2><p>Vrindavan is the transcendental land where Lord Krishna performed His childhood and youth pastimes. Located in the Braj region of Uttar Pradesh, it is revered by millions as a place where the spiritual world manifests on earth.</p><h3>Significance</h3><p>Vrindavan is one of the most important pilgrimage destinations in Hinduism, especially in the Gaudiya Vaishnava tradition. Sri Chaitanya Mahaprabhu rediscovered the lost holy places of Vrindavan in the 16th century.</p>',
-         'Uttar Pradesh','Mathura','India',27.5830,77.6950,seed_images.get('vrindavan'),'published',1))
-    dham_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
-    for tid in [8,4,9,10]: db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)", (dham_id,tid))
+    # ═══════════════════════════════════════════════════════════════
+    # ─── AYODHYA DHAM (Tier 1) — Primary Dham ───
+    # ═══════════════════════════════════════════════════════════════
+    ayd_content = '<h2>The Invincible City of Lord Rama</h2><p>Ayodhya, derived from the Sanskrit <em>a-yodhya</em> meaning "invincible," is one of the most ancient and sacred cities in the world. Mentioned in the Atharvaveda as the unconquerable city of the gods, Ayodhya has been the spiritual beacon of Sanatana Dharma since time immemorial.</p><h3>Sapta Mokshapuri</h3><p>As proclaimed in the Garuda Purana: <em>"Ayodhya Mathura Maya Kashi Kanchi Avantika, Puri Dwaravati chaiva saptaite mokshadayikah"</em> — Ayodhya stands first among the seven cities that bestow liberation (moksha). A pilgrimage here is believed to free the soul from the cycle of birth and death.</p><h3>Capital of the Ikshvaku Dynasty</h3><p>According to the Ramayana, Ayodhya was established by Manu himself, taking a piece of Vaikuntha from Lord Narayana. It served as the magnificent capital of the Solar Dynasty (Surya Vansha) kings, including the great Raghu, Aja, Dasharatha, and the Supreme Lord Rama. The city is described as being shaped like a fish, spanning 12 yojanas in length and 3 yojanas in breadth.</p><h3>Birthplace of Lord Rama</h3><p>Lord Rama, the seventh avatara of Lord Vishnu, appeared here on the Navami tithi of Chaitra Shukla Paksha. He ruled the earth for eleven thousand years, establishing the ideal kingdom known as Ram Rajya. After His divine departure, the sacred tirthas, temples, kunds, and ghats of Ayodhya continue to radiate His spiritual presence.</p><h3>Saryu River</h3><p>The holy Saryu (Sarayu) river flows along the northern boundary of Ayodhya. Bathing in Saryu is considered highly meritorious. The famous ghats — Ram Ki Paidi, Guptar Ghat, Swargdwar — are centers of daily worship and grand festivals. The Saryu is described in the Padma Purana as flowing from the divine realm of Vaikuntha itself.</p><h3>Spiritual Heritage</h3><p>With over 100 temples, numerous sacred kunds, ancient ghats, and the newly consecrated Ram Janmabhoomi Mandir (inaugurated January 2024), Ayodhya attracts millions of pilgrims annually. The city also holds deep significance for Jainism — five Tirthankaras (Rishabhanatha, Ajitanatha, Abhinandananatha, Sumatinatha, and Anantanatha) were born here.</p>'
+    db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)",
+        ('Ayodhya Dham','ayodhya-dham',
+         'The sacred birthplace of Lord Rama, first of the Sapta Mokshapuris. Situated on the banks of River Saryu in Uttar Pradesh, Ayodhya is the eternal capital of the Ikshvaku dynasty.',
+         ayd_content,'Uttar Pradesh','Ayodhya','India',26.7922,82.1998,'published',1))
+    ayd_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    for tid in [11,4,3,12]: db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)", (ayd_id,tid))
+    # Custom fields for Ayodhya
+    cf_hours = db.execute("SELECT id FROM custom_field_defs WHERE name='opening_hours'").fetchone()[0]
+    cf_best = db.execute("SELECT id FROM custom_field_defs WHERE name='best_time_to_visit'").fetchone()[0]
+    cf_reach = db.execute("SELECT id FROM custom_field_defs WHERE name='how_to_reach'").fetchone()[0]
+    cf_accom = db.execute("SELECT id FROM custom_field_defs WHERE name='accommodation'").fetchone()[0]
+    cf_dress = db.execute("SELECT id FROM custom_field_defs WHERE name='dress_code'").fetchone()[0]
+    cf_hist = db.execute("SELECT id FROM custom_field_defs WHERE name='history'").fetchone()[0]
+    db.execute("INSERT INTO place_custom_values (place_id,field_def_id,value) VALUES (?,?,?)", (ayd_id,cf_hours,'Temples generally open 6 AM - 12 PM & 4 PM - 10 PM. Ram Janmabhoomi: 7 AM - 11:30 AM & 2 PM - 7 PM.'))
+    db.execute("INSERT INTO place_custom_values (place_id,field_def_id,value) VALUES (?,?,?)", (ayd_id,cf_best,'October to March (pleasant weather). Ram Navami (Chaitra Shukla Navami) is the grandest festival.'))
+    db.execute("INSERT INTO place_custom_values (place_id,field_def_id,value) VALUES (?,?,?)", (ayd_id,cf_reach,'By Air: Maharishi Valmiki Intl Airport (~8 km), Lucknow Airport (~135 km). By Rail: Ayodhya Dham Jn well-connected to Delhi, Lucknow, Varanasi. By Road: NH-27 to Lucknow (134 km), Varanasi (209 km).'))
+    db.execute("INSERT INTO place_custom_values (place_id,field_def_id,value) VALUES (?,?,?)", (ayd_id,cf_accom,'Government dharamshalas, IRCTC Ramayan Yatri Niwas, numerous private hotels and guest houses.'))
+    db.execute("INSERT INTO place_custom_values (place_id,field_def_id,value) VALUES (?,?,?)", (ayd_id,cf_dress,'Modest traditional clothing recommended. Avoid western casuals in temples.'))
+    db.execute("INSERT INTO place_custom_values (place_id,field_def_id,value) VALUES (?,?,?)", (ayd_id,cf_hist,'<p>Ayodhya is one of the oldest continuously inhabited cities in India, with archaeological evidence dating to around 600 BCE. Known as Saketa in early Buddhist and Jain texts, the city was renamed during the Gupta period. King Vikramaditya restored its glory, building 360 temples. The Ram Janmabhoomi Mandir, built in Nagara style with Bansi Paharpur sandstone, was consecrated on 22 January 2024.</p>'))
 
-    # ─── Tier 2: Key Places ───
-    kp_data = [
-        ('Vrindavan Town','vrindavan-town','The heart of Braj, dense with temples and sacred kunds.','<p>Vrindavan town is the epicenter of Krishna devotion with over 5,000 temples.</p>',27.5830,77.6950,1),
-        ('Barsana','barsana','The eternal abode of Srimati Radharani.','<p>Barsana is a hilltop town revered as the birthplace of Radha. It hosts the famous Lathmar Holi.</p>',27.6474,77.3833,2),
-        ('Nandgaon','nandgaon','The village of Nanda Maharaja, Krishna\'s foster father.','<p>Nandgaon is where Krishna spent his childhood. The Nand Bhavan temple stands on the hilltop.</p>',27.6714,77.3817,3),
-        ('Govardhan','govardhan','Sacred hill lifted by Krishna to protect Braj.','<p>Govardhan Hill is one of the holiest sites, worshipped as a form of Krishna Himself. The parikrama (circumambulation) is a key pilgrimage practice.</p>',27.4929,77.4583,4),
+    # ── AYODHYA: Tier 2 — Key Places (6 areas) ──
+    akp = {}
+    t2_data = [
+        ('Ram Janmabhoomi Kshetra','ram-janmabhoomi-kshetra','The sacred precinct around Lord Rama\'s birthplace — the spiritual heart of Ayodhya.','<h3>The Holy Birthplace</h3><p>Ram Janmabhoomi Kshetra is the most sacred area in Ayodhya, centered on the exact spot where Lord Rama appeared. The newly constructed Ram Mandir stands 161 feet tall with three stories in Nagara style. The complex includes the Ratna Singhasan, ancient Sita Kup well, Vidya Kund, Mani Parvat, Kanak Bhawan, and Vashistha Kund.</p>',26.7955,82.1942,1),
+        ('Central Ayodhya','central-ayodhya','The bustling heart of Ayodhya city — home to the iconic Hanuman Garhi fort-temple, Sapt Sagar tank, and Matta Gajendra.','<h3>Heart of the Sacred City</h3><p>Central Ayodhya is dominated by Hanuman Garhi — the tallest structure in the city, visible from all directions. This 10th-century fort-temple sits atop 76 steps and houses Bal Hanuman in Anjani\'s lap. Lord Rama appointed Hanuman as Ayodhya\'s eternal guardian. The area includes Sapt Sagar and the Matta Gajendra shrine.</p>',26.7965,82.2000,2),
+        ('Swargdwar & Saryu Ghat Area','swargdwar-saryu-ghat-area','The sacred Saryu riverfront — Sapt Hari temples, Lakshman\'s Shesha Sthali, and Guptar Ghat where citizens attained Vaikuntha.','<h3>The Divine Riverfront</h3><p>The Saryu riverfront from Swargdwar to Guptar Ghat is among the holiest stretches of any river in India. Chandrahari and Nageshwarnath temples stand at Swargdwar. Sahasradhara is where Lakshman assumed Shesha form. At Guptar Ghat, Ayodhya\'s citizens entered Saryu for Vaikuntha. Nirmali Kund is so pure that Teerth-raj Prayag bathes here daily.</p>',26.8032,82.1910,3),
+        ('Surrounding Teerth Kshetras','surrounding-teerth-kshetras','Sacred kunds, Shakti peethas, and teerths surrounding the main city — Surya Kund, Devkali, and Manorama Teerth.','<h3>Teerths Around the City</h3><p>Beyond central Ayodhya are powerful teerths described in the Skanda Purana. Surya Kund cures diseases. Devkali is the seat of Adi Shakti in Ashtabhuja form. Manorama Teerth across the Saryu is where King Dasharatha performed the Putrakameshti Yagya that led to Rama\'s birth.</p>',26.7870,82.1950,4),
+        ('Bilvahari & Punyahari Area','bilvahari-punyahari-area','Part of the Sapt Hari pilgrimage circuit — sacred Vishnu temples ~16 km east of Ayodhya on Saryu bank.','<h3>The Eastern Sapt Hari Temples</h3><p>About 16 km east of the city on the Saryu bank stand Bilvahari and Punyahari — two of the Sapt Hari temples. Bilvahari liberates from Rina Traya. Punyahari cures Pandu Roga. These remote teerths preserve ancient pilgrimage traditions predating even the Ramayana.</p>',26.8000,82.3500,5),
+        ('Nandigram','nandigram','18 km south — where Bharat installed Rama\'s Padukas and lived 14 years in austere penance.','<h3>Bharat\'s Seat of Devotion</h3><p>Nandigram, 18 km south of Ayodhya, is where Bharat installed Rama\'s Charan Padukas on the throne and administered the kingdom for 14 years as an ascetic. The first reunion with Rama after Lanka occurred here. The Skanda Purana declares darshan here equals 1000 Manvantaras of Kashi-vaas.</p>',26.6700,82.2100,6),
     ]
-    kp_img_map = {'vrindavan-town':seed_images.get('vrindavan_town'),'barsana':seed_images.get('barsana'),'nandgaon':seed_images.get('nandgaon'),'govardhan':seed_images.get('govardhan')}
-    kp_ids = {}
-    for t,s,sd,fc,lat,lng,o in kp_data:
-        db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,1)", (dham_id,t,s,sd,fc,kp_img_map.get(s),lat,lng,o))
-        kp_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    for t,s,sd,fc,lat,lng,o in t2_data:
+        db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,1)", (ayd_id,t,s,sd,fc,lat,lng,o))
+        akp[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
 
-    # ─── Tier 3: Key Spots (with categories) ───
+    # ── AYODHYA: Tier 3 — Key Spots (20 spots) ──
     temple_cat = db.execute("SELECT id FROM spot_categories WHERE slug='temple'").fetchone()[0]
     kund_cat = db.execute("SELECT id FROM spot_categories WHERE slug='kund'").fetchone()[0]
     ghat_cat = db.execute("SELECT id FROM spot_categories WHERE slug='ghat'").fetchone()[0]
-    van_cat = db.execute("SELECT id FROM spot_categories WHERE slug='van'").fetchone()[0]
     hill_cat = db.execute("SELECT id FROM spot_categories WHERE slug='hill'").fetchone()[0]
+    teerth_cat = db.execute("SELECT id FROM spot_categories WHERE slug='teerth'").fetchone()[0]
+    shakti_cat = db.execute("SELECT id FROM spot_categories WHERE slug='shakti_peeth'").fetchone()[0]
+    sacred_site_cat = db.execute("SELECT id FROM spot_categories WHERE slug='sacred_site'").fetchone()[0]
+    sacred_throne_cat = db.execute("SELECT id FROM spot_categories WHERE slug='sacred_throne'").fetchone()[0]
+    village_cat = db.execute("SELECT id FROM spot_categories WHERE slug='village'").fetchone()[0]
+    van_cat = db.execute("SELECT id FROM spot_categories WHERE slug='van'").fetchone()[0]
     parikrama_cat = db.execute("SELECT id FROM spot_categories WHERE slug='parikrama'").fetchone()[0]
 
-    ks_data = [
-        (kp_ids['vrindavan-town'],temple_cat,'ISKCON Krishna Balaram Mandir','iskcon-krishna-balaram','The international headquarters temple of ISKCON in Vrindavan.','<p>Founded by Srila Prabhupada in 1975, this temple features beautiful deities of Krishna-Balaram, Radha-Shyamasundar, and Gaura-Nitai.</p>',27.5815,77.6983,1),
-        (kp_ids['vrindavan-town'],temple_cat,'Banke Bihari Temple','banke-bihari','One of the most visited temples in Vrindavan.','<p>Built in 1864, the temple houses the deity of Banke Bihari, an enchanting form of Krishna.</p>',27.5833,77.6954,2),
-        (kp_ids['vrindavan-town'],temple_cat,'Radha Raman Temple','radha-raman','A 500-year-old temple with a self-manifested deity.','<p>Established by Gopal Bhatta Goswami, the deity of Radha Raman appeared from a shaligrama shila.</p>',27.5820,77.6940,3),
-        (kp_ids['vrindavan-town'],ghat_cat,'Kesi Ghat','kesi-ghat','The most prominent ghat on the Yamuna in Vrindavan.','<p>Where Krishna killed the demon Kesi. A key spot for evening aarti and Yamuna worship.</p>',27.5802,77.6960,4),
-        (kp_ids['vrindavan-town'],van_cat,'Nidhivan','nidhivan','Mysterious forest where Radha-Krishna are said to dance every night.','<p>The trees of Nidhivan form natural bowers (kunjas). It is believed that Radha and Krishna perform their Raas Leela here every night.</p>',27.5810,77.6930,5),
-        (kp_ids['govardhan'],hill_cat,'Govardhan Hill','govardhan-hill','The sacred hill lifted by Krishna.','<p>Govardhan Hill is worshipped as Govardhan Maharaj. Devotees perform parikrama and worship the shila (stones).</p>',27.4929,77.4583,1),
-        (kp_ids['govardhan'],kund_cat,'Radha Kund','radha-kund','The most sacred kund in all of Braj.','<p>Radha Kund is considered the most sacred body of water, representing the mercy of Srimati Radharani.</p>',27.5062,77.4629,2),
-        (kp_ids['govardhan'],kund_cat,'Kusum Sarovar','kusum-sarovar','Beautiful lake with stunning architecture.','<p>A historically significant sarovar with Mughal-era architecture, linked to the love pastimes of Radha-Krishna.</p>',27.5010,77.4600,3),
-        (kp_ids['govardhan'],parikrama_cat,'Govardhan Parikrama','govardhan-parikrama','21 km circumambulation of the sacred hill.','<p>The parikrama path encircles Govardhan Hill and is walked barefoot by millions of devotees annually.</p>',27.4930,77.4580,4),
+    aks = {}
+    t3_data = [
+        # T2-01: Ram Janmabhoomi Kshetra (6 spots)
+        (akp['ram-janmabhoomi-kshetra'],sacred_throne_cat,'Ratna Singhasan','ratna-singhasan','The jewel-studded divine throne beneath the Kalpa Vriksha where Lord Rama sits eternally with Sita, Lakshman, Bharat and Shatrughna.','<h3>The Jewelled Throne</h3><p><em>"Ayodhyanagare ramye ratna mandapamadhyagam, dhyayet kalpatarormule ratnasinhasana shubham"</em></p><p>In the beautiful city of Ayodhya, beneath the Kalpa Vriksha, within a gem-laden pavilion, stands the Ratna Singhasan — the jewelled throne where Lord Rama sits in Virasana with Sita Maharani, while Lakshman, Bharat, and Shatrughna stand in attendance. Devotees who meditate upon this scene and prostrate are blessed with fulfillment of all desires.</p>',26.7955,82.1942,1),
+        (akp['ram-janmabhoomi-kshetra'],kund_cat,'Sita Kup Teerth','sita-kup-teerth','Sacred well in the Agnikona of Janmasthan. Also known as Gyan Kup — drinking its water grants wisdom equal to Brihaspati.','<h3>The Well of Divine Wisdom</h3><p><em>"Janmasthanacca bho devi agnikonam virajate, Sitakupa iti vikhyatam jnanakupam iti shrutam"</em></p><p>Lord Shiva tells Parvati: In the Agnikona (southeast) of Janmasthan stands Sita Kup, also known as Gyan Kup. Regular drinking of its water makes intellect equal to Brihaspati and bestows Brahmavidya. This well is located within the courtyard of Kanak Bhawan temple.</p>',26.7950,82.1948,2),
+        (akp['ram-janmabhoomi-kshetra'],temple_cat,'Kanak Bhawan','kanak-bhawan','The magnificent Golden Palace — gifted by Queen Kaikeyi to Sita at her wedding. Houses three pairs of golden-crowned Rama-Sita deities in Bundelkhand architecture.','<h3>The Palace of Gold</h3><p>Kanak Bhawan (Sone-ka-Ghar), one of Ayodhya\'s most beautiful temples, was gifted by Queen Kaikeyi to Sita at her marriage. The present Bundelkhand-style structure was built by Queen Vrishabhanu Kunwari of Orchha in 1891. The sanctum houses three pairs of golden-crowned Rama-Sita deities under a silver roof: the largest by Queen Vrishabhanu, the medium pair preserved by Vikramaditya, and the smallest gifted by Lord Krishna Himself to a devotee. Major festivals: Ram Navami, Phool Bangla (April-July), 15-day Jhula Festival, Sharad Purnima. Timings: 8 AM - 11 AM & 4:30 PM - 9 PM.</p>',26.7978,82.1950,3),
+        (akp['ram-janmabhoomi-kshetra'],kund_cat,'Vashistha Kund','vashistha-kund','Sacred kund west of Janmasthan — residence of Guru Vashistha and Arundhati. Bathing destroys all sins.','<h3>Abode of the Royal Guru</h3><p><em>"Janmasthana tapascime tu kunda papapranashanam, Vasisthasya nivasastu Arundhatyaksha Parvati"</em></p><p>West of Janmasthan lies Vashistha Kund — the residence of Brahmarshi Vashistha, royal guru of the Ikshvaku dynasty, and his wife Arundhati. Bathing here fulfills all desires. Annual yatra on Shukla Paksha of Bhadrapada.</p>',26.7955,82.1930,4),
+        (akp['ram-janmabhoomi-kshetra'],kund_cat,'Vidya Kund','vidya-kund','East of Janmasthan — where Guru Vashistha taught Rama the 14 Vidyas and 64 Kalas. Japa of all mantras attains siddhi here.','<h3>The Pool of Sacred Learning</h3><p><em>"Janmasthanat purvabhage Vidyakundasya cottamam"</em></p><p>East of Janmasthan, Guru Vashistha imparted the 14 Vidyas and 64 Kalas to Lord Rama here. The scriptures declare that chanting of all mantras — Shaiva, Vaishnava, Ganesha, Shakta, or Saura — attains siddhi at this supremely potent site.</p>',26.7958,82.1960,5),
+        (akp['ram-janmabhoomi-kshetra'],hill_cat,'Mani Parvat','mani-parvat','Sacred gem-hill west of Vidya Kund — brought by Garuda on Rama\'s command for Sita\'s pleasure. Mere darshan grants all siddhis.','<h3>The Hill of Gems</h3><p><em>"Garudena samanitah parvato manisamjnakah, tasya darshanamtrena karasthat sarvasiddhayah"</em></p><p>On Lord Rama\'s command, Garuda brought this gem-studded hill for Sita\'s recreation. Merely seeing Mani Parvat grants all siddhis. Today it offers panoramic views of Ayodhya.</p>',26.7955,82.1955,6),
+        # T2-02: Central Ayodhya (3 spots)
+        (akp['central-ayodhya'],temple_cat,'Hanuman Garhi Temple','hanuman-garhi-temple','The iconic 10th-century fort-temple atop 76 steps — tallest structure in Ayodhya. Tradition requires visiting here before Ram Janmabhoomi.','<h3>The Fortress of Hanuman</h3><p>Hanuman Garhi is Ayodhya\'s most prominent landmark — a fort-temple visible from all directions, accessed by 76 steps. As per Valmiki Ramayana (Uttara Kanda 108): Lord Rama told Hanuman to remain here protecting Ayodhya as long as His katha exists in the world. The main deity is Bal Hanuman in Anjani\'s lap. King Vikramaditya built the original shrine as part of 360 temples. Present structure built ~1799 CE by Diwan Tikait Rai. Complex spreads over 52 bighas. Special festivals: Hanuman Jayanti, Ram Navami. Tuesdays & Saturdays are especially auspicious. Timings: 5 AM - 11 AM & 4 PM - 10 PM.</p>',26.7982,82.2007,1),
+        (akp['central-ayodhya'],sacred_site_cat,'Matta Gajendra','matta-gajendra','Guardian deity in the east of Ramkot — protector of the virtuous, punisher of the wicked. Darshan removes all obstacles.','<h3>The Mighty Guardian</h3><p><em>"Koshalarakshane daksho dushtadanatparah, yasya darshana nrinam vighnalesho na jayate"</em></p><p>Matta Gajendra, identified with Vibhishana\'s son appointed by Rama as Kotwal of Ramkot, protects all virtuous residents and punishes the wicked. Mere darshan removes all obstacles. Traditionally the first stop in an Ayodhya pilgrimage.</p>',26.7990,82.2020,2),
+        (akp['central-ayodhya'],kund_cat,'Sapt Sagar Teerth','sapt-sagar-teerth','Ancient seven-ocean tank in the heart of Ayodhya — bathing equals ocean-bathing merit on Purnima. Grants all wishes.','<h3>The Seven Oceans</h3><p><em>"Ayodhya madhyabhage tu ramyam patakanashakam, Saptasagara vikhyatam sarvakamarthasiddhidam"</em></p><p>In the heart of Ayodhya, the Sapt Sagar kund grants the merit of ocean-bathing on Purnima on any ordinary day. Special merit during Ashvina Purnima for those desiring progeny.</p>',26.7970,82.2000,3),
+        # T2-03: Swargdwar & Saryu Ghat Area (5 spots)
+        (akp['swargdwar-saryu-ghat-area'],temple_cat,'Chandrahari Mandir','chandrahari-mandir','Sapt Hari temple at Swargdwar — worship declared essential for all pilgrims. Annual yatra on Jyeshtha Shukla Purnima.','<h3>The Sapt Hari Temple</h3><p>Ayodhya\'s Sapt Hari circuit includes seven Vishnu temples: Guptahari, Chakrahari, Vishnuhari, Dharmahari, Punyahari, Bilvahari, and Chandrahari. Of these, Chandrahari at Swargdwar is the most essential. Annual yatra on Jyeshtha Shukla Purnima. Adjacent Nageshwarnath temple makes this a convergence of Vaishnava and Shaiva worship.</p>',26.8050,82.1900,1),
+        (akp['swargdwar-saryu-ghat-area'],temple_cat,'Nageshwarnath Mandir','nageshwarnath-mandir','Presiding deity temple of Ayodhya — built by King Kusha (Rama\'s son). Ancient Shivalinga. Edifice circa 750 AD.','<h3>The Presiding Deity of Ayodhya</h3><p><em>"Svargadvare narah snatva drishtva Nageshvaram Shivam, pujayitva ca vidhivat sarvan kaman avapnuyat"</em></p><p>Built by King Kusha, Lord Rama\'s son. Legend: Kusha\'s armlet fell in Saryu, a Naag Kanya who loved him retrieved it. Being a Shiva devotee, she inspired Kusha to build this temple. The ancient Shivalinga here is the Nagar Devata. Present edifice ~750 AD. Major festivals: Trayodashi & Mahashivratri.</p>',26.8048,82.1908,2),
+        (akp['swargdwar-saryu-ghat-area'],teerth_cat,'Sahasradhara & Lakshman Mandir','sahasradhara-lakshman-mandir','Where Lakshman shed his mortal body through yoga and assumed Shesha form on Rama\'s command. A thousand streams of amrit flow.','<h3>Where Lakshman Became Shesha</h3><p><em>"Yasmin Ramajnaya viro Laksmanah paravirdha, pranan utsrijya yogena yayau Sheshatmatam pura"</em></p><p>East of Papmochan Teerth, thousand streams of amrit flow from Shesha\'s hoods. Here, mighty Lakshman shed his mortal body by yoga and assumed his eternal Shesha form on Rama\'s command. Bathing with devotion, charity, and worship of Shesha-Lakshman grants Vishnu Lok and freedom from snake-bite.</p>',26.8060,82.1920,3),
+        (akp['swargdwar-saryu-ghat-area'],ghat_cat,'Guptahari (Guptar Ghat)','guptahari-guptar-ghat','Vishnu\'s abode west of Ayodhya — where Ayodhya\'s citizens entered Saryu and attained Vaikuntha. Snaan destroys all sins.','<h3>Gateway to Vaikuntha</h3><p><em>"Vishnusthanam ca tatraiva namna Guptaharih smritah"</em></p><p>West of Ayodhya lies Guptahari (Guptar Ghat) — a great Vishnu sthana where Lord Rama performed His Jal Samadhi. By Rama\'s command, the citizens of Ayodhya entered the Saryu and attained Vaikuntha. Bathing here with devotion purifies all sins and grants Vishnu Lok. Today one of Ayodhya\'s most visited ghats.</p>',26.8100,82.1780,4),
+        (akp['swargdwar-saryu-ghat-area'],kund_cat,'Nirmali Kund','nirmali-kund','So supremely pure that Teerth-raj Prayag comes to bathe here daily. Bathing destroys even sins equal to Brahmahatya.','<h3>The Purest of All Teerths</h3><p><em>"Yatra vai tirtharajo pi snatum ayati nityashah"</em></p><p>In the western part of Ayodhya, so pristine that Teerth-raj Prayag himself comes daily to bathe. All sins, even Brahmahatya-grade, are destroyed by bathing in Nirmali Kund — one of the most powerful purification teerths in all of Ayodhya.</p>',26.8090,82.1790,5),
+        # T2-04: Surrounding Teerth Kshetras (3 spots)
+        (akp['surrounding-teerth-kshetras'],kund_cat,'Surya Kund','surya-kund','South of Vaitarni river — bathing cures leprosy, boils, poverty, all diseases. Special merit on Sundays and in Bhadra/Pausha/Magha.','<h3>The Sun\'s Healing Pool</h3><p><em>"Suryakundam itikhyatam sarvakamarthasiddhidam"</em></p><p>South of Vaitarni river, Surya Kund cures boils, leprosy, poverty, and all diseases through ritual bathing. Especially meritorious on Sundays during Bhadrapada, Pausha, and Magha months. Devotees perform Surya Namaskar and offer arghya here.</p>',26.7880,82.1940,1),
+        (akp['surrounding-teerth-kshetras'],shakti_cat,'Devkali','devkali','Adi Shakti Durga Kund — seat of the Goddess in eight-armed (Ashtabhuja) form. Darshan-pujan grants all desires.','<h3>Seat of the Primal Goddess</h3><p><em>"Adya cashbhujau tatra sarvanchitadayini"</em></p><p>West of Surya Kund lies the Durga Kund — seat of Devkali, Adi Shakti in her Ashtabhuja (eight-armed) form, described as the grantor of all desires. Special worship during Navratri and Durga Puja.</p>',26.7875,82.1930,2),
+        (akp['surrounding-teerth-kshetras'],teerth_cat,'Manorama Teerth','manorama-teerth','Opposite bank of Saryu — Manorama-Saryu confluence where King Dasharatha performed Putrakameshti Yagya leading to Rama\'s birth.','<h3>Where Dasharatha\'s Yagya Bore Fruit</h3><p><em>"Yatra Raja Dasharatho putresti kritavan pura"</em></p><p>On the far bank of Saryu, at the Manorama river confluence, King Dasharatha performed the Putrakameshti Yagya. By its power, Lord Rama and His three brothers were born. Annual yatra on Chaitra Purnima. Especially auspicious for those desiring children.</p>',26.8000,82.1880,3),
+        # T2-05: Bilvahari & Punyahari Area (2 spots)
+        (akp['bilvahari-punyahari-area'],temple_cat,'Bilvahari','bilvahari','16 km east on Saryu bank — Sapt Hari. Liberates from Rina Traya (three debts). Darshan removes enemy fear. Yatra in Madhava month.','<h3>Liberation from the Three Debts</h3><p><em>"Tatra snatva naro devi mucyate ca rinatrayat"</em></p><p>Sixteen km east of Ayodhya on the Saryu bank, Bilvahari liberates from Rina Traya — debts to gods, sages, and ancestors. Darshan removes all enemy fear. Annual yatra in Vaishakha month.</p>',26.8000,82.3500,1),
+        (akp['bilvahari-punyahari-area'],temple_cat,'Punyahari','punyahari','~1 km west of Bilvahari — Sapt Hari. Bathing cures Pandu Roga (jaundice/anemia). Sundays especially auspicious.','<h3>The Merit-Bestowing Hari</h3><p><em>"Snatva datva ca vidhivat Pandurogadi nashyati"</em></p><p>One km west of Bilvahari, Punyahari cures Pandu Roga (jaundice, anemia) through bathing and charity. Sundays are declared especially auspicious for worship.</p>',26.8000,82.3400,2),
+        # T2-06: Nandigram (1 spot)
+        (akp['nandigram'],village_cat,'Nandigram & Bharat Kund','nandigram-bharat-kund','Bharat installed Rama\'s Padukas, lived 14 years in penance. Darshan equals 1000 Manvantaras of Kashi-vaas.','<h3>Bharat\'s Supreme Devotion</h3><p><em>"Manvantarasahasraistu Kashivasena yatphalam, tatphalam samprapnoti Nandigramasya darshanat"</em></p><p>Eighteen km south of Ayodhya, Bharat installed Rama\'s Charan Padukas and lived 14 years without food. The first reunion after Lanka occurred here. Darshan merit equals 1000 Manvantaras of Kashi-vaas. All snaan and shraddha here yield inexhaustible merit.</p>',26.6700,82.2100,1),
     ]
+    for kpid,catid,t,s,sd,fc,lat,lng,o in t3_data:
+        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,'Uttar Pradesh','Ayodhya','India',lat,lng,o))
+        aks[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+    # ═══════════════════════════════════════════════════════════════
+    # ─── VRINDAVAN DHAM (Tier 1) — Secondary Dham (no images) ───
+    # ═══════════════════════════════════════════════════════════════
+    db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)",
+        ('Vrindavan Dham','vrindavan-dham','The divine land of Radha-Krishna leelas, one of the holiest Dhams in Gaudiya Vaishnavism.',
+         '<h2>The Eternal Abode of Krishna</h2><p>Vrindavan is the transcendental land where Lord Krishna performed His childhood and youth pastimes. Located in the Braj region of Uttar Pradesh, it is revered by millions.</p>',
+         'Uttar Pradesh','Mathura','India',27.5830,77.6950,'published',1))
+    vrn_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    for tid in [8,4,9,10]: db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)", (vrn_id,tid))
+
+    kp_ids = {}
+    for t,s,sd,fc,lat,lng,o in [
+        ('Vrindavan Town','vrindavan-town','The heart of Vrindavan with ancient temples.','<p>Spiritual center of Braj, home to thousands of Radha-Krishna temples.</p>',27.5830,77.6950,1),
+        ('Govardhan','govardhan','The sacred hill lifted by Lord Krishna.','<p>The hill Krishna lifted for seven days to protect Braj from Indra\'s wrath.</p>',27.4929,77.4583,2),
+        ('Barsana','barsana','The birthplace of Srimati Radharani.','<p>Sacred village where Srimati Radharani appeared.</p>',27.6474,77.3776,3),
+        ('Nandgaon','nandgaon','Village of Nanda Maharaj where Krishna was raised.','<p>Nanda Maharaj\'s village where Krishna spent His early childhood.</p>',27.6717,77.3803,4),
+    ]:
+        db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,1)", (vrn_id,t,s,sd,fc,lat,lng,o))
+        kp_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+
     ks_ids = {}
-    # Generate additional seed images for T3 spots
-    ks_images = {'iskcon-krishna-balaram': seed_images.get('iskcon'), 'banke-bihari': seed_images.get('banke_bihari'), 'radha-raman': seed_images.get('radha_raman'), 'kesi-ghat': seed_images.get('kesi_ghat'), 'nidhivan': seed_images.get('nidhivan'), 'govardhan-hill': seed_images.get('govardhan_hill'), 'radha-kund': seed_images.get('radha_kund'), 'kusum-sarovar': seed_images.get('kusum_sarovar'), 'govardhan-parikrama': seed_images.get('parikrama')}
-    for kpid,catid,t,s,sd,fc,lat,lng,o in ks_data:
-        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,ks_images.get(s),'Uttar Pradesh','Mathura','India',lat,lng,o))
+    for kpid,catid,t,s,sd,fc,lat,lng,o in [
+        (kp_ids['vrindavan-town'],temple_cat,'ISKCON Krishna Balaram Mandir','iskcon-krishna-balaram','ISKCON headquarters in Vrindavan.','<p>Founded by Srila Prabhupada in 1975 with deities of Krishna-Balaram, Radha-Shyamasundar, Gaura-Nitai.</p>',27.5815,77.6983,1),
+        (kp_ids['vrindavan-town'],temple_cat,'Banke Bihari Temple','banke-bihari','Most visited temple in Vrindavan.','<p>Built in 1864, houses the enchanting Banke Bihari deity of Krishna.</p>',27.5833,77.6954,2),
+        (kp_ids['vrindavan-town'],temple_cat,'Radha Raman Temple','radha-raman','500-year-old temple with self-manifested deity.','<p>Established by Gopal Bhatta Goswami, the deity appeared from a shaligrama shila.</p>',27.5820,77.6940,3),
+        (kp_ids['vrindavan-town'],ghat_cat,'Kesi Ghat','kesi-ghat','Most prominent ghat on the Yamuna.','<p>Where Krishna killed demon Kesi. Key spot for evening aarti.</p>',27.5802,77.6960,4),
+        (kp_ids['vrindavan-town'],van_cat,'Nidhivan','nidhivan','Mysterious forest of nightly Raas Leela.','<p>Trees form natural bowers where Radha-Krishna perform Raas Leela every night.</p>',27.5810,77.6930,5),
+        (kp_ids['govardhan'],hill_cat,'Govardhan Hill','govardhan-hill','The sacred hill lifted by Krishna.','<p>Worshipped as Govardhan Maharaj. Devotees perform parikrama.</p>',27.4929,77.4583,1),
+        (kp_ids['govardhan'],kund_cat,'Radha Kund','radha-kund','Most sacred kund in all of Braj.','<p>Represents the mercy of Srimati Radharani.</p>',27.5062,77.4629,2),
+        (kp_ids['govardhan'],kund_cat,'Kusum Sarovar','kusum-sarovar','Beautiful lake with Mughal-era architecture.','<p>Historically significant sarovar linked to Radha-Krishna pastimes.</p>',27.5010,77.4600,3),
+        (kp_ids['govardhan'],parikrama_cat,'Govardhan Parikrama','govardhan-parikrama','21 km circumambulation of the sacred hill.','<p>Walked barefoot by millions of devotees annually.</p>',27.4930,77.4580,4),
+    ]:
+        db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,state,city,country,latitude,longitude,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)", (kpid,catid,t,s,sd,fc,'Uttar Pradesh','Mathura','India',lat,lng,o))
         ks_ids[s] = db.execute("SELECT last_insert_rowid()").fetchone()[0]
 
-    # ─── Tier 4: Sub-Spots (with categories) ───
     altar_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='altar'").fetchone()[0]
     samadhi_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='samadhi_internal'").fetchone()[0]
     quarters_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='quarters'").fetchone()[0]
     courtyard_cat = db.execute("SELECT id FROM sub_spot_categories WHERE slug='courtyard'").fetchone()[0]
+    for ksid,catid,t,s,sd,fc,o in [
+        (ks_ids['iskcon-krishna-balaram'],samadhi_cat,'Srila Prabhupada Samadhi','prabhupada-samadhi','Sacred samadhi of ISKCON founder-acharya.','<p>Ornate marble memorial of A.C. Bhaktivedanta Swami Prabhupada.</p>',1),
+        (ks_ids['iskcon-krishna-balaram'],quarters_cat,"Srila Prabhupada's Quarters",'prabhupada-quarters','Preserved living quarters.','<p>Rooms where Srila Prabhupada lived and translated, maintained as-is.</p>',2),
+        (ks_ids['iskcon-krishna-balaram'],altar_cat,'Krishna-Balaram Altar','krishna-balaram-altar','Main altar with presiding deities.','<p>Sri Sri Krishna-Balaram, Radha-Shyamasundar, and Gaura-Nitai.</p>',3),
+        (ks_ids['iskcon-krishna-balaram'],courtyard_cat,'Temple Courtyard','temple-courtyard','Open gathering space for kirtans.','<p>Spacious courtyard for daily kirtans, festivals, and programs.</p>',4),
+    ]:
+        db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,state,city,country,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,'Uttar Pradesh','Vrindavan','India',o))
 
-    ss_data = [
-        (ks_ids['iskcon-krishna-balaram'],samadhi_cat,'Srila Prabhupada Samadhi','prabhupada-samadhi','The sacred samadhi shrine of ISKCON founder-acharya.','<p>An ornate marble memorial housing the sacred remains of His Divine Grace A.C. Bhaktivedanta Swami Prabhupada.</p>',1),
-        (ks_ids['iskcon-krishna-balaram'],quarters_cat,"Srila Prabhupada's Quarters",'prabhupada-quarters','The preserved living quarters of Srila Prabhupada.','<p>The rooms where Srila Prabhupada lived, wrote, and translated. Maintained exactly as they were during his stay.</p>',2),
-        (ks_ids['iskcon-krishna-balaram'],altar_cat,'Krishna-Balaram Altar','krishna-balaram-altar','The main altar with the presiding deities.','<p>The central altar features the beautiful deities of Sri Sri Krishna-Balaram, Radha-Shyamasundar, and Gaura-Nitai.</p>',3),
-        (ks_ids['iskcon-krishna-balaram'],courtyard_cat,'Temple Courtyard','temple-courtyard','Open gathering space for kirtans.','<p>The spacious courtyard hosts daily kirtans, festivals, and spiritual programs.</p>',4),
-    ]
-    ss_images = {'prabhupada-samadhi': seed_images.get('samadhi'), 'krishna-balaram-altar': seed_images.get('altar'), 'prabhupada-quarters': seed_images.get('quarters'), 'temple-courtyard': seed_images.get('courtyard')}
-    for ksid,catid,t,s,sd,fc,o in ss_data:
-        db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,state,city,country,sort_order,is_visible) VALUES (?,?,?,?,?,?,?,?,?,?,?,1)", (ksid,catid,t,s,sd,fc,ss_images.get(s),'Uttar Pradesh','Vrindavan','India',o))
-
-    # More sample dhams
-    other_dham_imgs = {'mayapur-dham': seed_images.get('mayapur'), 'kedarnath-dham': seed_images.get('kedarnath'), 'jagannath-puri-dham': seed_images.get('jagannath')}
-    for t,s,sd,fc,st,ci,lat,lng in [('Mayapur Dham','mayapur-dham','The spiritual headquarters of ISKCON and birthplace of Sri Chaitanya Mahaprabhu.','<h2>The Holy Land of Mayapur</h2><p>Mayapur is one of the most important pilgrimage sites for Gaudiya Vaishnavas.</p>','West Bengal','Nadia',23.4231,88.3884),
-        ('Kedarnath Dham','kedarnath-dham','One of the twelve Jyotirlingas of Lord Shiva.','<h2>Sacred Abode of Lord Shiva</h2><p>Located in the Garhwal Himalayas near the Mandakini river.</p>','Uttarakhand','Rudraprayag',30.7352,79.0669),
-        ('Jagannath Puri Dham','jagannath-puri-dham','The abode of Lord Jagannath, one of the four Dhams.','<h2>The Land of Lord Jagannath</h2><p>Puri is one of the Char Dham pilgrimage sites.</p>','Odisha','Puri',19.8135,85.8312)]:
-        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,status,is_featured,created_by) VALUES (?,?,?,?,?,?,'India',?,?,?,'published',1,1)", (t,s,sd,fc,st,ci,lat,lng,other_dham_imgs.get(s)))
+    # Other sample dhams (no images)
+    for t,s,sd,fc,st,ci,lat,lng in [('Mayapur Dham','mayapur-dham','Spiritual headquarters of ISKCON.','<h2>The Holy Land of Mayapur</h2><p>One of the most important Gaudiya Vaishnava pilgrimage sites.</p>','West Bengal','Nadia',23.4231,88.3884),
+        ('Kedarnath Dham','kedarnath-dham','One of the twelve Jyotirlingas.','<h2>Sacred Abode of Lord Shiva</h2><p>Located in the Garhwal Himalayas.</p>','Uttarakhand','Rudraprayag',30.7352,79.0669),
+        ('Jagannath Puri Dham','jagannath-puri-dham','Abode of Lord Jagannath, one of the Char Dham.','<h2>Land of Lord Jagannath</h2><p>One of the Char Dham pilgrimage sites.</p>','Odisha','Puri',19.8135,85.8312)]:
+        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,status,is_featured,created_by) VALUES (?,?,?,?,?,?,'India',?,?,'published',1,1)", (t,s,sd,fc,st,ci,lat,lng))
 
     # Module entries
-    for mod,pid,t,s,c in [(3,dham_id,'Appearance of Sri Chaitanya','appearance-sri-chaitanya','<p>Sri Chaitanya appeared in Mayapur in 1486 CE amidst ecstatic chanting.</p>'),(3,None,'Legend of Kedarnath','legend-kedarnath','<p>The Pandavas sought Lord Shiva who hid as a bull.</p>'),(4,None,'Gaura Purnima','gaura-purnima','<p>Celebrates the appearance of Sri Chaitanya. Hundreds of thousands visit Mayapur.</p>')]:
+    for mod,pid,t,s,c in [(3,ayd_id,'The Ramayana of Ayodhya','ramayana-of-ayodhya','<p>Ayodhya is the setting for the beginning and end of the Ramayana. From Rama\'s birth to His coronation after 14 years of exile, Ayodhya witnessed the leelas that defined dharma for all ages.</p>'),(3,ayd_id,'Sapt Hari Yatra','sapt-hari-yatra','<p>The Sapt Hari pilgrimage covers seven Vishnu temples: Guptahari, Chakrahari, Vishnuhari, Dharmahari, Bilvahari, Punyahari, and Chandrahari.</p>'),(4,ayd_id,'Ram Navami in Ayodhya','ram-navami-ayodhya','<p>Ram Navami on Chaitra Shukla Navami is Ayodhya\'s grandest festival with millions of devotees, grand processions, and Ramayana recitation.</p>'),(3,vrn_id,'Appearance of Sri Chaitanya','appearance-sri-chaitanya','<p>Sri Chaitanya appeared in Mayapur in 1486 CE amidst ecstatic chanting.</p>'),(4,None,'Gaura Purnima','gaura-purnima','<p>Celebrates Sri Chaitanya\'s appearance. Hundreds of thousands visit Mayapur.</p>')]:
         db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,status,created_by) VALUES (?,?,?,?,?,'published',1)", (mod,pid,t,s,c))
     # Permissions
     for k,l,d,cat in [('manage_places','Manage Holy Dhams','Create/edit/delete dhams','content'),('manage_modules','Manage Modules','Configure modules','system'),('manage_entries','Manage Entries','Create/edit entries','content'),('manage_media','Manage Media','Upload media','media'),('publish_content','Publish Content','Publish/unpublish','content'),('manage_users','Manage Users','Manage accounts','system'),('manage_tags','Manage Tags','Manage categories','content'),('manage_fields','Manage Fields','Configure custom fields','system')]:
         db.execute("INSERT OR IGNORE INTO permission_definitions (permission_key,label,description,category) VALUES (?,?,?,?)", (k,l,d,cat))
     db.commit()
-    # Backfill hierarchy IDs for all seeded data
     _backfill_hierarchy_ids(db)
     db.commit()
+
 
 # ─── Helpers ───
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
