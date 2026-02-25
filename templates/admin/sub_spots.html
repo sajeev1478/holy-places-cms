@@ -100,7 +100,17 @@
 <div class="form-group"><label>🖼️ Featured Image</label>
 {% if sub.featured_image %}<input type="hidden" name="ss_{{ si }}_featured_image_existing" value="{{ sub.featured_image }}">
 <div class="gal-section" style="margin-bottom:6px"><div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ sub.featured_image }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t4',{{ sub.id }},'{{ sub.featured_image }}',this)" title="Delete">✕</span></div></div></div>{% endif %}
-<input type="file" class="form-control" name="ss_{{ si }}_featured_image_file" accept="image/*"></div>
+<input type="file" class="form-control" name="ss_{{ si }}_featured_image_file" accept="image/*">
+<div class="cam-capture-wrap">
+<div style="display:flex;gap:8px;align-items:center">
+<button type="button" class="cam-btn" onclick="this.parentElement.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture Featured</button>
+<button class="loc-info-btn" type="button" onclick="document.getElementById('camInfoPopup').classList.add('active')" title="How to use" style="flex-shrink:0"><i class="fas fa-info"></i></button>
+</div>
+<input type="file" name="ss_{{ si }}_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.parentElement.querySelector('.cam-preview');p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
+<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.cam-capture-wrap');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
+<div class="cam-desc"><input type="text" name="ss_{{ si }}_featured_cam_desc" placeholder="📝 Photo description"></div>
+<div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
+</div></div>
 <div class="form-group gal-section"><label>📸 Gallery Images
 {% if sub.gallery_images %}<span class="gal-count">{{ sub.gallery_images.split(',')|length }} image{{ 's' if sub.gallery_images.split(',')|length != 1 }}</span>{% endif %}</label>
 <input type="hidden" name="ss_{{ si }}_gallery_existing" value="{{ sub.gallery_images or '' }}" class="gal-existing-input">
@@ -121,6 +131,9 @@
 {% endif %}
 <div id="ss_{{ si }}_new_gals"></div>
 <button type="button" class="btn btn-sm btn-secondary" style="margin-top:6px;font-size:11px" onclick="addGalleryItem('ss_{{ si }}')"><i class="fas fa-plus"></i> Add More Images</button>
+<div class="cam-capture-wrap" style="margin-top:8px">
+<button type="button" class="cam-btn cam-btn-gallery" onclick="addCamGalleryItem('ss_{{ si }}')"><i class="fas fa-camera"></i> Capture Gallery Photo</button>
+</div>
 </div>
 <div style="font-size:10px;color:var(--text-light);margin-top:3px">Ctrl/Cmd+click for multiple. Appends to existing.</div></div>
 </div>

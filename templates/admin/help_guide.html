@@ -48,6 +48,7 @@
 <div class="help-nav">
 <a href="#tiers">🏛️ Tier Structure</a>
 <a href="#location">📍 Location Picker</a>
+<a href="#camera">📸 Camera Capture</a>
 <a href="#modules">📦 Modules</a>
 <a href="#tags-cats">🏷️ Tags & Categories</a>
 <a href="#json">📋 JSON</a>
@@ -196,10 +197,88 @@
 </div>
 </div>
 
+<!-- ═══ CAMERA CAPTURE ═══ -->
+<div class="help-section" id="camera">
+<div class="help-section-head">
+<h2>📸 3. Camera Capture & Image Compression</h2>
+<p>How to capture photos directly from your mobile device and upload them with automatic compression</p>
+</div>
+<div class="help-body">
+<p>When editing any tier from a <strong>mobile phone or tablet</strong>, you'll see blue <strong>"📸 Capture"</strong> buttons next to image upload fields. These open your device camera directly, letting you photograph a sacred site and upload it in one step.</p>
+
+<h3>Where Camera Capture Appears</h3>
+<p>Camera buttons appear <strong>only on touch devices</strong> (phones and tablets). On desktop computers, you won't see them — use the regular file upload instead.</p>
+<table class="ft-table">
+<tr><th>Location</th><th>Camera Button</th></tr>
+<tr><td>Featured Image (all tiers)</td><td>📸 Capture Featured Image</td></tr>
+<tr><td>Gallery Images (all tiers)</td><td>📸 Capture Gallery Photo</td></tr>
+</table>
+<p>Look for the <strong>ℹ️ info icon</strong> next to each camera button for a quick reference popup.</p>
+
+<h3>How to Capture a Featured Image</h3>
+<div class="help-example">
+<div class="ex-title">📌 Steps</div>
+<strong>Step 1:</strong> Open the edit page for any tier on your mobile device<br>
+<strong>Step 2:</strong> Scroll to the image section and tap <strong>"📸 Capture Featured Image"</strong><br>
+<strong>Step 3:</strong> Your phone camera opens — take the photo and confirm<br>
+<strong>Step 4:</strong> A preview thumbnail appears below the button<br>
+<strong>Step 5:</strong> Add a description in the <strong>"📝 Photo description"</strong> field<br>
+<strong>Step 6:</strong> Save the form — the image is uploaded and auto-compressed
+</div>
+
+<h3>How to Capture Gallery Photos</h3>
+<div class="help-example">
+<div class="ex-title">📌 Steps</div>
+<strong>Step 1:</strong> Scroll to the gallery section and tap <strong>"📸 Capture Gallery Photo"</strong><br>
+<strong>Step 2:</strong> Camera opens — take the photo<br>
+<strong>Step 3:</strong> A new gallery slot appears with preview and description field<br>
+<strong>Step 4:</strong> Tap the button again to capture more photos<br>
+<strong>Step 5:</strong> Each photo gets its own description field<br>
+<strong>Step 6:</strong> Save the form to upload all captured photos at once
+</div>
+
+<h3>🗜️ Automatic Image Compression</h3>
+<p><strong>All images</strong> (both from camera and regular uploads) are automatically compressed on the server to save storage and speed up page loading:</p>
+<table class="ft-table">
+<tr><th>Feature</th><th>Details</th></tr>
+<tr><td><strong>Resizing</strong></td><td>Images larger than 1920px are resized to max 1920px (longest side) while maintaining aspect ratio</td></tr>
+<tr><td><strong>JPEG Quality</strong></td><td>Optimized to 82% — excellent visual quality with significantly smaller file size</td></tr>
+<tr><td><strong>PNG Optimization</strong></td><td>PNG files are optimized with lossless compression</td></tr>
+<tr><td><strong>WebP Support</strong></td><td>WebP images are optimized at 82% quality</td></tr>
+<tr><td><strong>Auto-Rotation</strong></td><td>Mobile photos are auto-rotated based on EXIF data (no more sideways photos!)</td></tr>
+<tr><td><strong>Color Mode</strong></td><td>RGBA/transparent images are auto-converted to RGB for JPEG saving</td></tr>
+</table>
+<div class="help-tip">💡 <strong>Compression is automatic</strong> — you don't need to resize or compress images before uploading. The system handles everything. A 5MB phone photo might be reduced to 300-500KB with no visible quality loss.</div>
+
+<h3>📝 Photo Descriptions</h3>
+<p>Every camera capture includes a <strong>description field</strong> where you can add context about the photo. Good descriptions help identify images later and can be shown as captions on the frontend.</p>
+<div class="help-example">
+<div class="ex-title">📌 Example Descriptions</div>
+<strong>Featured Image:</strong> "Main entrance gate during evening aarti"<br>
+<strong>Gallery Photo 1:</strong> "Deity of Bihari Ji with flower decoration"<br>
+<strong>Gallery Photo 2:</strong> "Courtyard view with marble floor"<br>
+<strong>Gallery Photo 3:</strong> "Ceiling painting depicting Krishna Leela"
+</div>
+
+<h3>Tips for Best Results</h3>
+<ul>
+<li><strong>Use landscape orientation</strong> for featured images (wider photos work better as hero images)</li>
+<li><strong>Hold steady</strong> — avoid blurry photos by keeping the phone still</li>
+<li><strong>Natural lighting</strong> gives the best results — avoid flash when possible</li>
+<li><strong>Multiple angles</strong> — capture gallery photos from different perspectives</li>
+<li><strong>Always add descriptions</strong> — it helps organize hundreds of photos later</li>
+<li><strong>Preview before saving</strong> — check the thumbnail preview to make sure the photo looks good</li>
+<li><strong>Remove bad captures</strong> — click the ✕ on the preview to remove a photo before saving</li>
+</ul>
+
+<div class="help-warn">⚠️ <strong>Desktop users:</strong> Camera capture buttons are hidden on desktop computers. Use the regular "Choose File" button to upload images from your computer instead.</div>
+</div>
+</div>
+
 <!-- ═══ 2. MODULES ═══ -->
 <div class="help-section" id="modules">
 <div class="help-section-head">
-<h2>📦 3. Modules</h2>
+<h2>📦 4. Modules</h2>
 <p>What modules are and how they organize content features</p>
 </div>
 <div class="help-body">
@@ -234,7 +313,7 @@
 <!-- ═══ 3. TAGS & CATEGORIES ═══ -->
 <div class="help-section" id="tags-cats">
 <div class="help-section-head">
-<h2>🏷️ 4. Tags and Categories</h2>
+<h2>🏷️ 5. Tags and Categories</h2>
 <p>How to organize and filter content effectively</p>
 </div>
 <div class="help-body">
@@ -278,7 +357,7 @@
 <!-- ═══ 4. JSON ═══ -->
 <div class="help-section" id="json">
 <div class="help-section-head">
-<h2>📋 5. JSON (JavaScript Object Notation)</h2>
+<h2>📋 6. JSON (JavaScript Object Notation)</h2>
 <p>What JSON is and how it's used in the system</p>
 </div>
 <div class="help-body">
@@ -319,7 +398,7 @@
 <!-- ═══ 5. CUSTOM FIELDS ═══ -->
 <div class="help-section" id="custom-fields">
 <div class="help-section-head">
-<h2>⚙️ 6. Custom Fields</h2>
+<h2>⚙️ 7. Custom Fields</h2>
 <p>Adding extra information to any tier with custom fields</p>
 </div>
 <div class="help-body">
@@ -385,7 +464,7 @@
 <!-- ═══ 6. IMAGES & GALLERY ═══ -->
 <div class="help-section" id="images">
 <div class="help-section-head">
-<h2>📸 7. Images & Gallery</h2>
+<h2>📸 8. Images & Gallery</h2>
 <p>How to manage images across all tiers</p>
 </div>
 <div class="help-body">
@@ -424,7 +503,7 @@
 <!-- ═══ 7. TIPS ═══ -->
 <div class="help-section" id="tips">
 <div class="help-section-head">
-<h2>💡 8. Tips & Best Practices</h2>
+<h2>💡 9. Tips & Best Practices</h2>
 <p>Helpful advice for managing content effectively</p>
 </div>
 <div class="help-body">

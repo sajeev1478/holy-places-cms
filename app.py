@@ -331,6 +331,43 @@ def save_upload(file, subfolder='images'):
     fn=secure_filename(f"{uuid.uuid4().hex[:12]}_{file.filename}")
     dp=os.path.join(app.config['UPLOAD_FOLDER'],subfolder); os.makedirs(dp,exist_ok=True)
     fp=os.path.join(dp,fn); file.save(fp)
+    # Compress images with Pillow
+    if ext in ALLOWED_IMAGE_EXT and ext != 'svg':
+        try:
+            from PIL import Image, ExifTags
+            img=Image.open(fp)
+            # Auto-rotate based on EXIF (mobile photos often rotated)
+            try:
+                for k,v in (img._getexif() or {}).items():
+                    if ExifTags.TAGS.get(k)=='Orientation':
+                        if v==3: img=img.rotate(180,expand=True)
+                        elif v==6: img=img.rotate(270,expand=True)
+                        elif v==8: img=img.rotate(90,expand=True)
+                        break
+            except: pass
+            # Resize if too large (max 1920px on longest side)
+            max_dim=1920
+            w,h=img.size
+            if w>max_dim or h>max_dim:
+                ratio=min(max_dim/w,max_dim/h)
+                img=img.resize((int(w*ratio),int(h*ratio)),Image.LANCZOS)
+            # Convert RGBA to RGB for JPEG
+            if img.mode in ('RGBA','P') and ext in ('jpg','jpeg'):
+                bg=Image.new('RGB',img.size,(255,255,255))
+                if img.mode=='P': img=img.convert('RGBA')
+                bg.paste(img,mask=img.split()[3])
+                img=bg
+            # Save with optimization
+            if ext in ('jpg','jpeg'):
+                img.save(fp,'JPEG',quality=82,optimize=True)
+            elif ext=='png':
+                img.save(fp,'PNG',optimize=True)
+            elif ext=='webp':
+                img.save(fp,'WEBP',quality=82)
+            else:
+                img.save(fp)
+        except Exception as e:
+            print(f"Image compression warning: {e}")
     db=get_db(); rp=f"{subfolder}/{fn}"; ft='image' if ext in ALLOWED_IMAGE_EXT else 'audio' if ext in ALLOWED_AUDIO_EXT else 'video'
     db.execute("INSERT INTO media (filename,original_name,file_type,mime_type,file_size,folder,uploaded_by) VALUES (?,?,?,?,?,?,?)",
         (rp,file.filename,ft,file.content_type,os.path.getsize(fp),'places',session.get('user_id'))); db.commit()
@@ -735,8 +772,13 @@ def _save_place(place_id):
     db=get_db(); f=request.form; title=f['title']; slug=slugify(title)
     fi=f.get('featured_image_existing','').strip()
     if not fi: fi=''  # Handle cleared by delete
+    orig_fi=fi  # Track original to detect if regular upload changed it
     if 'featured_image_file' in request.files:
         uf=request.files['featured_image_file']
+        if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
+    # Camera capture fallback for featured image (mobile)
+    if fi==orig_fi and 'featured_image_cam' in request.files:
+        uf=request.files['featured_image_cam']
         if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
     vis={}
     for bf in BUILTIN_FIELDS: vis[bf['key']]=1 if f.get(f"vis_{bf['key']}") else 0
@@ -811,8 +853,14 @@ def _save_place(place_id):
         kv=1 if f.get(f'kp_{kpi}_is_visible') else 0
         kimg=f.get(f'kp_{kpi}_featured_image_existing','')
         kfk=f'kp_{kpi}_featured_image_file'
+        orig_kimg=kimg
         if kfk in request.files:
             uf=request.files[kfk]
+            if uf and uf.filename: u=save_upload(uf,'images'); kimg=u if u else kimg
+        # Camera capture fallback for T2 featured image (mobile)
+        kcam=f'kp_{kpi}_featured_cam'
+        if kimg==orig_kimg and kcam in request.files:
+            uf=request.files[kcam]
             if uf and uf.filename: u=save_upload(uf,'images'); kimg=u if u else kimg
         # Gallery images for T2
         kgallery=f.get(f'kp_{kpi}_gallery_existing','')
@@ -906,9 +954,15 @@ def admin_key_spots_save(kp_id):
         lat=f.get(f'ks_{i}_latitude',type=float); lng=f.get(f'ks_{i}_longitude',type=float)
         vis=1 if f.get(f'ks_{i}_is_visible') else 0
         img=f.get(f'ks_{i}_featured_image_existing','')
+        orig_img=img
         fk=f'ks_{i}_featured_image_file'
         if fk in request.files:
             uf=request.files[fk]
+            if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
+        # Camera capture fallback for T3 featured image (mobile)
+        cam_fk=f'ks_{i}_featured_cam'
+        if img==orig_img and cam_fk in request.files:
+            uf=request.files[cam_fk]
             if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
         # Gallery images
         gallery=f.get(f'ks_{i}_gallery_existing','')
@@ -1008,9 +1062,15 @@ def admin_sub_spots_save(ks_id):
         lat=f.get(f'ss_{i}_latitude',type=float); lng=f.get(f'ss_{i}_longitude',type=float)
         vis=1 if f.get(f'ss_{i}_is_visible') else 0
         img=f.get(f'ss_{i}_featured_image_existing','')
+        orig_img=img
         fk=f'ss_{i}_featured_image_file'
         if fk in request.files:
             uf=request.files[fk]
+            if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
+        # Camera capture fallback for T4 featured image (mobile)
+        cam_fk=f'ss_{i}_featured_cam'
+        if img==orig_img and cam_fk in request.files:
+            uf=request.files[cam_fk]
             if uf and uf.filename: u=save_upload(uf,'images'); img=u if u else img
         gallery=f.get(f'ss_{i}_gallery_existing','')
         gk=f'ss_{i}_gallery_files'
