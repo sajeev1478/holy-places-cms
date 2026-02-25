@@ -246,27 +246,65 @@ def _gen_t4_id(dham_code, db, key_spot_id):
     return f"{ks_prefix}{next_seq:02d}"
 
 def _backfill_hierarchy_ids(db):
-    """Backfill hierarchy_ids for existing data that doesn't have them."""
+    """Backfill hierarchy_ids for existing data that doesn't have them.
+    Uses in-memory counters to avoid transaction visibility issues."""
     # T1: Places without hierarchy_id
     for p in db.execute("SELECT id,title FROM places WHERE hierarchy_id IS NULL OR hierarchy_id=''").fetchall():
         code=_generate_dham_code(p['title'],db)
         hid=_gen_t1_id(code)
         db.execute("UPDATE places SET dham_code=?,hierarchy_id=? WHERE id=?",(code,hid,p['id']))
-    # T2: Key places
-    for kp in db.execute("SELECT kp.id,kp.parent_place_id,p.dham_code FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.hierarchy_id IS NULL OR kp.hierarchy_id=''").fetchall():
-        if kp['dham_code']:
-            hid=_gen_t2_id(kp['dham_code'],db,kp['parent_place_id'])
+    db.commit()
+    # Build lookup: place_id → dham_code
+    dham_codes={r['id']:r['dham_code'] for r in db.execute("SELECT id,dham_code FROM places WHERE dham_code IS NOT NULL").fetchall()}
+    # T2: Key places — group by parent, assign sequential IDs in-memory
+    # First get existing max sequences per parent
+    t2_seqs={}  # parent_place_id → current max seq
+    for r in db.execute("SELECT parent_place_id,hierarchy_id FROM key_places WHERE hierarchy_id IS NOT NULL AND hierarchy_id!=''").fetchall():
+        pid=r['parent_place_id']; hid=r['hierarchy_id']
+        if hid and len(hid)==10:
+            try: seq=int(hid[3:5]); t2_seqs[pid]=max(t2_seqs.get(pid,0),seq)
+            except: pass
+    for kp in db.execute("SELECT id,parent_place_id FROM key_places WHERE hierarchy_id IS NULL OR hierarchy_id='' ORDER BY parent_place_id,sort_order,id").fetchall():
+        code=dham_codes.get(kp['parent_place_id'])
+        if code:
+            pid=kp['parent_place_id']
+            t2_seqs[pid]=t2_seqs.get(pid,0)+1
+            hid=f"{code}{t2_seqs[pid]:02d}0000"
             db.execute("UPDATE key_places SET hierarchy_id=? WHERE id=?",(hid,kp['id']))
-    # T3: Key spots
-    for ks in db.execute("SELECT ks.id,ks.key_place_id,kp.parent_place_id,p.dham_code FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.hierarchy_id IS NULL OR ks.hierarchy_id=''").fetchall():
-        if ks['dham_code']:
-            hid=_gen_t3_id(ks['dham_code'],db,ks['key_place_id'])
-            if hid: db.execute("UPDATE key_spots SET hierarchy_id=? WHERE id=?",(hid,ks['id']))
-    # T4: Sub spots
-    for ss in db.execute("SELECT ss.id,ss.key_spot_id,ks.key_place_id,kp.parent_place_id,p.dham_code FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ss.hierarchy_id IS NULL OR ss.hierarchy_id=''").fetchall():
-        if ss['dham_code']:
-            hid=_gen_t4_id(ss['dham_code'],db,ss['key_spot_id'])
-            if hid: db.execute("UPDATE sub_spots SET hierarchy_id=? WHERE id=?",(hid,ss['id']))
+    db.commit()
+    # T3: Key spots — group by key_place, assign in-memory
+    # Build lookup: kp_id → hierarchy_id prefix (first 5 chars)
+    kp_prefixes={r['id']:r['hierarchy_id'][:5] for r in db.execute("SELECT id,hierarchy_id FROM key_places WHERE hierarchy_id IS NOT NULL AND hierarchy_id!=''").fetchall()}
+    t3_seqs={}  # key_place_id → current max seq
+    for r in db.execute("SELECT key_place_id,hierarchy_id FROM key_spots WHERE hierarchy_id IS NOT NULL AND hierarchy_id!=''").fetchall():
+        kpid=r['key_place_id']; hid=r['hierarchy_id']
+        if hid and len(hid)==10:
+            try: seq=int(hid[5:7]); t3_seqs[kpid]=max(t3_seqs.get(kpid,0),seq)
+            except: pass
+    for ks in db.execute("SELECT id,key_place_id FROM key_spots WHERE hierarchy_id IS NULL OR hierarchy_id='' ORDER BY key_place_id,sort_order,id").fetchall():
+        prefix=kp_prefixes.get(ks['key_place_id'])
+        if prefix:
+            kpid=ks['key_place_id']
+            t3_seqs[kpid]=t3_seqs.get(kpid,0)+1
+            hid=f"{prefix}{t3_seqs[kpid]:02d}00"
+            db.execute("UPDATE key_spots SET hierarchy_id=? WHERE id=?",(hid,ks['id']))
+    db.commit()
+    # T4: Sub spots — group by key_spot, assign in-memory
+    ks_prefixes={r['id']:r['hierarchy_id'][:7] for r in db.execute("SELECT id,hierarchy_id FROM key_spots WHERE hierarchy_id IS NOT NULL AND hierarchy_id!=''").fetchall()}
+    t4_seqs={}  # key_spot_id → current max seq
+    for r in db.execute("SELECT key_spot_id,hierarchy_id FROM sub_spots WHERE hierarchy_id IS NOT NULL AND hierarchy_id!=''").fetchall():
+        ksid=r['key_spot_id']; hid=r['hierarchy_id']
+        if hid and len(hid)==10:
+            try: seq=int(hid[7:9]); t4_seqs[ksid]=max(t4_seqs.get(ksid,0),seq)
+            except: pass
+    for ss in db.execute("SELECT id,key_spot_id FROM sub_spots WHERE hierarchy_id IS NULL OR hierarchy_id='' ORDER BY key_spot_id,sort_order,id").fetchall():
+        prefix=ks_prefixes.get(ss['key_spot_id'])
+        if prefix:
+            ksid=ss['key_spot_id']
+            t4_seqs[ksid]=t4_seqs.get(ksid,0)+1
+            hid=f"{prefix}{t4_seqs[ksid]:02d}"
+            db.execute("UPDATE sub_spots SET hierarchy_id=? WHERE id=?",(hid,ss['id']))
+    db.commit()
 
 def seed_db():
     db = get_db()
