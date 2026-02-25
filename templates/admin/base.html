@@ -1314,6 +1314,7 @@ function locationPickerHTML(id, latName, lngName, latVal, lngVal){
     '<div class="loc-coords-row"><div class="form-group"><label>📍 Latitude</label><input type="number" class="form-control" name="'+latName+'" value="'+latVal+'" step="any" placeholder="e.g. 27.5835"></div><div class="form-group"><label>📍 Longitude</label><input type="number" class="form-control" name="'+lngName+'" value="'+lngVal+'" step="any" placeholder="e.g. 77.6949"></div></div>'+
     '<div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map to place pin · Drag pin to adjust · Or use GPS/Search</div>'+
   '</div>';
+}
 // ═══ Hierarchy ID Copy ═══
 function copyHid(el){
   var id=el.dataset.hid||el.textContent.trim().replace('📋','').trim();
