@@ -1512,6 +1512,31 @@ def admin_delete_gallery_image():
     except Exception as e:
         return jsonify({'ok':False,'error':str(e)})
 
+@app.route('/admin/api/hierarchy-search')
+@login_required
+def admin_hierarchy_search():
+    """Live search across all 4 tiers by name or hierarchy_id."""
+    q=request.args.get('q','').strip()
+    if not q or len(q)<1: return jsonify([])
+    db=get_db(); like=f'%{q}%'; results=[]
+    # T1: Holy Dhams
+    for r in db.execute("SELECT id,title,hierarchy_id,dham_code,city,state,slug FROM places WHERE (title LIKE ? OR hierarchy_id LIKE ? OR dham_code LIKE ? OR city LIKE ? OR state LIKE ?) ORDER BY title LIMIT 10",(like,like,like,like,like)).fetchall():
+        # Count children
+        kp_count=db.execute("SELECT COUNT(*) FROM key_places WHERE parent_place_id=?",(r['id'],)).fetchone()[0]
+        results.append({'tier':'T1','tier_label':'Holy Dham','icon':'🏛️','color':'#C76B8F','title':r['title'],'hid':r['hierarchy_id'] or '','code':r['dham_code'] or '','location':f"{r['city'] or ''}{', ' if r['city'] and r['state'] else ''}{r['state'] or ''}",'children':f"{kp_count} Key Places",'url':f"/admin/places/{r['id']}/edit"})
+    # T2: Key Places
+    for r in db.execute("SELECT kp.id,kp.title,kp.hierarchy_id,kp.parent_place_id,p.title as dham_title,p.dham_code,p.hierarchy_id as dham_hid FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE (kp.title LIKE ? OR kp.hierarchy_id LIKE ?) ORDER BY kp.title LIMIT 10",(like,like)).fetchall():
+        ks_count=db.execute("SELECT COUNT(*) FROM key_spots WHERE key_place_id=?",(r['id'],)).fetchone()[0]
+        results.append({'tier':'T2','tier_label':'Key Place','icon':'📍','color':'#2E86AB','title':r['title'],'hid':r['hierarchy_id'] or '','parent':r['dham_title'],'parent_hid':r['dham_hid'] or '','children':f"{ks_count} Key Spots",'url':f"/admin/places/{r['parent_place_id']}/edit"})
+    # T3: Key Spots
+    for r in db.execute("SELECT ks.id,ks.title,ks.hierarchy_id,ks.key_place_id,kp.title as kp_title,kp.hierarchy_id as kp_hid,kp.parent_place_id,p.title as dham_title,p.dham_code,p.hierarchy_id as dham_hid FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE (ks.title LIKE ? OR ks.hierarchy_id LIKE ?) ORDER BY ks.title LIMIT 10",(like,like)).fetchall():
+        ss_count=db.execute("SELECT COUNT(*) FROM sub_spots WHERE key_spot_id=?",(r['id'],)).fetchone()[0]
+        results.append({'tier':'T3','tier_label':'Key Spot','icon':'🎯','color':'#E74845','title':r['title'],'hid':r['hierarchy_id'] or '','parent':r['kp_title'],'parent_hid':r['kp_hid'] or '','grandparent':r['dham_title'],'grandparent_hid':r['dham_hid'] or '','children':f"{ss_count} Key Points",'url':f"/admin/key-place/{r['key_place_id']}/spots"})
+    # T4: Key Points
+    for r in db.execute("SELECT ss.id,ss.title,ss.hierarchy_id,ss.key_spot_id,ks.title as ks_title,ks.hierarchy_id as ks_hid,ks.key_place_id,kp.title as kp_title,kp.hierarchy_id as kp_hid,kp.parent_place_id,p.title as dham_title,p.hierarchy_id as dham_hid FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE (ss.title LIKE ? OR ss.hierarchy_id LIKE ?) ORDER BY ss.title LIMIT 10",(like,like)).fetchall():
+        results.append({'tier':'T4','tier_label':'Key Point','icon':'✦','color':'#9C27B0','title':r['title'],'hid':r['hierarchy_id'] or '','parent':r['ks_title'],'parent_hid':r['ks_hid'] or '','grandparent':r['kp_title'],'grandparent_hid':r['kp_hid'] or '','great_grandparent':r['dham_title'],'great_grandparent_hid':r['dham_hid'] or '','children':'','url':f"/admin/key-spot/{r['key_spot_id']}/sub-spots"})
+    return jsonify(results[:25])
+
 # ─── Report Error / Feedback (Frontend) ───
 @app.route('/report-error', methods=['POST'])
 def report_error():

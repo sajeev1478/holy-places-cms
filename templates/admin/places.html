@@ -8,9 +8,13 @@
 <a class="btn btn-sm {{ 'btn-primary' if not current_status else 'btn-secondary' }}" href="{{ url_for('admin_places') }}">All</a>
 <a class="btn btn-sm {{ 'btn-primary' if current_status=='published' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='published') }}">Published</a>
 <a class="btn btn-sm {{ 'btn-primary' if current_status=='draft' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='draft') }}">Drafts</a>
-<form action="{{ url_for('admin_places') }}" method="GET" style="margin-left:auto;display:flex;gap:8px">
-<input name="q" value="{{ query }}" placeholder="Search dhams or IDs..." class="form-control" style="width:240px;padding:8px 14px">
-<button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-search"></i></button>
+<form action="{{ url_for('admin_places') }}" method="GET" style="margin-left:auto;display:flex;gap:8px" onsubmit="return false">
+<div class="hsearch-wrap" style="width:320px">
+<input id="placesHSearch" class="hsearch-input" autocomplete="off" placeholder="Search all tiers by name or ID..." value="{{ query }}">
+<i class="fas fa-search hsearch-icon"></i>
+<button type="button" class="hsearch-clear" id="placesHClear">✕</button>
+<div class="hsearch-results" id="placesHResults"></div>
+</div>
 </form>
 </div>
 
@@ -49,4 +53,16 @@
 <div class="empty"><span class="icon">🛕</span><h3>No Holy Dhams found</h3><p>Create your first Holy Dham to begin building the spiritual hierarchy.</p></div>
 {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  initHierarchySearch(
+    document.getElementById('placesHSearch'),
+    document.getElementById('placesHResults'),
+    document.getElementById('placesHClear')
+  );
+});
+</script>
 {% endblock %}

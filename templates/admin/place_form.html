@@ -103,6 +103,16 @@
 {% set vis = json.loads(place.field_visibility) if editing and place.field_visibility else {} %}
 {% set indian_states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'] %}
 
+<!-- ═══ HIERARCHY SEARCH BAR ═══ -->
+<div style="margin-bottom:16px">
+<div class="hsearch-wrap">
+<input id="editHSearch" class="hsearch-input" autocomplete="off" placeholder="🔍 Search all tiers by name or hierarchy ID...">
+<i class="fas fa-search hsearch-icon"></i>
+<button type="button" class="hsearch-clear" id="editHClear">✕</button>
+<div class="hsearch-results" id="editHResults"></div>
+</div>
+</div>
+
 <!-- ═══ CLICKABLE TIER TABS ═══ -->
 <div class="tier-tabs">
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
@@ -574,6 +584,8 @@ function addKeyPlace() {
 
 // Initialize Location Pickers
 document.addEventListener('DOMContentLoaded', function(){
+  // Init hierarchy search
+  initHierarchySearch(document.getElementById('editHSearch'),document.getElementById('editHResults'),document.getElementById('editHClear'));
   // T1 Dham
   initLocationPicker('loc_t1','latitude','longitude');
   // T2 Key Places

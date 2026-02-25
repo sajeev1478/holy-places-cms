@@ -428,6 +428,16 @@ td[style*="display:flex"] [style*="width:36px"]{width:28px!important;height:28px
 [style*="padding:24px"]:not(.admin-card-body):not(.stat-card){padding:14px!important}
 [style*="padding:20px"]:not(.admin-card-header){padding:12px!important}
 
+/* ═══ HIERARCHY SEARCH ═══ */
+.hsearch-wrap{width:100%!important}
+.hsearch-input{font-size:13px!important;padding:9px 12px 9px 34px!important}
+.hsearch-results{max-height:350px}
+.hsearch-item{padding:10px 12px;gap:8px}
+.hsearch-tier-icon{width:32px;height:32px;font-size:15px}
+.hsearch-title{font-size:12.5px}
+.hsearch-crumb{font-size:9px;max-width:120px}
+.hsearch-meta{font-size:10px}
+
 } /* end @media(max-width:768px) */
 
 /* ═══════════════════════════════════════════════════════════
@@ -566,6 +576,35 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 .hid-badge.copied{background:#C8E6C9!important;border-color:#66BB6A!important;color:#2E7D32!important}
 .hid-label{font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
 .hid-readonly{background:#F5F0EB;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Courier New',monospace;font-size:13px;font-weight:700;color:#6A1B9A;letter-spacing:1px;width:100%;cursor:default}
+
+/* ═══ Live Hierarchy Search Widget ═══ */
+.hsearch-wrap{position:relative;width:100%}
+.hsearch-input{width:100%;padding:10px 14px 10px 38px;border:2px solid var(--border);border-radius:10px;font-size:14px;background:white;transition:all .25s;outline:none;color:var(--text)}
+.hsearch-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(199,107,143,.12)}
+.hsearch-input::placeholder{color:#aaa}
+.hsearch-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#aaa;pointer-events:none;transition:color .2s}
+.hsearch-input:focus ~ .hsearch-icon,.hsearch-wrap:focus-within .hsearch-icon{color:var(--primary)}
+.hsearch-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:#eee;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:11px;color:#888;line-height:1}
+.hsearch-clear:hover{background:#ddd;color:#333}
+.hsearch-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.12);z-index:999;max-height:420px;overflow-y:auto;display:none;scrollbar-width:thin}
+.hsearch-results.active{display:block}
+.hsearch-results::-webkit-scrollbar{width:5px}
+.hsearch-results::-webkit-scrollbar-thumb{background:#ccc;border-radius:5px}
+.hsearch-item{display:flex;gap:12px;padding:12px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid #f5f0eb;text-decoration:none;color:inherit}
+.hsearch-item:last-child{border-bottom:none}
+.hsearch-item:hover,.hsearch-item.focused{background:#F9F5F1}
+.hsearch-tier-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hsearch-body{flex:1;min-width:0}
+.hsearch-crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin-bottom:3px}
+.hsearch-crumb{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;letter-spacing:.3px;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.hsearch-crumb-id{font-family:'Courier New',monospace;font-size:9px;font-weight:700;color:#6A1B9A;opacity:.7}
+.hsearch-arrow{font-size:9px;color:#bbb}
+.hsearch-title{font-size:13.5px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hsearch-title .hid-badge{font-size:10px;padding:1px 7px;vertical-align:middle}
+.hsearch-meta{font-size:11px;color:var(--text-light);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap}
+.hsearch-children{font-size:10px;font-weight:600;padding:2px 8px;border-radius:50px}
+.hsearch-empty{padding:24px;text-align:center;color:var(--text-light);font-size:13px}
+.hsearch-empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.3}
 @media(hover:none) and (pointer:coarse){
   .cam-capture-wrap{display:block;margin-top:8px}
 }
@@ -1284,6 +1323,60 @@ function copyHid(el){
     el.innerHTML='✅ Copied!';
     setTimeout(function(){el.classList.remove('copied');el.innerHTML=orig},1500);
   });
+}
+
+// ═══ Live Hierarchy Search ═══
+function initHierarchySearch(inputEl,resultsEl,clearEl){
+  var timer=null,focusIdx=-1,items=[];
+  function doSearch(){
+    var q=inputEl.value.trim();
+    clearEl.style.display=q?'flex':'none';
+    if(!q){resultsEl.classList.remove('active');resultsEl.innerHTML='';return;}
+    fetch('/admin/api/hierarchy-search?q='+encodeURIComponent(q))
+    .then(function(r){return r.json()})
+    .then(function(data){
+      focusIdx=-1;
+      if(!data.length){resultsEl.innerHTML='<div class="hsearch-empty"><i class="fas fa-search"></i>No results for "'+q.replace(/</g,'&lt;')+'"</div>';resultsEl.classList.add('active');return;}
+      var html='';
+      data.forEach(function(d,idx){
+        // Build breadcrumbs
+        var bc='';
+        if(d.great_grandparent) bc+='<span class="hsearch-crumb" style="background:'+_hclr('T1')+'15;color:'+_hclr('T1')+'">🏛️ '+_esc(d.great_grandparent)+'</span>'+(d.great_grandparent_hid?'<span class="hsearch-crumb-id">'+d.great_grandparent_hid+'</span>':'')+'<span class="hsearch-arrow">›</span>';
+        if(d.grandparent) bc+='<span class="hsearch-crumb" style="background:'+_hclr(d.tier=='T3'?'T1':d.tier=='T4'?'T2':'T1')+'15;color:'+_hclr(d.tier=='T3'?'T1':d.tier=='T4'?'T2':'T1')+'">'+(d.tier=='T4'?'📍':'🏛️')+' '+_esc(d.grandparent)+'</span>'+(d.grandparent_hid?'<span class="hsearch-crumb-id">'+d.grandparent_hid+'</span>':'')+'<span class="hsearch-arrow">›</span>';
+        if(d.parent) bc+='<span class="hsearch-crumb" style="background:'+_hclr(_parentTier(d.tier))+'15;color:'+_hclr(_parentTier(d.tier))+'">'+(d.tier=='T2'?'🏛️':d.tier=='T3'?'📍':'🎯')+' '+_esc(d.parent)+'</span>'+(d.parent_hid?'<span class="hsearch-crumb-id">'+d.parent_hid+'</span>':'')+'<span class="hsearch-arrow">›</span>';
+        bc+='<span class="hsearch-crumb" style="background:'+d.color+'15;color:'+d.color+'">'+d.icon+' '+d.tier+'</span>';
+        // Meta
+        var meta='';
+        if(d.location) meta+='<span>📍 '+_esc(d.location)+'</span>';
+        if(d.children) meta+='<span class="hsearch-children" style="background:'+d.color+'10;color:'+d.color+'">'+d.children+'</span>';
+        html+='<a class="hsearch-item" href="'+d.url+'" data-idx="'+idx+'">';
+        html+='<div class="hsearch-tier-icon" style="background:'+d.color+'12">'+d.icon+'</div>';
+        html+='<div class="hsearch-body">';
+        html+='<div class="hsearch-crumbs">'+bc+'</div>';
+        html+='<div class="hsearch-title">'+_esc(d.title)+' <span class="hid-badge" onclick="event.preventDefault();event.stopPropagation();copyHid(this)" data-hid="'+d.hid+'">'+d.hid+' <span class="hid-copy">📋</span></span></div>';
+        if(meta) html+='<div class="hsearch-meta">'+meta+'</div>';
+        html+='</div></a>';
+      });
+      resultsEl.innerHTML=html;
+      resultsEl.classList.add('active');
+      items=resultsEl.querySelectorAll('.hsearch-item');
+    });
+  }
+  inputEl.addEventListener('input',function(){clearTimeout(timer);timer=setTimeout(doSearch,180)});
+  inputEl.addEventListener('focus',function(){if(inputEl.value.trim()&&resultsEl.innerHTML)resultsEl.classList.add('active')});
+  inputEl.addEventListener('keydown',function(e){
+    if(!items.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();focusIdx=Math.min(focusIdx+1,items.length-1);_hlItem()}
+    else if(e.key==='ArrowUp'){e.preventDefault();focusIdx=Math.max(focusIdx-1,0);_hlItem()}
+    else if(e.key==='Enter'&&focusIdx>=0){e.preventDefault();items[focusIdx].click()}
+    else if(e.key==='Escape'){resultsEl.classList.remove('active');inputEl.blur()}
+  });
+  clearEl.addEventListener('click',function(){inputEl.value='';clearEl.style.display='none';resultsEl.classList.remove('active');resultsEl.innerHTML='';inputEl.focus()});
+  document.addEventListener('click',function(e){if(!inputEl.parentElement.contains(e.target))resultsEl.classList.remove('active')});
+  function _hlItem(){items.forEach(function(it,i){it.classList.toggle('focused',i===focusIdx)});if(items[focusIdx])items[focusIdx].scrollIntoView({block:'nearest'})}
+  function _esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+  function _hclr(t){return{T1:'#C76B8F',T2:'#2E86AB',T3:'#E74845',T4:'#9C27B0'}[t]||'#888'}
+  function _parentTier(t){return{T2:'T1',T3:'T2',T4:'T3'}[t]||'T1'}
 }
 
 // ═══ Camera Capture for Mobile/Tablet ═══
