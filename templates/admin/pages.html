@@ -1,69 +1,109 @@
 {% extends "admin/base.html" %}
 {% block page_title %}Site Pages{% endblock %}
+{% block extra_css %}
+<style>
+.sec-card{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;transition:box-shadow .2s}
+.sec-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.sec-card.collapsed .sec-body{display:none}
+.sec-head{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;user-select:none;background:var(--bg)}
+.sec-head:hover{background:#f5f0ea}
+.sec-drag{color:var(--text-light);cursor:grab;font-size:14px}
+.sec-type-badge{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--rose-pale);color:var(--rose-deep)}
+.sec-title-text{flex:1;font-size:14px;font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec-actions{display:flex;gap:4px}
+.sec-actions button{border:none;background:none;cursor:pointer;padding:4px 6px;border-radius:4px;font-size:12px;color:var(--text-light)}
+.sec-actions button:hover{background:var(--cream-dark);color:var(--text-dark)}
+.sec-actions button.sec-del:hover{background:#fee;color:#c00}
+.sec-body{padding:18px;border-top:1px solid var(--border)}
+.sec-field{margin-bottom:14px}
+.sec-field label{display:block;font-size:12px;font-weight:700;color:var(--text-mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.sec-field input,.sec-field textarea,.sec-field select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg)}
+.sec-field textarea{min-height:100px;resize:vertical;font-size:13px}
+.sec-field input:focus,.sec-field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(199,107,143,.15)}
+.sec-field .hint{font-size:11px;color:var(--text-light);margin-top:2px}
+.items-list{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.item-row{display:flex;gap:8px;align-items:start;padding:10px 12px;border-bottom:1px solid var(--border);background:#fff}
+.item-row:last-child{border-bottom:none}
+.item-row input,.item-row textarea{flex:1;padding:6px 8px;border:1px solid #e0d8d0;border-radius:6px;font-size:13px;font-family:inherit}
+.item-row textarea{min-height:50px;resize:vertical}
+.item-remove{border:none;background:none;color:#c00;cursor:pointer;padding:4px;font-size:14px}
+.add-item-btn{padding:8px;text-align:center;font-size:12px;color:var(--primary);cursor:pointer;border-top:1px solid var(--border);background:var(--bg)}
+.add-item-btn:hover{background:var(--cream-dark)}
+.add-section-bar{display:flex;align-items:center;gap:10px;padding:16px;background:var(--bg);border:2px dashed var(--border);border-radius:12px;margin-bottom:20px}
+.add-section-bar select{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px}
+.chevron{transition:transform .2s;font-size:12px;color:var(--text-light)}.collapsed .chevron{transform:rotate(-90deg)}
+.sec-preview{font-size:11px;color:var(--text-light);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+{% endblock %}
 {% block admin_content %}
-<div style="margin-bottom:24px">
-<p style="color:var(--text-light);font-size:14px">Edit content for About Us, Privacy Policy, and Terms of Service pages using the rich text editor below.</p>
+<div style="margin-bottom:20px">
+<p style="color:var(--text-light);font-size:14px">Edit individual sections of your site pages. Each section can be edited, reordered, added or removed.</p>
 </div>
 
-<!-- Page Selector Dropdown -->
-<div class="card" style="padding:20px 24px;margin-bottom:20px">
-<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+<!-- Page Selector -->
+<div class="card" style="padding:16px 20px;margin-bottom:20px">
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
 <label style="font-size:14px;font-weight:700;white-space:nowrap"><i class="fas fa-file-alt" style="margin-right:6px;color:var(--primary)"></i> Select Page:</label>
-<select id="pageSelector" class="form-control" style="max-width:320px;font-size:14px" onchange="switchPage(this.value)">
-<option value="">— Choose a page to edit —</option>
+<select id="pageSelector" class="form-control" style="max-width:300px;font-size:14px" onchange="if(this.value)location.href='?page='+this.value;else location.href='?'">
+<option value="">— Choose a page —</option>
 {% for page in pages %}
 <option value="{{ page.key }}" {{ 'selected' if selected_key == page.key }}>{{ page.icon }} {{ page.title }} {% if page.has_content %}✅{% else %}(default){% endif %}</option>
 {% endfor %}
 </select>
 {% if selected_key %}
-<a href="{{ url_for(selected_page.url_endpoint) }}" target="_blank" class="btn btn-secondary btn-sm" style="margin-left:auto"><i class="fas fa-external-link-alt"></i> Preview Page</a>
+<a href="{{ url_for(selected_page.url_endpoint) }}" target="_blank" class="btn btn-secondary btn-sm" style="margin-left:auto"><i class="fas fa-external-link-alt"></i> Preview</a>
 {% endif %}
 </div>
 </div>
 
 {% if selected_key %}
-<!-- Editor for selected page -->
-<form method="POST" enctype="multipart/form-data">
+<form method="POST" id="sectionsForm">
 <input type="hidden" name="page_key" value="{{ selected_key }}">
-<div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start">
-<!-- Main Content Editor -->
-<div class="card" style="padding:24px">
-<h3 style="font-size:16px;font-weight:700;margin-bottom:4px">{{ selected_page.icon }} {{ selected_page.title }}</h3>
-<p style="font-size:12px;color:var(--text-light);margin-bottom:16px">
-{% if selected_page.has_content %}<span style="color:var(--success)">✅ Custom content is active</span>{% else %}Currently using default built-in template{% endif %}
-</p>
-<input type="hidden" name="content" id="page_content" value="{{ content }}">
-<div class="rich-editor" data-target="page_content" style="min-height:380px"></div>
+<input type="hidden" name="sections_json" id="sectionsJson">
+<script type="application/json" id="initSections">{{ sections|safe }}</script>
+<script type="application/json" id="defaultSections">{{ default_sections|safe }}</script>
+
+<!-- Toolbar -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+<div style="font-size:13px;color:var(--text-light)"><span id="sectionCount">0</span> sections</div>
+<div style="display:flex;gap:8px">
+<button type="button" class="btn btn-secondary btn-sm" onclick="collapseAll()"><i class="fas fa-compress-alt"></i> Collapse All</button>
+<button type="button" class="btn btn-secondary btn-sm" onclick="expandAll()"><i class="fas fa-expand-alt"></i> Expand All</button>
+<button type="button" class="btn btn-secondary btn-sm" onclick="resetDefaults()" title="Reset to default template content"><i class="fas fa-undo"></i> Reset Defaults</button>
+<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save All Sections</button>
+</div>
 </div>
 
-<!-- Sidebar -->
-<div>
-<div class="card" style="padding:18px;margin-bottom:14px">
-<h4 style="font-size:13px;font-weight:700;margin-bottom:12px">Featured Image</h4>
-<input type="hidden" name="existing_featured_image" value="{{ featured_image }}">
-{% if featured_image %}
-<div style="margin-bottom:10px;border-radius:8px;overflow:hidden"><img src="/static/uploads/{{ featured_image }}" style="width:100%;display:block" alt="Featured image"></div>
-<p style="font-size:10px;color:var(--text-light);margin-bottom:8px">{{ featured_image }}</p>
-{% endif %}
-<input type="file" name="featured_image" accept="image/*" class="form-control" style="font-size:12px">
-<p style="font-size:10px;color:var(--text-light);margin-top:4px">Optional banner image for this page.</p>
+<!-- Sections Container -->
+<div id="sectionsContainer"></div>
+
+<!-- Add Section -->
+<div class="add-section-bar">
+<i class="fas fa-plus-circle" style="color:var(--primary);font-size:18px"></i>
+<select id="newSectionType">
+<option value="">Add a new section...</option>
+<option value="hero">🎯 Hero Banner</option>
+<option value="text_image">📝 Text + Image Block</option>
+<option value="stats_row">📊 Statistics Row</option>
+<option value="values_grid">💎 Values / Features Grid</option>
+<option value="team_note">📣 CTA / Team Banner</option>
+<option value="legal_section">📄 Legal / Content Section</option>
+<option value="rich_text">✏️ Rich Text Block</option>
+</select>
+<button type="button" class="btn btn-primary btn-sm" onclick="addSection()"><i class="fas fa-plus"></i> Add</button>
 </div>
 
-<div class="card" style="padding:18px;margin-bottom:14px">
-<button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px"><i class="fas fa-save"></i> Save Changes</button>
-<a href="{{ url_for(selected_page.url_endpoint) }}" target="_blank" class="btn btn-secondary" style="width:100%;justify-content:center"><i class="fas fa-eye"></i> Preview</a>
-</div>
-
-<div style="padding:12px;background:#fef9f3;border-radius:8px;border:1px dashed var(--border)">
-<p style="font-size:11px;color:var(--text-light);margin:0"><strong>💡</strong> Leave content empty and save to revert to default template.</p>
-</div>
-</div>
+<!-- Save Button (bottom) -->
+<div style="text-align:right;margin-top:16px">
+<a href="{{ url_for(selected_page.url_endpoint) }}" target="_blank" class="btn btn-secondary" style="margin-right:8px"><i class="fas fa-eye"></i> Preview Page</a>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save All Sections</button>
 </div>
 </form>
+
 {% else %}
-<!-- No page selected - show overview -->
+<!-- No page selected — overview -->
 <div class="card" style="padding:24px">
-<div style="display:grid;gap:14px">
+<div style="display:grid;gap:12px">
 {% for page in pages %}
 <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
 <div style="display:flex;align-items:center;gap:14px">
@@ -71,26 +111,245 @@
 <div>
 <h3 style="font-size:15px;font-weight:700;margin-bottom:2px">{{ page.title }}</h3>
 <span style="font-size:11px;color:var(--text-light)">
-{% if page.has_content %}<span style="color:var(--success);font-weight:600">✅ Custom content</span>{% else %}Default template{% endif %}
+{% if page.has_content %}<span style="color:var(--success);font-weight:600">✅ Custom sections saved</span>{% else %}Default template{% endif %}
 — <a href="{{ url_for(page.url_endpoint) }}" target="_blank" style="color:var(--primary)">View ↗</a>
 </span>
 </div>
 </div>
-<a href="{{ url_for('admin_pages', page=page.key) }}" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i> Edit</a>
+<a href="?page={{ page.key }}" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i> Edit Sections</a>
 </div>
 {% endfor %}
 </div>
 </div>
 {% endif %}
 
+{% if selected_key %}
+{% raw %}
 <script>
-function switchPage(key) {
-  if (key) window.location.href = '{{ url_for("admin_pages") }}?page=' + key;
-  else window.location.href = '{{ url_for("admin_pages") }}';
+var sections = JSON.parse(document.getElementById('initSections').textContent || '[]');
+var defaults = JSON.parse(document.getElementById('defaultSections').textContent || '[]');
+var container = document.getElementById('sectionsContainer');
+
+var TYPE_INFO = {
+  hero:{label:'Hero Banner',icon:'🎯'},
+  text_image:{label:'Text + Image',icon:'📝'},
+  stats_row:{label:'Stats Row',icon:'📊'},
+  values_grid:{label:'Values Grid',icon:'💎'},
+  team_note:{label:'CTA Banner',icon:'📣'},
+  legal_section:{label:'Legal Section',icon:'📄'},
+  rich_text:{label:'Rich Text',icon:'✏️'}
+};
+
+function uid(){return 's'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+function getPreview(s){
+  if(s.type==='hero') return s.title||'';
+  if(s.type==='text_image') return s.heading||'';
+  if(s.type==='legal_section') return s.title||'';
+  if(s.type==='team_note') return s.title||'';
+  if(s.type==='stats_row') return (s.items||[]).map(function(i){return i.number}).join(', ');
+  if(s.type==='values_grid') return (s.items||[]).length+' items';
+  if(s.type==='rich_text') return (s.content||'').replace(/<[^>]*>/g,'').substring(0,60);
+  return '';
 }
+
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function stripHtml(h){var d=document.createElement('div');d.innerHTML=h;return d.textContent||''}
+
+// Event delegation for all inputs
+document.addEventListener('input', function(e){
+  var el=e.target;
+  if(el.dataset.secIdx!==undefined && el.dataset.secKey!==undefined){
+    var idx=parseInt(el.dataset.secIdx);
+    var key=el.dataset.secKey;
+    if(el.dataset.itemIdx!==undefined){
+      var ii=parseInt(el.dataset.itemIdx);
+      sections[idx].items[ii][key]=el.value;
+    } else {
+      sections[idx][key]=el.value;
+      updatePreview(idx);
+    }
+  }
+});
+
+function updatePreview(idx){
+  var card=container.children[idx];
+  if(card){
+    var titleEl=card.querySelector('.sec-title-text');
+    if(titleEl) titleEl.textContent=stripHtml(getPreview(sections[idx]))||'(empty)';
+  }
+}
+
+function renderSections(){
+  container.innerHTML='';
+  sections.forEach(function(s,i){
+    var info=TYPE_INFO[s.type]||{label:s.type,icon:'📦'};
+    var card=document.createElement('div');
+    card.className='sec-card';
+    card.dataset.idx=i;
+    var preview=getPreview(s);
+
+    var head=document.createElement('div');
+    head.className='sec-head';
+    head.innerHTML='<span class="sec-drag" title="Drag to reorder">⋮⋮</span>'+
+      '<span class="chevron">▾</span>'+
+      '<span class="sec-type-badge">'+esc(info.icon)+' '+esc(info.label)+'</span>'+
+      '<span class="sec-title-text">'+(preview?esc(stripHtml(preview)):'(empty)')+'</span>'+
+      '<span class="sec-preview">#'+(i+1)+'</span>'+
+      '<span class="sec-actions">'+
+        '<button type="button" data-action="move-up" data-i="'+i+'" title="Move up">▲</button>'+
+        '<button type="button" data-action="move-down" data-i="'+i+'" title="Move down">▼</button>'+
+        '<button type="button" data-action="dup" data-i="'+i+'" title="Duplicate">⧉</button>'+
+        '<button type="button" class="sec-del" data-action="del" data-i="'+i+'" title="Delete">✕</button>'+
+      '</span>';
+    head.addEventListener('click', function(e){
+      if(e.target.closest('.sec-actions')) return;
+      card.classList.toggle('collapsed');
+    });
+    card.appendChild(head);
+
+    var body=document.createElement('div');
+    body.className='sec-body';
+    body.innerHTML=renderFields(s,i);
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+  document.getElementById('sectionCount').textContent=sections.length;
+}
+
+function makeInput(type,secIdx,key,val,opts){
+  opts=opts||{};
+  var da=' data-sec-idx="'+secIdx+'" data-sec-key="'+key+'"';
+  if(opts.itemIdx!==undefined) da+=' data-item-idx="'+opts.itemIdx+'"';
+  var style=opts.style?' style="'+opts.style+'"':'';
+  if(type==='textarea'){
+    return '<textarea'+da+style+' placeholder="'+(opts.placeholder||'')+'">'+esc(val)+'</textarea>';
+  } else if(type==='select'){
+    var h='<select'+da+style+'>';
+    (opts.options||[]).forEach(function(o){
+      h+='<option value="'+esc(o.value)+'"'+(o.value===val?' selected':'')+'>'+esc(o.label)+'</option>';
+    });
+    h+='</select>';
+    return h;
+  } else {
+    return '<input type="text"'+da+style+' value="'+esc(val)+'" placeholder="'+(opts.placeholder||'')+'">';
+  }
+}
+
+function renderFields(s,idx){
+  var h='';
+  switch(s.type){
+    case 'hero':
+      h+=wrapField('Title',makeInput('text',idx,'title',s.title||''));
+      h+=wrapField('Subtitle',makeInput('textarea',idx,'subtitle',s.subtitle||''));
+      break;
+    case 'text_image':
+      h+=wrapField('Heading',makeInput('text',idx,'heading',s.heading||''));
+      h+=wrapField('Content (HTML)',makeInput('textarea',idx,'content',s.content||''),'Supports &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt; tags');
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+      h+=wrapField('Emoji / Icon',makeInput('text',idx,'emoji',s.emoji||''));
+      h+=wrapField('Image Position',makeInput('select',idx,'position',s.position||'right',{options:[{value:'right',label:'Image Right'},{value:'left',label:'Image Left'}]}));
+      h+='</div>';
+      break;
+    case 'stats_row':
+      h+=renderItemsList(s.items||[],'stats',idx);
+      break;
+    case 'values_grid':
+      h+=renderItemsList(s.items||[],'values',idx);
+      break;
+    case 'team_note':
+      h+=wrapField('Title',makeInput('text',idx,'title',s.title||''));
+      h+=wrapField('Content',makeInput('textarea',idx,'content',s.content||''));
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+      h+=wrapField('Button Text',makeInput('text',idx,'cta_text',s.cta_text||''));
+      h+=wrapField('Button Link',makeInput('text',idx,'cta_link',s.cta_link||'',{placeholder:'/contact'}));
+      h+='</div>';
+      break;
+    case 'legal_section':
+      h+=wrapField('Section Title',makeInput('text',idx,'title',s.title||'',{placeholder:'e.g. 1. Introduction'}));
+      h+=wrapField('Content (HTML)',makeInput('textarea',idx,'content',s.content||''),'Supports &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt; tags');
+      break;
+    case 'rich_text':
+      h+=wrapField('Content (HTML)',makeInput('textarea',idx,'content',s.content||''));
+      break;
+  }
+  return h;
+}
+
+function wrapField(label,inner,hint){
+  var h='<div class="sec-field"><label>'+label+'</label>'+inner;
+  if(hint) h+='<div class="hint">'+hint+'</div>';
+  return h+'</div>';
+}
+
+function renderItemsList(items,listType,secIdx){
+  var cols = listType==='stats'
+    ? [{key:'number',label:'Number',w:'100px'},{key:'label',label:'Label',w:''}]
+    : [{key:'icon',label:'Icon',w:'60px'},{key:'title',label:'Title',w:'180px'},{key:'desc',label:'Description',type:'textarea'}];
+
+  var h='<div class="sec-field"><label>Items ('+items.length+')</label><div class="items-list">';
+  items.forEach(function(item,ii){
+    h+='<div class="item-row">';
+    cols.forEach(function(col){
+      var st=col.w?'max-width:'+col.w+';flex:0 0 '+col.w:'';
+      var inputType=col.type==='textarea'?'textarea':'text';
+      h+=makeInput(inputType,secIdx,col.key,item[col.key]||'',{itemIdx:ii,style:st,placeholder:col.label});
+    });
+    h+='<button type="button" class="item-remove" data-action="rm-item" data-sec="'+secIdx+'" data-ii="'+ii+'" title="Remove">✕</button></div>';
+  });
+  h+='<div class="add-item-btn" data-action="add-item" data-sec="'+secIdx+'" data-list="'+listType+'">+ Add Item</div>';
+  h+='</div></div>';
+  return h;
+}
+
+// Action delegation
+document.addEventListener('click', function(e){
+  var btn=e.target.closest('[data-action]');
+  if(!btn) return;
+  var action=btn.dataset.action;
+  var i=parseInt(btn.dataset.i);
+  if(action==='move-up'){e.stopPropagation();if(i>0){var t=sections[i];sections[i]=sections[i-1];sections[i-1]=t;renderSections()}}
+  else if(action==='move-down'){e.stopPropagation();if(i<sections.length-1){var t=sections[i];sections[i]=sections[i+1];sections[i+1]=t;renderSections()}}
+  else if(action==='dup'){e.stopPropagation();var c=JSON.parse(JSON.stringify(sections[i]));c.id=uid();sections.splice(i+1,0,c);renderSections()}
+  else if(action==='del'){e.stopPropagation();if(confirm('Delete this section?')){sections.splice(i,1);renderSections()}}
+  else if(action==='rm-item'){var si=parseInt(btn.dataset.sec);var ii=parseInt(btn.dataset.ii);sections[si].items.splice(ii,1);renderSections()}
+  else if(action==='add-item'){var si=parseInt(btn.dataset.sec);var lt=btn.dataset.list;if(!sections[si].items)sections[si].items=[];if(lt==='stats')sections[si].items.push({number:'',label:''});else sections[si].items.push({icon:'',title:'',desc:''});renderSections()}
+});
+
+function toggleSection(idx){container.children[idx].classList.toggle('collapsed')}
+function collapseAll(){Array.from(container.children).forEach(function(c){c.classList.add('collapsed')})}
+function expandAll(){Array.from(container.children).forEach(function(c){c.classList.remove('collapsed')})}
+
+function addSection(){
+  var sel=document.getElementById('newSectionType');
+  var type=sel.value;if(!type)return;
+  var s={id:uid(),type:type};
+  switch(type){
+    case 'hero':s.title='';s.subtitle='';break;
+    case 'text_image':s.heading='';s.content='';s.emoji='';s.position='right';break;
+    case 'stats_row':s.items=[{number:'',label:''},{number:'',label:''}];break;
+    case 'values_grid':s.items=[{icon:'',title:'',desc:''},{icon:'',title:'',desc:''}];break;
+    case 'team_note':s.title='';s.content='';s.cta_text='';s.cta_link='';break;
+    case 'legal_section':s.title='';s.content='';break;
+    case 'rich_text':s.content='';break;
+  }
+  sections.push(s);sel.value='';renderSections();
+  var last=container.lastElementChild;
+  if(last){last.scrollIntoView({behavior:'smooth',block:'center'});last.classList.remove('collapsed')}
+}
+
+function resetDefaults(){
+  if(!confirm('Reset all sections to the default template content? Your current edits will be replaced.'))return;
+  sections=JSON.parse(JSON.stringify(defaults));
+  renderSections();
+}
+
+document.getElementById('sectionsForm').addEventListener('submit',function(){
+  document.getElementById('sectionsJson').value=JSON.stringify(sections);
+});
+
+renderSections();
 </script>
-<style>
-.rich-editor .ql-editor{min-height:340px;font-size:15px;line-height:1.7}
-@media(max-width:768px){form>div{grid-template-columns:1fr!important}}
-</style>
+{% endraw %}
+{% endif %}
 {% endblock %}

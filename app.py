@@ -450,31 +450,30 @@ def all_dhams():
     places=db.execute(query,params).fetchall()
     return render_template('frontend/all_dhams.html',places=places,query=q)
 
-# ─── Static Pages (with DB content override) ───
+# ─── Static Pages (section-based with DB content) ───
+import json as _json
+
+def _get_page_sections(page_key):
+    """Load page sections from DB, return list of section dicts."""
+    db=get_db()
+    row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{page_key}_sections",)).fetchone()
+    if row and row['value']:
+        try: return _json.loads(row['value'])
+        except: pass
+    return None
+
 @app.route('/about')
 def about():
-    db=get_db()
-    content_row=db.execute("SELECT value FROM site_settings WHERE key='page_about'").fetchone()
-    image_row=db.execute("SELECT value FROM site_settings WHERE key='page_about_image'").fetchone()
-    custom_content=content_row['value'] if content_row and content_row['value'] else None
-    featured_image=image_row['value'] if image_row and image_row['value'] else None
-    return render_template('frontend/about.html', custom_content=custom_content, featured_image=featured_image)
+    sections=_get_page_sections('about')
+    return render_template('frontend/about.html', sections=sections)
 @app.route('/privacy')
 def privacy():
-    db=get_db()
-    content_row=db.execute("SELECT value FROM site_settings WHERE key='page_privacy'").fetchone()
-    image_row=db.execute("SELECT value FROM site_settings WHERE key='page_privacy_image'").fetchone()
-    custom_content=content_row['value'] if content_row and content_row['value'] else None
-    featured_image=image_row['value'] if image_row and image_row['value'] else None
-    return render_template('frontend/privacy.html', custom_content=custom_content, featured_image=featured_image)
+    sections=_get_page_sections('privacy')
+    return render_template('frontend/privacy.html', sections=sections)
 @app.route('/terms')
 def terms():
-    db=get_db()
-    content_row=db.execute("SELECT value FROM site_settings WHERE key='page_terms'").fetchone()
-    image_row=db.execute("SELECT value FROM site_settings WHERE key='page_terms_image'").fetchone()
-    custom_content=content_row['value'] if content_row and content_row['value'] else None
-    featured_image=image_row['value'] if image_row and image_row['value'] else None
-    return render_template('frontend/terms.html', custom_content=custom_content, featured_image=featured_image)
+    sections=_get_page_sections('terms')
+    return render_template('frontend/terms.html', sections=sections)
 
 @app.route('/contact', methods=['GET','POST'])
 def contact():
@@ -1453,55 +1452,108 @@ def admin_user_update_role(uid):
     flash(f'User #{uid} updated','success')
     return redirect(url_for('admin_users'))
 
-# ─── Admin: Site Pages (About, Privacy, Terms) ───
+# ─── Admin: Site Pages — Section-Based Builder ───
 SITE_PAGES = [
     {'key': 'about', 'title': 'About Us', 'icon': 'ℹ️', 'url_endpoint': 'about'},
     {'key': 'privacy', 'title': 'Privacy Policy', 'icon': '🔒', 'url_endpoint': 'privacy'},
     {'key': 'terms', 'title': 'Terms of Service', 'icon': '📜', 'url_endpoint': 'terms'},
 ]
 
+# Default sections extracted from current templates
+DEFAULT_SECTIONS = {
+    'about': [
+        {'id':'hero','type':'hero','title':'🪷 About HolyDham','subtitle':'We are on a sacred mission to digitally preserve and share India\'s holiest destinations, spiritual stories, and devotional heritage with seekers around the world.'},
+        {'id':'mission','type':'text_image','heading':'Our Sacred Mission','content':'<p>HolyDham was born from a deep reverence for India\'s spiritual landscape — a land where every river, mountain, and temple carries the echo of divine pastimes. We recognized that this immense spiritual heritage, passed down through millennia, deserved a modern, accessible, and beautifully crafted digital home.</p><p>Our platform meticulously catalogs holy dhams across India using a unique 4-tier hierarchy system — from the broadest sacred regions (Tier 1 – Holy Dhams) down to the exact meditation micro-points (Tier 4 – Key Points) where seekers can connect with the divine.</p><p>Every entry is curated with love, featuring detailed descriptions, gallery images, audio recordings, location data, and custom spiritual metadata that helps pilgrims, researchers, and devotees alike discover the sacred geography of Bharat.</p>','emoji':'🙏','image':'','position':'right'},
+        {'id':'stats','type':'stats_row','items':[{'number':'4','label':'Tier Hierarchy'},{'number':'100+','label':'Sacred Locations'},{'number':'50+','label':'Spiritual Stories'},{'number':'∞','label':'Divine Grace'}]},
+        {'id':'values','type':'values_grid','items':[
+            {'icon':'📜','title':'Authentic Content','desc':'Every piece of information is sourced from authentic scriptural texts, local traditions, and verified accounts. We respect the sanctity of each sacred place and present information with utmost devotion and accuracy.'},
+            {'icon':'🗺️','title':'4-Tier Mapping','desc':'Our unique hierarchy system (Holy Dham → Key Places → Key Spots → Key Points) provides granular navigation from broad sacred regions down to exact spots where divine pastimes occurred — a level of detail found nowhere else.'},
+            {'icon':'🎵','title':'Multimedia Experience','desc':'Beyond text, we offer gallery images, audio recordings of bhajans and aarti, video tours, and rich custom fields for each location — creating an immersive spiritual experience that transcends the screen.'},
+            {'icon':'🌍','title':'Open & Accessible','desc':'We believe sacred knowledge should be freely available to all seekers regardless of geography. HolyDham is designed to be accessible on all devices, fast-loading, and easy to navigate for users worldwide.'},
+            {'icon':'🔔','title':'Living Platform','desc':'This is not a static archive. We continuously add new dhams, update existing entries, and enrich content with fresh media, stories, and community contributions. The platform grows as our collective devotion grows.'},
+            {'icon':'🙏','title':'Seva-Driven','desc':'HolyDham is a labor of love — a digital seva. Our team works with the spirit of selfless service, motivated not by commercial gain but by the desire to help every soul find their sacred connection with the divine.'}
+        ]},
+        {'id':'team','type':'team_note','title':'Built With Love & Devotion','content':'HolyDham is created and maintained by a small team of devotees, technologists, and spiritual seekers who share a common passion — preserving India\'s sacred heritage for future generations. We welcome contributions, corrections, and suggestions from the community.','cta_text':'Get In Touch →','cta_link':'/contact'},
+    ],
+    'privacy': [
+        {'id':'s1','type':'legal_section','title':'1. Introduction','content':'<p>Welcome to HolyDham ("we," "our," or "us"). We are deeply committed to protecting your privacy and handling your personal information with care and respect. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.</p><p>By using HolyDham, you agree to the collection and use of information in accordance with this policy. If you do not agree with any part of this policy, please discontinue use of our services.</p>'},
+        {'id':'s2','type':'legal_section','title':'2. Information We Collect','content':'<p><strong>Information You Provide Directly:</strong></p><ul><li><strong>Contact Information:</strong> When you use our contact form, you may provide your name, email address, subject, and message content.</li><li><strong>Newsletter Subscription:</strong> If you subscribe to our newsletter, we collect your email address.</li><li><strong>Account Information:</strong> If you create an admin account, we collect your username, email, and password (stored securely using one-way hashing).</li><li><strong>User-Generated Content:</strong> Any content you submit, including images, descriptions, or comments.</li></ul><p><strong>Information Collected Automatically:</strong></p><ul><li><strong>Usage Data:</strong> Pages visited, time spent on pages, click patterns, and navigation paths.</li><li><strong>Device Information:</strong> Browser type, operating system, screen resolution, and device type.</li><li><strong>Log Data:</strong> IP address, access times, referring URLs, and pages viewed.</li><li><strong>Cookies:</strong> Small data files stored on your device to enhance your browsing experience and maintain session state.</li></ul>'},
+        {'id':'s3','type':'legal_section','title':'3. How We Use Your Information','content':'<p>We use the information we collect for the following purposes:</p><ul><li><strong>Service Delivery:</strong> To operate, maintain, and improve the HolyDham platform and its features.</li><li><strong>Communication:</strong> To respond to your inquiries, send newsletter updates (if subscribed), and provide customer support.</li><li><strong>Analytics:</strong> To understand how users interact with our platform, identify popular content, and improve user experience.</li><li><strong>Security:</strong> To detect, prevent, and address technical issues, fraud, or unauthorized access.</li><li><strong>Content Curation:</strong> To personalize and improve the spiritual content we present based on aggregated usage patterns.</li></ul>'},
+        {'id':'s4','type':'legal_section','title':'4. Data Sharing & Disclosure','content':'<p>We deeply value your trust and do <strong>not sell, trade, or rent</strong> your personal information to third parties. We may share information only in the following limited circumstances:</p><ul><li><strong>Service Providers:</strong> With trusted third-party services that help us operate our platform (hosting, analytics, email delivery), bound by confidentiality agreements.</li><li><strong>Legal Requirements:</strong> When required by law, court order, or governmental regulation.</li><li><strong>Safety:</strong> To protect the rights, property, or safety of HolyDham, our users, or the public.</li><li><strong>Consent:</strong> With your explicit consent for any other purpose.</li></ul>'},
+        {'id':'s5','type':'legal_section','title':'5. Cookies & Tracking','content':'<p>HolyDham uses essential cookies to maintain your session and remember your preferences. We may also use analytics cookies to understand site usage. You can control cookie settings through your browser preferences. Disabling cookies may affect some functionality of the platform.</p><p>We do not use advertising cookies or tracking pixels from third-party advertisers.</p>'},
+        {'id':'s6','type':'legal_section','title':'6. Data Security','content':'<p>We implement industry-standard security measures to protect your personal information, including:</p><ul><li>Secure password hashing (SHA-256 with salting) for all accounts</li><li>HTTPS encryption for all data transmission</li><li>Regular security audits and vulnerability assessments</li><li>Access controls limiting data access to authorized personnel only</li><li>Regular data backups with encrypted storage</li></ul><p>While we strive to protect your information, no method of electronic transmission or storage is 100% secure. We encourage you to use strong, unique passwords and exercise caution when sharing personal information online.</p>'},
+        {'id':'s7','type':'legal_section','title':'7. Data Retention','content':'<p>We retain your personal information only for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required or permitted by law. Contact form submissions are retained for up to 12 months. Analytics data is retained in aggregated, anonymized form.</p>'},
+        {'id':'s8','type':'legal_section','title':'8. Your Rights','content':'<p>Depending on your jurisdiction, you may have the following rights regarding your personal data:</p><ul><li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li><li><strong>Correction:</strong> Request correction of inaccurate or incomplete data.</li><li><strong>Deletion:</strong> Request deletion of your personal data (subject to legal requirements).</li><li><strong>Objection:</strong> Object to the processing of your data for certain purposes.</li><li><strong>Portability:</strong> Request transfer of your data in a machine-readable format.</li><li><strong>Withdrawal:</strong> Withdraw consent for data processing at any time.</li></ul><p>To exercise any of these rights, please contact us through our contact page.</p>'},
+        {'id':'s9','type':'legal_section','title':'9. Children\'s Privacy','content':'<p>HolyDham is a spiritual knowledge platform suitable for all ages. We do not knowingly collect personal information from children under 13 without parental consent. If we discover that a child under 13 has provided personal information, we will promptly delete it.</p>'},
+        {'id':'s10','type':'legal_section','title':'10. Third-Party Links','content':'<p>Our platform may contain links to external websites or services. We are not responsible for the privacy practices of these third-party sites. We encourage you to read the privacy policies of any external sites you visit.</p>'},
+        {'id':'s11','type':'legal_section','title':'11. Changes to This Policy','content':'<p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Effective Date." We encourage you to review this policy periodically.</p>'},
+        {'id':'s12','type':'legal_section','title':'12. Contact Us','content':'<p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please reach out to us via our contact page or email privacy@holydham.com.</p><p>We take every privacy inquiry seriously and will respond within a reasonable timeframe. Thank you for trusting HolyDham with your spiritual journey. 🙏</p>'},
+    ],
+    'terms': [
+        {'id':'t1','type':'legal_section','title':'1. Acceptance of Terms','content':'<p>By accessing or using the HolyDham platform ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service. These Terms apply to all visitors, users, contributors, and administrators of the platform.</p>'},
+        {'id':'t2','type':'legal_section','title':'2. Description of Service','content':'<p>HolyDham is a spiritual knowledge platform that curates information about India\'s holy destinations (dhams), temples, sacred stories, festivals, and devotional content. The Service provides:</p><ul><li>A searchable directory of holy places organized in a 4-tier hierarchy</li><li>Detailed information including descriptions, images, audio, video, and location data</li><li>Sacred stories, articles, and educational content about Indian spiritual heritage</li><li>Contact and communication features</li><li>An administrative interface for authorized content managers</li></ul>'},
+        {'id':'t3','type':'legal_section','title':'3. User Responsibilities','content':'<p>As a user of HolyDham, you agree to:</p><ul><li><strong>Respectful Usage:</strong> Use the platform respectfully, acknowledging the sacred nature of the content.</li><li><strong>Accurate Information:</strong> Provide accurate and truthful information when using contact forms or contributing content.</li><li><strong>Legal Compliance:</strong> Use the Service in compliance with all applicable laws and regulations.</li><li><strong>Account Security:</strong> If you have an admin account, maintain the confidentiality of your credentials.</li><li><strong>No Automated Access:</strong> Do not use bots, scrapers, or automated tools without prior written permission.</li></ul>'},
+        {'id':'t4','type':'legal_section','title':'4. Intellectual Property','content':'<p><strong>Platform Content:</strong> All content on HolyDham — including text, descriptions, images, audio, video, graphics, logos, and the distinctive 4-tier hierarchy system — is the intellectual property of HolyDham or its content contributors.</p><p><strong>Scriptural Content:</strong> Sacred texts, mantras, shlokas, and scriptural references are from traditional sources and are shared in the spirit of spiritual education.</p><p><strong>User Contributions:</strong> By submitting content to HolyDham, you grant us a non-exclusive, royalty-free, worldwide license to use, display, modify, and distribute that content in connection with the Service.</p><p><strong>Fair Use:</strong> You may share or reference HolyDham content for personal, educational, or non-commercial purposes with proper attribution.</p>'},
+        {'id':'t5','type':'legal_section','title':'5. Content Standards','content':'<p>All content on HolyDham must adhere to the following standards:</p><ul><li>Must be respectful of all spiritual traditions and religious sentiments</li><li>Must not contain false, misleading, or unverified claims about sacred places</li><li>Must not include promotional, commercial, or spam content</li><li>Must not infringe on any third party\'s intellectual property rights</li><li>Must not contain malicious code, viruses, or harmful content</li><li>Images and media must be original, properly licensed, or in the public domain</li></ul>'},
+        {'id':'t6','type':'legal_section','title':'6. Admin Accounts','content':'<p>Administrative access to HolyDham is provided at our discretion. Administrators agree to use their access only for authorized content management purposes, not share credentials, follow editorial standards, and report security vulnerabilities immediately.</p>'},
+        {'id':'t7','type':'legal_section','title':'7. Disclaimer of Warranties','content':'<p>HolyDham is provided "as is" and "as available" without warranties of any kind. While we strive for accuracy, spiritual knowledge is vast and interpretations may vary across traditions. We encourage users to verify information through multiple authentic sources.</p>'},
+        {'id':'t8','type':'legal_section','title':'8. Limitation of Liability','content':'<p>To the fullest extent permitted by law, HolyDham and its team shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of or inability to use the Service.</p>'},
+        {'id':'t9','type':'legal_section','title':'9. Indemnification','content':'<p>You agree to indemnify, defend, and hold harmless HolyDham and its team from any claims, damages, obligations, losses, or expenses arising from your use of the Service or violation of these Terms.</p>'},
+        {'id':'t10','type':'legal_section','title':'10. Modifications to Service','content':'<p>We reserve the right to modify, suspend, or discontinue any aspect of the Service at any time without prior notice. We may also update these Terms from time to time. Continued use constitutes acceptance.</p>'},
+        {'id':'t11','type':'legal_section','title':'11. Governing Law','content':'<p>These Terms shall be governed by and construed in accordance with the laws of India. Any disputes shall be resolved in the courts of competent jurisdiction in India.</p>'},
+        {'id':'t12','type':'legal_section','title':'12. Severability','content':'<p>If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force and effect.</p>'},
+        {'id':'t13','type':'legal_section','title':'13. Contact','content':'<p>If you have any questions about these Terms of Service, please contact us via our contact page or email legal@holydham.com. We appreciate your respect for these terms and your participation in preserving India\'s sacred heritage. 🙏</p>'},
+    ],
+}
+
+SECTION_TYPES = {
+    'hero': {'label':'Hero Banner','icon':'🎯','fields':['title','subtitle']},
+    'text_image': {'label':'Text + Image Block','icon':'📝','fields':['heading','content','emoji','position']},
+    'stats_row': {'label':'Statistics Row','icon':'📊','fields':['items']},
+    'values_grid': {'label':'Values / Features Grid','icon':'💎','fields':['items']},
+    'team_note': {'label':'CTA / Team Banner','icon':'📣','fields':['title','content','cta_text','cta_link']},
+    'legal_section': {'label':'Legal / Content Section','icon':'📄','fields':['title','content']},
+    'rich_text': {'label':'Rich Text Block','icon':'✏️','fields':['content']},
+}
+
 @app.route('/admin/pages', methods=['GET','POST'])
 @login_required
 def admin_pages():
     db=get_db()
     selected_key=request.args.get('page','')
-    # Handle POST (save page content)
     if request.method=='POST':
         selected_key=request.form.get('page_key','')
-        page_info=next((p for p in SITE_PAGES if p['key']==selected_key), None)
-        if page_info:
-            content=request.form.get('content','')
-            featured_image=request.form.get('existing_featured_image','')
-            if 'featured_image' in request.files:
-                f=request.files['featured_image']
-                if f and f.filename:
-                    ext=f.filename.rsplit('.',1)[-1].lower()
-                    if ext in ALLOWED_IMAGE_EXT:
-                        fname=f"page_{selected_key}_{uuid.uuid4().hex[:8]}.{ext}"
-                        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                        f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
-                        featured_image=fname
-            db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{selected_key}",content,content))
-            db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{selected_key}_image",featured_image,featured_image))
-            db.commit()
-            log_action(session.get('user_id'), 'update_page', 'site_page', None, f"Updated {page_info['title']}")
-            flash(f"{page_info['title']} page updated successfully!",'success')
-            return redirect(url_for('admin_pages', page=selected_key))
+        sections_json=request.form.get('sections_json','[]')
+        try:
+            sections=_json.loads(sections_json)
+        except:
+            sections=[]
+        db.execute("INSERT INTO site_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=?",(f"page_{selected_key}_sections",_json.dumps(sections,ensure_ascii=False),_json.dumps(sections,ensure_ascii=False)))
+        db.commit()
+        page_info=next((p for p in SITE_PAGES if p['key']==selected_key),None)
+        log_action(session.get('user_id'),'update_page','site_page',None,f"Updated {page_info['title'] if page_info else selected_key} sections")
+        flash(f"Page sections saved successfully!",'success')
+        return redirect(url_for('admin_pages',page=selected_key))
     # Build pages list with status
     pages=[]
     for p in SITE_PAGES:
-        content_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{p['key']}",)).fetchone()
-        pages.append({**p, 'has_content': bool(content_row and content_row['value'])})
-    # Load selected page data if any
-    content=''; featured_image=''; selected_page=None
+        row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{p['key']}_sections",)).fetchone()
+        has_custom=bool(row and row['value'] and row['value']!='[]')
+        pages.append({**p,'has_content':has_custom})
+    # Load sections for selected page
+    sections=[]; selected_page=None
     if selected_key:
-        selected_page=next((p for p in pages if p['key']==selected_key), None)
+        selected_page=next((p for p in pages if p['key']==selected_key),None)
         if selected_page:
-            content_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{selected_key}",)).fetchone()
-            image_row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{selected_key}_image",)).fetchone()
-            content=content_row['value'] if content_row else ''
-            featured_image=image_row['value'] if image_row else ''
-    return render_template('admin/pages.html', pages=pages, selected_key=selected_key, selected_page=selected_page, content=content, featured_image=featured_image)
+            row=db.execute("SELECT value FROM site_settings WHERE key=?",(f"page_{selected_key}_sections",)).fetchone()
+            if row and row['value']:
+                try: sections=_json.loads(row['value'])
+                except: sections=[]
+            if not sections:
+                sections=DEFAULT_SECTIONS.get(selected_key,[])
+    sj=_json.dumps(sections,ensure_ascii=False).replace('</','<\\/')
+    dj=_json.dumps(DEFAULT_SECTIONS.get(selected_key,[]),ensure_ascii=False).replace('</','<\\/') if selected_key else '[]'
+    return render_template('admin/pages.html',pages=pages,selected_key=selected_key,selected_page=selected_page,sections=sj,section_types=SECTION_TYPES,default_sections=dj)
 
 # ─── API ───
 @app.route('/api/v1/places')

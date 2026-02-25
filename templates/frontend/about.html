@@ -9,9 +9,12 @@
 .about-hero p{color:var(--text-mid);font-size:18px;max-width:600px;margin:0 auto;line-height:1.8}
 .about-section{padding:60px 0}
 .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.about-grid.img-left{direction:ltr}.about-grid.img-right{direction:ltr}
 .about-img{border-radius:24px;overflow:hidden;aspect-ratio:4/3;background:linear-gradient(135deg,var(--rose-pale),var(--cream-deep));display:flex;align-items:center;justify-content:center;font-size:100px}
 .about-content h2{font-family:'Josefin Sans',sans-serif;font-size:28px;margin-bottom:16px;color:var(--text-dark)}
 .about-content p{color:var(--text-mid);line-height:1.8;margin-bottom:16px;font-size:16px}
+.about-content ul{color:var(--text-mid);line-height:1.8;margin:8px 0 16px 24px;font-size:16px}
+.about-content li{margin-bottom:6px}
 .values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
 .value-card{background:white;border-radius:20px;padding:32px;border:1px solid var(--border);transition:all .3s}
 .value-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px var(--shadow);border-color:var(--rose-pale)}
@@ -25,24 +28,110 @@
 .team-note{background:var(--rose-pale);border-radius:24px;padding:48px;text-align:center;margin-top:48px}
 .team-note h2{font-family:'Josefin Sans',sans-serif;font-size:28px;margin-bottom:12px}
 .team-note p{color:var(--text-mid);font-size:16px;line-height:1.8;max-width:640px;margin:0 auto 24px}
+.rich-block{max-width:900px;margin:0 auto;line-height:1.85;font-size:16px;color:var(--text-mid);padding:40px 0}
+.rich-block h2{font-family:'Josefin Sans',sans-serif;font-size:24px;color:var(--text-dark);margin-bottom:12px}
+.rich-block p{margin-bottom:14px}
+.legal-section-block{max-width:800px;margin:0 auto;padding:20px 0}
+.legal-section-block h2{font-family:'Josefin Sans',sans-serif;font-size:22px;color:var(--text-dark);margin:36px 0 12px;padding-top:20px;border-top:1px solid var(--border)}
+.legal-section-block:first-of-type h2{border-top:none;margin-top:0;padding-top:0}
+.legal-section-block p{color:var(--text-mid);line-height:1.85;margin-bottom:14px;font-size:15px}
+.legal-section-block ul{color:var(--text-mid);margin:8px 0 16px 24px;line-height:1.85;font-size:15px}
+.legal-section-block li{margin-bottom:6px}
 @media(max-width:768px){.about-grid{grid-template-columns:1fr}.values-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 {% endblock %}
 
 {% block content %}
-{% if custom_content %}
+{% if sections %}
+{# ─── Section-based rendering ─── #}
+{% for sec in sections %}
+
+{% if sec.type == 'hero' %}
 <section class="about-hero">
 <div class="container">
-<h1>🪷 About HolyDham</h1>
-{% if featured_image %}<div style="max-width:800px;margin:20px auto 0"><img src="/static/uploads/{{ featured_image }}" alt="About HolyDham" style="width:100%;border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.1)"></div>{% endif %}
+<h1>{{ sec.title }}</h1>
+{% if sec.subtitle %}<p>{{ sec.subtitle }}</p>{% endif %}
 </div>
 </section>
+
+{% elif sec.type == 'text_image' %}
 <section class="about-section">
 <div class="container">
-<div class="rich-content" style="max-width:900px;margin:0 auto;line-height:1.85;font-size:16px;color:var(--text-mid)">{{ custom_content|safe }}</div>
+<div class="about-grid{% if sec.position == 'left' %} img-left{% endif %}">
+{% if sec.position == 'left' %}
+<div class="about-img">{{ sec.emoji or '🙏' }}</div>
+<div class="about-content">
+<h2>{{ sec.heading }}</h2>
+{{ sec.content|safe }}
+</div>
+{% else %}
+<div class="about-content">
+<h2>{{ sec.heading }}</h2>
+{{ sec.content|safe }}
+</div>
+<div class="about-img">{{ sec.emoji or '🙏' }}</div>
+{% endif %}
+</div>
 </div>
 </section>
+
+{% elif sec.type == 'stats_row' %}
+<section class="about-section" style="padding-top:0">
+<div class="container">
+<div class="stats-row" style="grid-template-columns:repeat({{ sec['items']|length }},1fr)">
+{% for item in sec['items'] %}
+<div class="stat-box"><div class="stat-num">{{ item.number }}</div><div class="stat-label">{{ item.label }}</div></div>
+{% endfor %}
+</div>
+</div>
+</section>
+
+{% elif sec.type == 'values_grid' %}
+<section class="about-section" style="padding-top:0">
+<div class="container">
+<div class="values-grid" style="grid-template-columns:repeat({{ [sec['items']|length, 3]|min }},1fr)">
+{% for item in sec['items'] %}
+<div class="value-card">
+<div class="value-icon">{{ item.icon }}</div>
+<h3>{{ item.title }}</h3>
+<p>{{ item.desc }}</p>
+</div>
+{% endfor %}
+</div>
+</div>
+</section>
+
+{% elif sec.type == 'team_note' %}
+<section class="about-section" style="padding-top:0">
+<div class="container">
+<div class="team-note">
+<h2>{{ sec.title }}</h2>
+<p>{{ sec.content }}</p>
+{% if sec.cta_text %}<a href="{{ sec.cta_link or '/contact' }}" class="btn btn-primary" style="margin-top:8px">{{ sec.cta_text }}</a>{% endif %}
+</div>
+</div>
+</section>
+
+{% elif sec.type == 'legal_section' %}
+<div class="container">
+<div class="legal-section-block">
+<h2>{{ sec.title }}</h2>
+{{ sec.content|safe }}
+</div>
+</div>
+
+{% elif sec.type == 'rich_text' %}
+<section class="about-section">
+<div class="container">
+<div class="rich-block">{{ sec.content|safe }}</div>
+</div>
+</section>
+
+{% endif %}
+{% endfor %}
+
 {% else %}
+{# ─── Default template (no custom sections) ─── #}
 <section class="about-hero">
 <div class="container">
 <h1>🪷 About HolyDham</h1>
@@ -70,41 +159,17 @@
 </div>
 
 <div class="values-grid">
-<div class="value-card">
-<div class="value-icon">📜</div>
-<h3>Authentic Content</h3>
-<p>Every piece of information is sourced from authentic scriptural texts, local traditions, and verified accounts. We respect the sanctity of each sacred place and present information with utmost devotion and accuracy.</p>
-</div>
-<div class="value-card">
-<div class="value-icon">🗺️</div>
-<h3>4-Tier Mapping</h3>
-<p>Our unique hierarchy system (Holy Dham → Key Places → Key Spots → Key Points) provides granular navigation from broad sacred regions down to exact spots where divine pastimes occurred — a level of detail found nowhere else.</p>
-</div>
-<div class="value-card">
-<div class="value-icon">🎵</div>
-<h3>Multimedia Experience</h3>
-<p>Beyond text, we offer gallery images, audio recordings of bhajans and aarti, video tours, and rich custom fields for each location — creating an immersive spiritual experience that transcends the screen.</p>
-</div>
-<div class="value-card">
-<div class="value-icon">🌍</div>
-<h3>Open & Accessible</h3>
-<p>We believe sacred knowledge should be freely available to all seekers regardless of geography. HolyDham is designed to be accessible on all devices, fast-loading, and easy to navigate for users worldwide.</p>
-</div>
-<div class="value-card">
-<div class="value-icon">🔔</div>
-<h3>Living Platform</h3>
-<p>This is not a static archive. We continuously add new dhams, update existing entries, and enrich content with fresh media, stories, and community contributions. The platform grows as our collective devotion grows.</p>
-</div>
-<div class="value-card">
-<div class="value-icon">🙏</div>
-<h3>Seva-Driven</h3>
-<p>HolyDham is a labor of love — a digital seva. Our team works with the spirit of selfless service, motivated not by commercial gain but by the desire to help every soul find their sacred connection with the divine.</p>
-</div>
+<div class="value-card"><div class="value-icon">📜</div><h3>Authentic Content</h3><p>Every piece of information is sourced from authentic scriptural texts, local traditions, and verified accounts. We respect the sanctity of each sacred place and present information with utmost devotion and accuracy.</p></div>
+<div class="value-card"><div class="value-icon">🗺️</div><h3>4-Tier Mapping</h3><p>Our unique hierarchy system (Holy Dham → Key Places → Key Spots → Key Points) provides granular navigation from broad sacred regions down to exact spots where divine pastimes occurred.</p></div>
+<div class="value-card"><div class="value-icon">🎵</div><h3>Multimedia Experience</h3><p>Beyond text, we offer gallery images, audio recordings of bhajans and aarti, video tours, and rich custom fields for each location — creating an immersive spiritual experience.</p></div>
+<div class="value-card"><div class="value-icon">🌍</div><h3>Open & Accessible</h3><p>We believe sacred knowledge should be freely available to all seekers regardless of geography. HolyDham is designed to be accessible on all devices.</p></div>
+<div class="value-card"><div class="value-icon">🔔</div><h3>Living Platform</h3><p>This is not a static archive. We continuously add new dhams, update existing entries, and enrich content with fresh media, stories, and community contributions.</p></div>
+<div class="value-card"><div class="value-icon">🙏</div><h3>Seva-Driven</h3><p>HolyDham is a labor of love — a digital seva. Our team works with the spirit of selfless service, motivated by the desire to help every soul find their sacred connection.</p></div>
 </div>
 
 <div class="team-note">
 <h2>Built With Love & Devotion</h2>
-<p>HolyDham is created and maintained by a small team of devotees, technologists, and spiritual seekers who share a common passion — preserving India's sacred heritage for future generations. We welcome contributions, corrections, and suggestions from the community.</p>
+<p>HolyDham is created and maintained by a small team of devotees, technologists, and spiritual seekers who share a common passion — preserving India's sacred heritage for future generations.</p>
 <a href="{{ url_for('contact') }}" class="btn btn-primary" style="margin-top:8px">Get In Touch →</a>
 </div>
 </div>

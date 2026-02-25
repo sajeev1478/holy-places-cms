@@ -19,18 +19,6 @@
 {% endblock %}
 
 {% block content %}
-{% if custom_content %}
-<section class="legal-hero">
-<div class="container">
-<h1>📋 Terms of Service</h1>
-<p>Last updated: {{ current_year }}</p>
-</div>
-</section>
-<div class="legal-body">
-{% if featured_image %}<img src="/static/uploads/{{ featured_image }}" alt="Terms of Service" style="width:100%;border-radius:16px;margin-bottom:24px">{% endif %}
-{{ custom_content|safe }}
-</div>
-{% else %}
 <section class="legal-hero">
 <div class="container">
 <h1>📋 Terms of Service</h1>
@@ -41,90 +29,61 @@
 <div class="legal-body">
 <span class="legal-updated">Effective Date: January 1, {{ current_year }}</span>
 
+{% if sections %}
+{% for sec in sections %}
+{% if sec.type == 'legal_section' %}
+<h2>{{ sec.title }}</h2>
+{{ sec.content|safe }}
+{% elif sec.type == 'rich_text' %}
+{{ sec.content|safe }}
+{% endif %}
+{% endfor %}
+{% else %}
 <h2>1. Acceptance of Terms</h2>
-<p>By accessing or using the HolyDham platform ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service. These Terms apply to all visitors, users, contributors, and administrators of the platform.</p>
+<p>By accessing or using the HolyDham platform ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, you may not access the Service.</p>
 
 <h2>2. Description of Service</h2>
-<p>HolyDham is a spiritual knowledge platform that curates information about India's holy destinations (dhams), temples, sacred stories, festivals, and devotional content. The Service provides:</p>
+<p>HolyDham is a spiritual knowledge platform that curates information about India's holy destinations, temples, sacred stories, festivals, and devotional content.</p>
 <ul>
 <li>A searchable directory of holy places organized in a 4-tier hierarchy</li>
 <li>Detailed information including descriptions, images, audio, video, and location data</li>
-<li>Sacred stories, articles, and educational content about Indian spiritual heritage</li>
+<li>Sacred stories, articles, and educational content</li>
 <li>Contact and communication features</li>
 <li>An administrative interface for authorized content managers</li>
 </ul>
 
 <h2>3. User Responsibilities</h2>
-<p>As a user of HolyDham, you agree to:</p>
-<ul>
-<li><strong>Respectful Usage:</strong> Use the platform respectfully, acknowledging the sacred nature of the content. Do not post or transmit any material that is offensive, disrespectful to any religion or spiritual tradition, hateful, or harassing.</li>
-<li><strong>Accurate Information:</strong> Provide accurate and truthful information when using contact forms, creating accounts, or contributing content.</li>
-<li><strong>Legal Compliance:</strong> Use the Service in compliance with all applicable local, national, and international laws and regulations.</li>
-<li><strong>Account Security:</strong> If you have an admin account, you are responsible for maintaining the confidentiality of your credentials and for all activities that occur under your account.</li>
-<li><strong>No Automated Access:</strong> Do not use bots, scrapers, or automated tools to access or collect data from the Service without prior written permission.</li>
-</ul>
+<p>As a user of HolyDham, you agree to use the platform respectfully, provide accurate information, comply with all applicable laws, maintain account security, and not use automated access tools without permission.</p>
 
 <h2>4. Intellectual Property</h2>
-<p><strong>Platform Content:</strong> All content on HolyDham — including text, descriptions, images, audio, video, graphics, logos, and the distinctive 4-tier hierarchy system — is the intellectual property of HolyDham or its content contributors, protected by applicable copyright and trademark laws.</p>
-<p><strong>Scriptural Content:</strong> Sacred texts, mantras, shlokas, and scriptural references are from traditional sources and are shared in the spirit of spiritual education. We acknowledge and honor the ancient rishis, acharyas, and traditions from which this wisdom flows.</p>
-<p><strong>User Contributions:</strong> By submitting content to HolyDham, you grant us a non-exclusive, royalty-free, worldwide license to use, display, modify, and distribute that content in connection with the Service. You represent that you own or have the right to share any content you submit.</p>
-<p><strong>Fair Use:</strong> You may share or reference HolyDham content for personal, educational, or non-commercial purposes with proper attribution. Commercial reproduction, redistribution, or republication requires prior written consent.</p>
+<p>All content on HolyDham is the intellectual property of HolyDham or its contributors. Scriptural content is shared in the spirit of spiritual education. Fair use is permitted for personal, educational, or non-commercial purposes with attribution.</p>
 
 <h2>5. Content Standards</h2>
-<p>All content on HolyDham must adhere to the following standards:</p>
-<ul>
-<li>Must be respectful of all spiritual traditions and religious sentiments</li>
-<li>Must not contain false, misleading, or unverified claims about sacred places</li>
-<li>Must not include promotional, commercial, or spam content</li>
-<li>Must not infringe on any third party's intellectual property rights</li>
-<li>Must not contain malicious code, viruses, or harmful content</li>
-<li>Images and media must be original, properly licensed, or in the public domain</li>
-</ul>
-<p>We reserve the right to remove any content that violates these standards without prior notice.</p>
+<p>Content must be respectful of all spiritual traditions, accurate, non-promotional, non-infringing, and free of malicious code. We reserve the right to remove violating content.</p>
 
 <h2>6. Admin Accounts</h2>
-<p>Administrative access to HolyDham is provided at our discretion. Administrators agree to:</p>
-<ul>
-<li>Use their access only for authorized content management purposes</li>
-<li>Not share admin credentials with unauthorized persons</li>
-<li>Follow content guidelines and editorial standards when creating or editing entries</li>
-<li>Report any security vulnerabilities or unauthorized access immediately</li>
-</ul>
-<p>We may revoke admin access at any time for violations of these Terms or at our discretion.</p>
+<p>Administrative access is provided at our discretion. Administrators must use access responsibly, protect credentials, follow editorial standards, and report security issues.</p>
 
 <h2>7. Disclaimer of Warranties</h2>
-<p>HolyDham is provided "as is" and "as available" without warranties of any kind, whether express or implied, including but not limited to:</p>
-<ul>
-<li>Accuracy, completeness, or reliability of any information presented</li>
-<li>Uninterrupted or error-free operation of the Service</li>
-<li>Fitness for a particular purpose or non-infringement</li>
-<li>Historical or scriptural accuracy of devotional content</li>
-</ul>
-<p>While we strive for accuracy, spiritual knowledge is vast and interpretations may vary across traditions. We encourage users to verify information through multiple authentic sources and consult qualified spiritual teachers.</p>
+<p>HolyDham is provided "as is" without warranties. While we strive for accuracy, spiritual knowledge is vast and interpretations may vary.</p>
 
 <h2>8. Limitation of Liability</h2>
-<p>To the fullest extent permitted by law, HolyDham and its team shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of or inability to use the Service, including but not limited to loss of data, revenue, or goodwill.</p>
-<p>Our total liability for any claim arising from these Terms shall not exceed the amount you paid to access the Service (if any) in the 12 months preceding the claim.</p>
+<p>HolyDham shall not be liable for indirect, incidental, special, consequential, or punitive damages arising from your use of the Service.</p>
 
 <h2>9. Indemnification</h2>
-<p>You agree to indemnify, defend, and hold harmless HolyDham and its team from any claims, damages, obligations, losses, or expenses arising from your use of the Service, violation of these Terms, or infringement of any third party's rights.</p>
+<p>You agree to indemnify and hold harmless HolyDham from any claims arising from your use of the Service or violation of these Terms.</p>
 
 <h2>10. Modifications to Service</h2>
-<p>We reserve the right to modify, suspend, or discontinue any aspect of the Service at any time without prior notice. We may also update these Terms from time to time. Continued use of the Service after changes constitutes acceptance of the modified Terms.</p>
+<p>We may modify, suspend, or discontinue any aspect of the Service at any time. Continued use after changes constitutes acceptance.</p>
 
 <h2>11. Governing Law</h2>
-<p>These Terms shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law provisions. Any disputes arising from these Terms shall be resolved in the courts of competent jurisdiction in India.</p>
+<p>These Terms are governed by the laws of India. Disputes shall be resolved in Indian courts of competent jurisdiction.</p>
 
 <h2>12. Severability</h2>
-<p>If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force and effect.</p>
+<p>If any provision is found unenforceable, it shall be limited to the minimum extent necessary; remaining provisions remain in effect.</p>
 
 <h2>13. Contact</h2>
-<p>If you have any questions about these Terms of Service, please contact us:</p>
-<ul>
-<li><strong>Contact Page:</strong> <a href="{{ url_for('contact') }}">{{ url_for('contact', _external=True) }}</a></li>
-<li><strong>Email:</strong> legal@holydham.com</li>
-</ul>
-<p>We appreciate your respect for these terms and your participation in preserving India's sacred heritage. 🙏</p>
-</div>
+<p>Questions about these Terms? Contact us via our <a href="{{ url_for('contact') }}">contact page</a> or email legal@holydham.com. 🙏</p>
 {% endif %}
+</div>
 {% endblock %}
