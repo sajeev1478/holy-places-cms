@@ -246,6 +246,13 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
   .rm-type-options{flex-direction:column;gap:8px}
   .rm-type-opt{padding:10px 14px}
 
+  /* Section boxes mobile */
+  .section-box{padding:18px 16px;margin-bottom:14px;border-radius:14px}
+  .sidebar-card-pastel{padding:18px 16px}
+  .rich-content{font-size:15.5px!important}
+  .rich-content h2{font-size:22px!important}
+  .rich-content h3{font-size:19px!important}
+
   /* Back buttons row wrap */
   .back-btns{flex-wrap:wrap!important;gap:8px!important}
   .back-btns a{font-size:11px!important;padding:6px 10px!important}
@@ -295,7 +302,53 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 .cf-item .cf-label{font-size:12px;color:var(--text-light);font-weight:600;letter-spacing:.3px}
 .cf-item .cf-value{font-size:14px;font-weight:600;color:var(--text-dark)}
 
-/* ═══ Report Error Modal ═══ */
+/* ═══ Section Boxes — mild pastel backgrounds ═══ */
+.section-box{border-radius:16px;padding:24px 28px;margin-bottom:20px;border:1px solid transparent;transition:all .3s}
+.section-box:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.04)}
+.section-box h2,.section-box h3{margin-top:0!important}
+.section-box p:last-child{margin-bottom:0}
+
+/* Pastel palette for section boxes */
+.section-box.pastel-0{background:#FFF8F0;border-color:#F5E6D3}
+.section-box.pastel-1{background:#F0F7FF;border-color:#D6E8FA}
+.section-box.pastel-2{background:#F6F0FF;border-color:#E4D5F7}
+.section-box.pastel-3{background:#F0FFF5;border-color:#D1F0DC}
+.section-box.pastel-4{background:#FFFDF0;border-color:#F5EDCC}
+.section-box.pastel-5{background:#FFF0F5;border-color:#F7D5E2}
+.section-box.pastel-6{background:#F0FFFF;border-color:#D0EFF0}
+.section-box.pastel-7{background:#FFF5EE;border-color:#F0DDD0}
+.section-box.pastel-8{background:#F5FFF0;border-color:#DDF0CC}
+.section-box.pastel-9{background:#FFF0F0;border-color:#F5D5D5}
+
+/* Sidebar pastel cards */
+.sidebar-card-pastel{border-radius:16px;padding:24px;margin-bottom:20px;border:1.5px solid;transition:all .3s}
+.sidebar-card-pastel:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.sb-pastel-0{background:#FFF8F0;border-color:#F0DCC8!important}
+.sb-pastel-1{background:#F0F7FF;border-color:#CADDF5!important}
+.sb-pastel-2{background:#F6F0FF;border-color:#DAC8F2!important}
+.sb-pastel-3{background:#F0FFF5;border-color:#C5EAD2!important}
+.sb-pastel-4{background:#FFFDF0;border-color:#EDE5C0!important}
+.sb-pastel-5{background:#FFF0F5;border-color:#F0C8D8!important}
+
+/* Custom field blocks with pastels */
+.cf-block-pastel{border-radius:16px;padding:22px 24px;margin-bottom:16px;border:1px solid transparent}
+
+/* ═══ Enhanced Font Sizes (all tiers) ═══ */
+.rich-content{font-size:16.5px!important;line-height:1.9!important}
+.rich-content h2{font-size:26px!important}
+.rich-content h3{font-size:22px!important}
+.rich-content p{font-size:16.5px;line-height:1.9}
+
+/* Sidebar font sizes */
+.sidebar-card-pastel h3{font-family:'Josefin Sans',sans-serif;font-size:20px!important;font-weight:700;margin-bottom:16px}
+.sidebar-card-pastel .quick-info-row{font-size:15px!important}
+.sidebar-card-pastel .quick-info-row strong{font-size:15px!important}
+
+/* Custom field font sizes */
+.cf-item .cf-label{font-size:13px!important}
+.cf-item .cf-value{font-size:15px!important}
+.cf-block-pastel h4{font-size:16px!important}
+.cf-block-pastel div{font-size:15px}
 .report-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
 .report-modal-overlay.active{display:flex}
 .report-modal{background:white;border-radius:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3);animation:rmSlide .4s cubic-bezier(.4,0,.2,1)}
@@ -638,6 +691,54 @@ function submitReport(){
   });
 }
 document.getElementById('reportModal').addEventListener('click',function(e){if(e.target===this)closeReportModal()});
+
+// ═══ Section Box Pastel Wrapper ═══
+(function(){
+  var pastels=10; // total pastel classes (0-9)
+  // Wrap rich-content sections in pastel boxes
+  document.querySelectorAll('.rich-content').forEach(function(rc){
+    var children=Array.from(rc.childNodes);
+    var sections=[];
+    var current=null;
+    var pi=0;
+    children.forEach(function(node){
+      if(node.nodeType===1 && /^H[23]$/i.test(node.tagName)){
+        if(current)sections.push(current);
+        current={heading:node,nodes:[]};
+      } else if(current){
+        current.nodes.push(node);
+      } else {
+        // Content before first heading — also box it
+        if(!sections.length && !current){
+          current={heading:null,nodes:[node]};
+        } else if(current){
+          current.nodes.push(node);
+        }
+      }
+    });
+    if(current)sections.push(current);
+    if(sections.length>0){
+      rc.innerHTML='';
+      sections.forEach(function(sec,i){
+        var box=document.createElement('div');
+        box.className='section-box pastel-'+(i%pastels);
+        if(sec.heading)box.appendChild(sec.heading);
+        sec.nodes.forEach(function(n){box.appendChild(n)});
+        rc.appendChild(box);
+      });
+    }
+  });
+  // Apply pastel to sidebar cards
+  document.querySelectorAll('.sidebar-card').forEach(function(card,i){
+    card.classList.add('sidebar-card-pastel','sb-pastel-'+(i%6));
+    card.style.background='';card.style.border='';
+  });
+  // Apply pastel to custom field blocks  
+  document.querySelectorAll('.cf-block').forEach(function(block,i){
+    block.classList.add('cf-block-pastel','pastel-'+((i+3)%pastels));
+    block.style.background='';
+  });
+})();
 </script>
 </body>
 </html>

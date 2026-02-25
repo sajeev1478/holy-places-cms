@@ -56,7 +56,7 @@
 </div>
 {% endif %}
 
-{% if ks.full_content %}<div class="rich-content" style="margin-bottom:36px;line-height:1.85;font-size:15.5px;color:var(--text-mid)">{{ ks.full_content|safe }}</div>{% endif %}
+{% if ks.full_content %}<div class="rich-content" style="margin-bottom:36px;line-height:1.9;font-size:16.5px;color:var(--text-mid)">{{ ks.full_content|safe }}</div>{% endif %}
 
 <!-- Custom Fields with Icons -->
 {% with custom_vals=ks_customs, accent=ks.cat_color or '#E74845' %}{% include 'frontend/_custom_fields.html' %}{% endwith %}
@@ -64,7 +64,7 @@
 <!-- ═══ TIER 4: SUB-SPOTS ═══ -->
 {% if sub_spots %}
 <div style="margin-bottom:36px">
-<h2 style="font-family:'Josefin Sans',sans-serif;font-size:24px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px">✦ Key Points <span style="font-size:14px;font-weight:500;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">(Tier 4)</span></h2>
+<h2 style="font-family:'Josefin Sans',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px">✦ Key Points <span style="font-size:15px;font-weight:500;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif">(Tier 4)</span></h2>
 <p style="font-size:13px;color:var(--text-light);margin-bottom:20px;font-family:'Plus Jakarta Sans',sans-serif">Sacred points within {{ ks.title }} for deeper engagement</p>
 
 <div style="display:grid;gap:16px">
@@ -95,12 +95,12 @@
 <!-- Sidebar -->
 <div>
 <!-- Category Info Card -->
-<div style="background:white;border:2px solid {{ accent }}20;border-radius:16px;padding:22px;margin-bottom:20px">
+<div class="sidebar-card" style="background:white;border:2px solid {{ accent }}20;border-radius:16px;padding:22px;margin-bottom:20px">
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
 <span style="width:48px;height:48px;background:{{ accent }}12;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px">{{ ks.cat_icon or '📍' }}</span>
-<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:{{ accent }};font-family:'Plus Jakarta Sans',sans-serif">Category</div><div style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:600">{{ ks.cat_name or 'Key Spot' }}</div></div>
+<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:{{ accent }};font-family:'Plus Jakarta Sans',sans-serif">Category</div><div style="font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:600">{{ ks.cat_name or 'Key Spot' }}</div></div>
 </div>
-<div style="font-size:13px;color:var(--text-light);line-height:1.5;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:12px">Part of <strong style="color:var(--text-dark)">{{ kp.title }}</strong> in <strong style="color:var(--text-dark)">{{ place.title }}</strong></div>
+<div style="font-size:14px;color:var(--text-light);line-height:1.5;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:12px">Part of <strong style="color:var(--text-dark)">{{ kp.title }}</strong> in <strong style="color:var(--text-dark)">{{ place.title }}</strong></div>
 <!-- Location Fields with Icons -->
 <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px">
 {% if ks.city %}<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="font-size:15px">🏙️</span><span style="color:var(--text-light)">City</span><strong style="margin-left:auto;color:var(--text-dark)">{{ ks.city }}</strong></div>{% endif %}
@@ -113,8 +113,8 @@
 
 <!-- Sibling Key Spots -->
 {% if siblings %}
-<div style="background:white;border:2px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px">
-<h3 style="font-family:'Josefin Sans',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px">Other Key Spots</h3>
+<div class="sidebar-card" style="background:white;border:2px solid var(--border);border-radius:16px;padding:22px;margin-bottom:20px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:14px">Other Key Spots</h3>
 {% for sib in siblings %}
 <a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=sib.slug) }}" style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;font-size:13px;transition:color .2s" onmouseover="this.style.color='{{ sib.cat_color or accent }}'" onmouseout="this.style.color='inherit'">
 <span style="font-size:14px">{{ sib.cat_icon or '📍' }}</span><strong>{{ sib.title }}</strong></a>
@@ -138,8 +138,8 @@
 </section>
 
 <style>
-.rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:20px 0 10px;color:var(--text-dark);font-weight:700}
-.rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:18px;margin:16px 0 8px;font-weight:600}
+.rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:26px;margin:20px 0 10px;color:var(--text-dark);font-weight:700}
+.rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:16px 0 8px;font-weight:600}
 .rich-content p{margin-bottom:12px}
 </style>
 {% endblock %}

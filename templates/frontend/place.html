@@ -54,7 +54,7 @@
 {% endif %}
 
 {% if vis.get('full_content',1) and place.full_content %}
-<div class="rich-content" style="margin-bottom:40px;line-height:1.85;font-size:15.5px;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ place.full_content|safe }}</div>{% endif %}
+<div class="rich-content" style="margin-bottom:40px;line-height:1.9;font-size:16.5px;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ place.full_content|safe }}</div>{% endif %}
 
 <!-- Custom Fields -->
 {% if custom_values %}
@@ -84,7 +84,7 @@
 {% if hierarchy %}
 <div style="margin-bottom:40px">
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
-  <h2 class="explore-title" style="font-family:'Josefin Sans',sans-serif;font-size:28px;font-weight:700;color:var(--text-dark)">Explore {{ place.title }}</h2>
+  <h2 class="explore-title" style="font-family:'Josefin Sans',sans-serif;font-size:30px;font-weight:700;color:var(--text-dark)">Explore {{ place.title }}</h2>
 </div>
 
 <!-- Tier Legend -->
@@ -151,7 +151,7 @@
 <!-- Related Content -->
 {% if related_entries %}
 <div style="margin-bottom:40px">
-<h2 style="font-family:'Josefin Sans',sans-serif;font-size:24px;font-weight:700;margin-bottom:20px">📖 Related Content</h2>
+<h2 style="font-family:'Josefin Sans',sans-serif;font-size:26px;font-weight:700;margin-bottom:20px">📖 Related Content</h2>
 <div style="display:grid;gap:12px">{% for entry in related_entries %}
 <a href="{{ url_for('entry_detail', mod_slug=entry.module_slug, entry_slug=entry.slug) }}" style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--cream-dark);border-radius:12px;text-decoration:none;color:inherit;transition:all .2s" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
 <span style="font-size:24px">{{ entry.module_icon }}</span><div><strong style="color:var(--text-dark)">{{ entry.title }}</strong><br><span style="font-size:12px;color:var(--text-light)">{{ entry.module_name }}</span></div></a>{% endfor %}</div></div>{% endif %}
@@ -160,8 +160,8 @@
 <!-- Right Sidebar -->
 <div>
 <div class="sidebar-card" style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
-<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Quick Info</h3>
-<div style="display:flex;flex-direction:column;gap:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;margin-bottom:16px">Quick Info</h3>
+<div style="display:flex;flex-direction:column;gap:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px">
 {% if vis.get('city',1) and place.city %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">City</span><strong>{{ place.city }}</strong></div>{% endif %}
 {% if vis.get('state',1) and place.state %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">State</span><strong>{{ place.state }}</strong></div>{% endif %}
 {% if vis.get('country',1) and place.country %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Country</span><strong>{{ place.country }}</strong></div>{% endif %}
@@ -228,7 +228,7 @@
 <iframe src="https://maps.google.com/maps?q={{ place.latitude }},{{ place.longitude }}&z=12&output=embed" style="width:100%;height:220px;border:0"></iframe></div>{% endif %}
 
 {% if related %}
-<div style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px">
+<div class="sidebar-card" style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px">
 <h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px">Similar Dhams</h3>
 {% for rp in related %}<a href="{{ url_for('place_detail', slug=rp.slug) }}" style="display:block;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit"><strong style="color:var(--text-dark);font-size:14px">{{ rp.title }}</strong><p style="font-size:12px;color:var(--text-light);margin:4px 0 0">{{ rp.city }}{{ ', ' + rp.state if rp.state }}</p></a>{% endfor %}</div>{% endif %}
 </div>
@@ -243,8 +243,8 @@
 </section>
 
 <style>
-.rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:24px;margin:24px 0 12px;color:var(--text-dark);font-weight:700}
-.rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:20px;margin:20px 0 10px;color:var(--text-dark);font-weight:600}
+.rich-content h2{font-family:'Josefin Sans',sans-serif;font-size:26px;margin:24px 0 12px;color:var(--text-dark);font-weight:700}
+.rich-content h3{font-family:'Josefin Sans',sans-serif;font-size:22px;margin:20px 0 10px;color:var(--text-dark);font-weight:600}
 .rich-content p{margin-bottom:12px}
 .rich-content img{max-width:100%;border-radius:10px;margin:16px 0}
 .kp-card .kp-body{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.23,1,.32,1)}
