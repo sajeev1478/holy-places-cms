@@ -1,6 +1,7 @@
 {% extends "admin/base.html" %}
 {% block title %}{{ 'Edit' if itinerary else 'Create' }} Itinerary{% endblock %}
-{% block content %}
+{% block page_title %}{{ 'Edit' if itinerary else 'Create' }} Itinerary{% endblock %}
+{% block admin_content %}
 <style>
 .itin-form-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
 .itin-form-header h1{font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px}
