@@ -41,14 +41,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .sidebar-user-info span{font-size:11px;color:rgba(255,255,255,.4)}
 
 /* ─── Main Content ─── */
-.main{margin-left:260px;flex:1;padding:0;min-height:100vh}
+.main{margin-left:260px;flex:1;padding:0;min-height:100vh;overflow-x:hidden;max-width:calc(100vw - 260px)}
 .topbar{padding:16px 32px;background:white;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .topbar h1{font-family:'Playfair Display',serif;font-size:22px}
 .topbar-actions{display:flex;gap:8px;align-items:center}
-.content{padding:32px}
+.content{padding:32px;overflow-x:hidden;max-width:100%;box-sizing:border-box}
 
 /* ─── Cards ─── */
-.admin-card{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden}
+.admin-card{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;max-width:100%;box-sizing:border-box}
 .admin-card-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .admin-card-header h3{font-size:16px;font-weight:600}
 .admin-card-body{padding:24px}
@@ -149,7 +149,7 @@ select.form-control:focus{border-color:var(--primary);box-shadow:0 4px 16px rgba
 @media(max-width:1024px){
 .sidebar{transform:translateX(-100%);transition:transform .3s}
 .sidebar.open{transform:translateX(0)}
-.main{margin-left:0}
+.main{margin-left:0;max-width:100vw}
 .sidebar-toggle{display:block}
 .content{padding:20px}
 .form-row{grid-template-columns:1fr}
@@ -528,7 +528,7 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 .help-accordion-inner .code-block .val{color:#a6e3a1}
 .help-accordion-inner .code-block .str{color:#f9e2af}
 /* ═══ Location Picker Widget ═══ */
-.loc-picker{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:8px}
+.loc-picker{background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:8px;overflow-x:hidden;max-width:100%;box-sizing:border-box}
 .loc-picker-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px}
 .loc-picker-title .loc-badge{font-size:9px;padding:3px 8px;background:var(--primary);color:white;border-radius:50px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
 .loc-saved{display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border:1px solid var(--border);border-radius:10px;margin-bottom:12px;font-size:12px;flex-wrap:wrap}
@@ -835,25 +835,32 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script>
 // Initialize all Quill editors
-document.querySelectorAll('.rich-editor').forEach(el => {
-    const hidden = document.getElementById(el.dataset.target);
-    const quill = new Quill(el, {
-        theme: 'snow',
-        modules: {
-            toolbar: [
-                [{ 'header': [1, 2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['blockquote', 'link', 'image'],
-                ['clean']
-            ]
-        }
+function initRichEditors() {
+    document.querySelectorAll('.rich-editor:not(.ql-container)').forEach(el => {
+        try {
+            const hidden = document.getElementById(el.dataset.target);
+            if (!hidden) { console.warn('Rich editor target not found:', el.dataset.target); return; }
+            const quill = new Quill(el, {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['blockquote', 'link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+            if (hidden.value) quill.root.innerHTML = hidden.value;
+            quill.on('text-change', () => { hidden.value = quill.root.innerHTML; });
+            el.closest('form')?.addEventListener('submit', () => { hidden.value = quill.root.innerHTML; });
+        } catch(e) { console.error('Quill init error:', e); }
     });
-    if (hidden.value) quill.root.innerHTML = hidden.value;
-    quill.on('text-change', () => { hidden.value = quill.root.innerHTML; });
-    // Update before form submit
-    el.closest('form')?.addEventListener('submit', () => { hidden.value = quill.root.innerHTML; });
-});
+}
+initRichEditors();
+// Re-init after short delay to catch any late-rendered editors
+setTimeout(initRichEditors, 500);
 
 // Beautiful custom select dropdowns
 function initCustomSelects() {

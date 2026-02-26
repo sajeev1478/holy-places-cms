@@ -225,6 +225,7 @@
 <div class="cam-desc"><input type="text" name="featured_image_cam_desc" placeholder="📝 Photo description (optional)"></div>
 <div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
 </div>
+<input type="text" name="featured_image_desc" class="form-control" value="{{ place.featured_image_desc if editing else '' }}" placeholder="📝 Featured image description (shows as overlay on frontend)" style="font-size:12px;margin-top:6px">
 </div></div></div>
 <!-- T1 Gallery Images -->
 <div class="field-row"><div class="field-main"><div class="form-group gal-section"><label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
@@ -253,6 +254,7 @@
 <div id="loc_t1" class="loc-picker">
 <div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Location Picker <span class="loc-badge">T1 Dham</span><button class="loc-info-btn" type="button" onclick="document.getElementById('locInfoPopup').classList.add('active')" title="How to use"><i class="fas fa-info"></i></button></div>
 <div class="loc-saved" style="margin-bottom:10px"><span style="font-size:12px;color:var(--text-light);margin-right:4px">📍 Current:</span><span class="loc-saved-info">{% if editing and place.latitude and place.longitude %}<span class="loc-coords-display">{{ place.latitude }}, {{ place.longitude }}</span>{% else %}<span class="loc-no-data">No location set</span>{% endif %}</span></div>
+{% if editing and place.location_updated_at %}<div style="font-size:11px;color:var(--text-light);margin-bottom:10px;padding:6px 10px;background:var(--bg);border-radius:8px;border:1px dashed var(--border);display:inline-flex;align-items:center;gap:6px"><i class="fas fa-clock" style="color:var(--primary);font-size:10px"></i> Location last updated by <strong style="color:var(--text-dark)">{{ place.location_updated_by }}</strong> on <strong style="color:var(--text-dark)">{{ place.location_updated_at }}</strong></div>{% endif %}
 <div class="loc-status"></div>
 <div class="loc-map-container"><div class="loc-map-wrap" style="height:100%"></div></div>
 <div style="position:relative"><div class="loc-search-bar"><input class="loc-search-input" placeholder="🔍 Search for a place (e.g. Vrindavan Dham)"><button class="loc-search-btn" type="button"><i class="fas fa-search"></i> Search</button></div><div class="loc-search-results"></div></div>
@@ -399,10 +401,13 @@
 <div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.cam-capture-wrap');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
 <div class="cam-desc"><input type="text" name="kp_{{ ki }}_featured_cam_desc" placeholder="📝 Photo description (optional)"></div>
 <div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
-</div></div>
+</div>
+<input type="text" name="kp_{{ ki }}_featured_image_desc" class="form-control" value="{{ kp.featured_image_desc or '' }}" placeholder="📝 Featured image description (shows as overlay on frontend)" style="font-size:12px;margin-top:6px">
+</div>
 <div id="loc_kp_{{ ki }}" class="loc-picker">
 <div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:#2E86AB"></i> Location Picker <span class="loc-badge" style="background:#2E86AB">T2</span><button class="loc-info-btn" type="button" onclick="document.getElementById('locInfoPopup').classList.add('active')" title="How to use"><i class="fas fa-info"></i></button></div>
 <div class="loc-saved" style="margin-bottom:10px"><span style="font-size:12px;color:var(--text-light);margin-right:4px">📍 Current:</span><span class="loc-saved-info">{% if kp.latitude and kp.longitude %}<span class="loc-coords-display">{{ kp.latitude }}, {{ kp.longitude }}</span>{% else %}<span class="loc-no-data">No location set</span>{% endif %}</span></div>
+{% if kp.location_updated_at %}<div style="font-size:11px;color:var(--text-light);margin-bottom:10px;padding:6px 10px;background:var(--bg);border-radius:8px;border:1px dashed var(--border);display:inline-flex;align-items:center;gap:6px"><i class="fas fa-clock" style="color:#2E86AB;font-size:10px"></i> Location last updated by <strong style="color:var(--text-dark)">{{ kp.location_updated_by }}</strong> on <strong style="color:var(--text-dark)">{{ kp.location_updated_at }}</strong></div>{% endif %}
 <div class="loc-status"></div>
 <div class="loc-map-container"><div class="loc-map-wrap" style="height:100%"></div></div>
 <div style="position:relative"><div class="loc-search-bar"><input class="loc-search-input" placeholder="🔍 Search for {{ kp.title or 'this place' }}"><button class="loc-search-btn" type="button"><i class="fas fa-search"></i> Search</button></div><div class="loc-search-results"></div></div>

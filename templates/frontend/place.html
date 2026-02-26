@@ -35,8 +35,9 @@
 <div>
 
 {% if vis.get('featured_image',1) and place.featured_image %}
-<div class="featured-img-wrap" style="margin-bottom:32px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
+<div class="featured-img-wrap" style="margin-bottom:32px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);position:relative">
 <img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'">
+{% if place.featured_image_desc %}<div style="position:absolute;bottom:0;left:0;right:0;padding:14px 20px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:white;font-family:'Nunito Sans',sans-serif;font-size:14px;line-height:1.5">{{ place.featured_image_desc }}</div>{% endif %}
 </div>{% endif %}
 
 <!-- T1 Gallery Slider -->

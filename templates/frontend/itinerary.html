@@ -157,6 +157,7 @@ img{max-width:100%;height:auto}
 {% if itinerary.leader_name %}<span><i class="fas fa-user"></i> <strong>Leader:</strong> {{ itinerary.leader_name }}</span>{% endif %}
 {% if itinerary.group_name %}<span><i class="fas fa-users"></i> <strong>Group:</strong> {{ itinerary.group_name }}</span>{% endif %}
 <span><i class="fas fa-map-marker-alt"></i> {{ places|length }} places</span>
+<span><i class="fas fa-eye"></i> {{ itinerary.view_count or 0 }} views</span>
 </div>
 <div class="share-bar">
 <button class="share-btn" onclick="shareItinerary()"><i class="fas fa-share-alt"></i> Share</button>

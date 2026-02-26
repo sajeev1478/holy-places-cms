@@ -84,12 +84,12 @@ textarea.field-input{min-height:80px;resize:vertical}
 <input type="text" name="title" class="field-input" required value="{{ itinerary.title if itinerary else '' }}" placeholder="e.g. Vrindavan Parikrama Yatra">
 </div>
 <div>
-<label class="field-label">Leader Name</label>
-<input type="text" name="leader_name" class="field-input" value="{{ itinerary.leader_name if itinerary else '' }}" placeholder="e.g. HG Prabhu Das">
+<label class="field-label">Leader Name *</label>
+<input type="text" name="leader_name" class="field-input" required value="{{ itinerary.leader_name if itinerary else '' }}" placeholder="e.g. HG Prabhu Das">
 </div>
 <div>
-<label class="field-label">Group Name</label>
-<input type="text" name="group_name" class="field-input" value="{{ itinerary.group_name if itinerary else '' }}" placeholder="e.g. iskcon-mumbai-youth">
+<label class="field-label">Group Name *</label>
+<input type="text" name="group_name" class="field-input" required value="{{ itinerary.group_name if itinerary else '' }}" placeholder="for e.g. Chitra">
 <div class="field-help">Used in the shareable URL: /itinerary-{group-name}</div>
 </div>
 <div class="form-full">

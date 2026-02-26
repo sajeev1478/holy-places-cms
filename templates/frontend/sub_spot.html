@@ -20,6 +20,9 @@
 </div>
 <h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(26px,4vw,44px);font-weight:700;margin-bottom:8px">{{ ss.title }}</h1>
 {% if ss.short_description %}<p style="max-width:620px;font-size:15px;line-height:1.7;opacity:.8;font-family:'Nunito Sans',sans-serif">{{ ss.short_description }}</p>{% endif %}
+<div style="display:flex;gap:16px;margin-top:18px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px">
+<div style="padding:10px 18px;background:rgba(255,255,255,.12);border-radius:10px">👁️ {{ ss.view_count or 0 }} views</div>
+</div>
 
 </div>
 </section>
@@ -44,7 +47,7 @@
 </div>
 </div>
 
-{% if ss.featured_image %}<div class="featured-img-wrap" style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)"><img src="/static/uploads/{{ ss.featured_image }}" alt="{{ ss.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'"></div>{% endif %}
+{% if ss.featured_image %}<div class="featured-img-wrap" style="margin-bottom:28px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);position:relative"><img src="/static/uploads/{{ ss.featured_image }}" alt="{{ ss.title }}" style="width:100%;display:block" onerror="this.parentElement.style.display='none'">{% if ss.featured_image_desc %}<div style="position:absolute;bottom:0;left:0;right:0;padding:14px 20px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:white;font-family:'Nunito Sans',sans-serif;font-size:14px;line-height:1.5">{{ ss.featured_image_desc }}</div>{% endif %}</div>{% endif %}
 
 <!-- Gallery Slider -->
 {% if ss_gallery %}

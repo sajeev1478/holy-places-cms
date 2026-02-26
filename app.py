@@ -188,6 +188,23 @@ def init_db():
     me_cols=[c['name'] for c in db.execute("PRAGMA table_info(module_entries)").fetchall()]
     if 'gallery_images' not in me_cols:
         db.execute("ALTER TABLE module_entries ADD COLUMN gallery_images TEXT DEFAULT ''")
+    # Migration: add view_count column to tables that need global views
+    for table in ('itineraries','key_places','key_spots','sub_spots'):
+        cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'view_count' not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN view_count INTEGER DEFAULT 0")
+    # Migration: add location tracking columns (who updated location & when)
+    for table in ('places','key_places','key_spots','sub_spots'):
+        cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'location_updated_at' not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN location_updated_at TEXT DEFAULT ''")
+        if 'location_updated_by' not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN location_updated_by TEXT DEFAULT ''")
+    # Migration: add featured_image_desc column for all tiers
+    for table in ('places','key_places','key_spots','sub_spots'):
+        cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'featured_image_desc' not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN featured_image_desc TEXT DEFAULT ''")
     db.commit()
 
 def _generate_dham_code(title, db):
@@ -791,6 +808,7 @@ def key_place_detail(slug, kp_slug):
     if not place: abort(404)
     kp=db.execute("SELECT * FROM key_places WHERE parent_place_id=? AND slug=? AND is_visible=1",(place['id'],kp_slug)).fetchone()
     if not kp: abort(404)
+    db.execute("UPDATE key_places SET view_count=view_count+1 WHERE id=?",(kp['id'],)); db.commit()
     kp_customs=db.execute("SELECT kpcv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(kp['id'],)).fetchall()
     key_spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.is_visible=1 ORDER BY ks.sort_order",(kp['id'],)).fetchall()
     spots_with_subs=[]
@@ -814,6 +832,7 @@ def key_spot_detail(slug, kp_slug, ks_slug):
     if not kp: abort(404)
     ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? AND ks.slug=? AND ks.is_visible=1",(kp['id'],ks_slug)).fetchone()
     if not ks: abort(404)
+    db.execute("UPDATE key_spots SET view_count=view_count+1 WHERE id=?",(ks['id'],)); db.commit()
     sub_spots=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.is_visible=1 ORDER BY ss.sort_order",(ks['id'],)).fetchall()
     ks_customs=db.execute("SELECT kscv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM key_spot_custom_values kscv JOIN custom_field_defs cfd ON kscv.field_def_id=cfd.id WHERE kscv.key_spot_id=? AND kscv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(ks['id'],)).fetchall()
     ks_gallery=[x.strip() for x in (ks['gallery_images'] or '').split(',') if x.strip()]
@@ -834,6 +853,7 @@ def sub_spot_detail(slug, kp_slug, ks_slug, ss_slug):
     if not ks: abort(404)
     ss=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? AND ss.slug=? AND ss.is_visible=1",(ks['id'],ss_slug)).fetchone()
     if not ss: abort(404)
+    db.execute("UPDATE sub_spots SET view_count=view_count+1 WHERE id=?",(ss['id'],)); db.commit()
     ss_customs=db.execute("SELECT sscv.*,cfd.name,cfd.label,cfd.field_type,cfd.icon as field_icon FROM sub_spot_custom_values sscv JOIN custom_field_defs cfd ON sscv.field_def_id=cfd.id WHERE sscv.sub_spot_id=? AND sscv.is_visible=1 AND cfd.is_active=1 ORDER BY cfd.sort_order",(ss['id'],)).fetchall()
     ss_gallery=[x.strip() for x in (ss['gallery_images'] or '').split(',') if x.strip()]
     try:
@@ -992,16 +1012,24 @@ def _save_place(place_id):
     vis={}
     for bf in BUILTIN_FIELDS: vis[bf['key']]=1 if f.get(f"vis_{bf['key']}") else 0
     lat=f.get('latitude',type=float); lng=f.get('longitude',type=float)
+    fi_desc=f.get('featured_image_desc','').strip()
+    _loc_user = get_current_user()
+    _loc_username = _loc_user['display_name'] if _loc_user else 'Unknown'
+    _loc_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if place_id:
-        db.execute("UPDATE places SET title=?,short_description=?,full_content=?,state=?,city=?,country=?,latitude=?,longitude=?,featured_image=?,status=?,is_featured=?,field_visibility=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (title,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),place_id))
+        db.execute("UPDATE places SET title=?,short_description=?,full_content=?,state=?,city=?,country=?,latitude=?,longitude=?,featured_image=?,featured_image_desc=?,status=?,is_featured=?,field_visibility=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (title,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,fi_desc,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),place_id))
+        if lat is not None and lng is not None:
+            db.execute("UPDATE places SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,place_id))
     else:
         if db.execute("SELECT id FROM places WHERE slug=?",(slug,)).fetchone(): slug+='-'+uuid.uuid4().hex[:6]
         dham_code=_generate_dham_code(title,db)
         hid=_gen_t1_id(dham_code)
-        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,status,is_featured,field_visibility,dham_code,hierarchy_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (title,slug,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),dham_code,hid,session['user_id']))
+        db.execute("INSERT INTO places (title,slug,short_description,full_content,state,city,country,latitude,longitude,featured_image,featured_image_desc,status,is_featured,field_visibility,dham_code,hierarchy_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (title,slug,f.get('short_description',''),f.get('full_content',''),f.get('state',''),f.get('city',''),f.get('country','India'),lat,lng,fi,fi_desc,f.get('status','draft'),1 if f.get('is_featured') else 0,json.dumps(vis),dham_code,hid,session['user_id']))
         place_id=db.execute("SELECT last_insert_rowid()").fetchone()[0]
+        if lat is not None and lng is not None:
+            db.execute("UPDATE places SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,place_id))
     db.execute("DELETE FROM place_tags WHERE place_id=?",(place_id,))
     for tid in f.getlist('tags'): db.execute("INSERT OR IGNORE INTO place_tags VALUES (?,?)",(place_id,tid))
     # Handle T1 gallery image uploads (individual)
@@ -1065,6 +1093,7 @@ def _save_place(place_id):
         if not kt.strip(): kpi+=1; continue
         kpid=f.get(f'kp_{kpi}_id',type=int); ks=slugify(kt); ksd=f.get(f'kp_{kpi}_short_description','')
         kfc=f.get(f'kp_{kpi}_full_content',''); klat=f.get(f'kp_{kpi}_latitude',type=float); klng=f.get(f'kp_{kpi}_longitude',type=float)
+        kfi_desc=f.get(f'kp_{kpi}_featured_image_desc','').strip()
         kv=1 if f.get(f'kp_{kpi}_is_visible') else 0
         kimg=f.get(f'kp_{kpi}_featured_image_existing','')
         kfk=f'kp_{kpi}_featured_image_file'
@@ -1112,13 +1141,17 @@ def _save_place(place_id):
                 if cap_val: kp_captions[img_path]=cap_val
         kp_captions_json=json.dumps(kp_captions)
         if kpid and kpid in existing_kpids:
-            db.execute("UPDATE key_places SET title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (kt,ks,ksd,kfc,kimg,kgallery,kp_captions_json,klat,klng,kpi,kv,kpid)); submitted_kpids.append(kpid)
+            db.execute("UPDATE key_places SET title=?,slug=?,short_description=?,full_content=?,featured_image=?,featured_image_desc=?,gallery_images=?,gallery_captions=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (kt,ks,ksd,kfc,kimg,kfi_desc,kgallery,kp_captions_json,klat,klng,kpi,kv,kpid)); submitted_kpids.append(kpid)
+            if klat is not None and klng is not None:
+                db.execute("UPDATE key_places SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,kpid))
         else:
             kp_hid=_gen_t2_id(_dham_code,db,place_id) if _dham_code else None
-            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (place_id,kt,ks,ksd,kfc,kimg,kgallery,kp_captions_json,klat,klng,kpi,kv,kp_hid))
+            db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,featured_image,featured_image_desc,gallery_images,gallery_captions,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (place_id,kt,ks,ksd,kfc,kimg,kfi_desc,kgallery,kp_captions_json,klat,klng,kpi,kv,kp_hid))
             kpid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted_kpids.append(kpid)
+            if klat is not None and klng is not None:
+                db.execute("UPDATE key_places SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,kpid))
         for cf in cfs:
             kcv=''; kcfk=f"kp_{kpi}_cf_file_{cf['id']}"
             if kcfk in request.files:
@@ -1308,21 +1341,23 @@ def admin_place_location(place_id):
     place = d['place']
     if request.method == 'POST':
         f = request.form
+        _loc_username = u['display_name'] if u else 'Unknown'
+        _loc_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         lat = f.get('t1_latitude', type=float); lng = f.get('t1_longitude', type=float)
         if lat is not None and lng is not None:
-            db.execute("UPDATE places SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (lat, lng, place_id))
+            db.execute("UPDATE places SET latitude=?,longitude=?,location_updated_at=?,location_updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (lat, lng, _loc_now, _loc_username, place_id))
         for kp in d['kps']:
             klat = f.get(f'kp_{kp["id"]}_latitude', type=float); klng = f.get(f'kp_{kp["id"]}_longitude', type=float)
             if klat is not None and klng is not None:
-                db.execute("UPDATE key_places SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, kp['id']))
+                db.execute("UPDATE key_places SET latitude=?,longitude=?,location_updated_at=?,location_updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, _loc_now, _loc_username, kp['id']))
         for ks in d['kss']:
             klat = f.get(f'ks_{ks["id"]}_latitude', type=float); klng = f.get(f'ks_{ks["id"]}_longitude', type=float)
             if klat is not None and klng is not None:
-                db.execute("UPDATE key_spots SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, ks['id']))
+                db.execute("UPDATE key_spots SET latitude=?,longitude=?,location_updated_at=?,location_updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, _loc_now, _loc_username, ks['id']))
         for ss in d['sss']:
             slat = f.get(f'ss_{ss["id"]}_latitude', type=float); slng = f.get(f'ss_{ss["id"]}_longitude', type=float)
             if slat is not None and slng is not None:
-                db.execute("UPDATE sub_spots SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (slat, slng, ss['id']))
+                db.execute("UPDATE sub_spots SET latitude=?,longitude=?,location_updated_at=?,location_updated_by=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (slat, slng, _loc_now, _loc_username, ss['id']))
         db.commit()
         log_action(session.get('user_id'), 'location_update', 'place', place_id, place['title'])
         flash('Locations updated successfully!', 'success')
@@ -1337,7 +1372,7 @@ def admin_key_place_spots(kp_id):
     kp=db.execute("SELECT kp.*,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
     if not kp: abort(404)
     spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? ORDER BY ks.sort_order",(kp_id,)).fetchall()
-    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place','key_spot') ORDER BY sort_order").fetchall()
     ks_customs={}
     for s in spots:
         ks_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM key_spot_custom_values WHERE key_spot_id=?",(s['id'],)).fetchall()}
@@ -1352,6 +1387,8 @@ def admin_key_spots_save(kp_id):
     # Get dham_code for hierarchy ID
     _kp_row=db.execute("SELECT kp.parent_place_id,p.dham_code FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
     _dham_code=_kp_row['dham_code'] if _kp_row else None
+    _loc_user=get_current_user(); _loc_username=_loc_user['display_name'] if _loc_user else 'Unknown'
+    _loc_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     submitted=[]; i=0
     while True:
         t=f.get(f'ks_{i}_title')
@@ -1362,6 +1399,7 @@ def admin_key_spots_save(kp_id):
         sd=f.get(f'ks_{i}_short_description',''); fc=f.get(f'ks_{i}_full_content','')
         state=f.get(f'ks_{i}_state',''); city=f.get(f'ks_{i}_city',''); country=f.get(f'ks_{i}_country','')
         lat=f.get(f'ks_{i}_latitude',type=float); lng=f.get(f'ks_{i}_longitude',type=float)
+        fi_desc=f.get(f'ks_{i}_featured_image_desc','').strip()
         vis=1 if f.get(f'ks_{i}_is_visible') else 0
         img=f.get(f'ks_{i}_featured_image_existing','')
         orig_img=img
@@ -1411,13 +1449,17 @@ def admin_key_spots_save(kp_id):
                 if cap_val: captions[img_path]=cap_val
         captions_json=json.dumps(captions)
         if sid and sid in existing:
-            db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
+            db.execute("UPDATE key_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,featured_image_desc=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,fi_desc,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
+            if lat is not None and lng is not None:
+                db.execute("UPDATE key_spots SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,sid))
         else:
             ks_hid=_gen_t3_id(_dham_code,db,kp_id) if _dham_code else None
-            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (kp_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,ks_hid))
+            db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,featured_image_desc,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (kp_id,catid,t,slug,sd,fc,img,fi_desc,gallery,captions_json,state,city,country,lat,lng,i,vis,ks_hid))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
+            if lat is not None and lng is not None:
+                db.execute("UPDATE key_spots SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,sid))
         # Save custom fields for this spot
         for cf in cfs:
             cv=''; cfk=f"ks_{i}_cf_file_{cf['id']}"
@@ -1450,7 +1492,7 @@ def admin_key_spot_subs(ks_id):
     ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,kp.title as kp_title,kp.id as kp_id,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
     if not ks: abort(404)
     subs=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? ORDER BY ss.sort_order",(ks_id,)).fetchall()
-    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place','sub_spot') ORDER BY sort_order").fetchall()
     ss_customs={}
     for s in subs:
         ss_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM sub_spot_custom_values WHERE sub_spot_id=?",(s['id'],)).fetchall()}
@@ -1465,6 +1507,8 @@ def admin_sub_spots_save(ks_id):
     # Get dham_code for hierarchy ID
     _ks_row=db.execute("SELECT p.dham_code FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
     _dham_code=_ks_row['dham_code'] if _ks_row else None
+    _loc_user=get_current_user(); _loc_username=_loc_user['display_name'] if _loc_user else 'Unknown'
+    _loc_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     submitted=[]; i=0
     while True:
         t=f.get(f'ss_{i}_title')
@@ -1475,6 +1519,7 @@ def admin_sub_spots_save(ks_id):
         sd=f.get(f'ss_{i}_short_description',''); fc=f.get(f'ss_{i}_full_content','')
         state=f.get(f'ss_{i}_state',''); city=f.get(f'ss_{i}_city',''); country=f.get(f'ss_{i}_country','')
         lat=f.get(f'ss_{i}_latitude',type=float); lng=f.get(f'ss_{i}_longitude',type=float)
+        fi_desc=f.get(f'ss_{i}_featured_image_desc','').strip()
         vis=1 if f.get(f'ss_{i}_is_visible') else 0
         img=f.get(f'ss_{i}_featured_image_existing','')
         orig_img=img
@@ -1521,13 +1566,17 @@ def admin_sub_spots_save(ks_id):
                 if cap_val: captions[img_path]=cap_val
         captions_json=json.dumps(captions)
         if sid and sid in existing:
-            db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-                (catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
+            db.execute("UPDATE sub_spots SET category_id=?,title=?,slug=?,short_description=?,full_content=?,featured_image=?,featured_image_desc=?,gallery_images=?,gallery_captions=?,state=?,city=?,country=?,latitude=?,longitude=?,sort_order=?,is_visible=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                (catid,t,slug,sd,fc,img,fi_desc,gallery,captions_json,state,city,country,lat,lng,i,vis,sid)); submitted.append(sid)
+            if lat is not None and lng is not None:
+                db.execute("UPDATE sub_spots SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,sid))
         else:
             ss_hid=_gen_t4_id(_dham_code,db,ks_id) if _dham_code else None
-            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (ks_id,catid,t,slug,sd,fc,img,gallery,captions_json,state,city,country,lat,lng,i,vis,ss_hid))
+            db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,featured_image_desc,gallery_images,gallery_captions,state,city,country,latitude,longitude,sort_order,is_visible,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (ks_id,catid,t,slug,sd,fc,img,fi_desc,gallery,captions_json,state,city,country,lat,lng,i,vis,ss_hid))
             sid=db.execute("SELECT last_insert_rowid()").fetchone()[0]; submitted.append(sid)
+            if lat is not None and lng is not None:
+                db.execute("UPDATE sub_spots SET location_updated_at=?,location_updated_by=? WHERE id=?",(_loc_now,_loc_username,sid))
         for cf in cfs:
             cv=''; cfk=f"ss_{i}_cf_file_{cf['id']}"
             if cfk in request.files:
@@ -2319,6 +2368,14 @@ def _save_itinerary(itin_id):
         flash('Yatra name is required.','error')
         return redirect(request.url)
 
+    if not leader_name:
+        flash('Leader name is required.','error')
+        return redirect(request.url)
+
+    if not group_name:
+        flash('Group name is required.','error')
+        return redirect(request.url)
+
     # Generate slug: ddmmyyyy-itinerary-groupname (only for new itineraries)
     if itin_id:
         # Keep existing slug on edit to avoid breaking shared links
@@ -2431,6 +2488,7 @@ def public_itinerary(slug):
     itin = db.execute("SELECT * FROM itineraries WHERE slug=? AND status='published'", (slug,)).fetchone()
     if not itin:
         return render_template('frontend/404.html'), 404
+    db.execute("UPDATE itineraries SET view_count=view_count+1 WHERE id=?", (itin['id'],)); db.commit()
     raw_places = db.execute("SELECT * FROM itinerary_places WHERE itinerary_id=? ORDER BY sort_order", (itin['id'],)).fetchall()
     places = []
     for rp in raw_places:
