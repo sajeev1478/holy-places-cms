@@ -178,6 +178,15 @@ def init_db():
             db.execute(f"ALTER TABLE {table} ADD COLUMN hierarchy_id TEXT UNIQUE")
     # Backfill hierarchy_ids for existing data that lacks them
     _backfill_hierarchy_ids(db)
+    # Migration: add description column to custom value tables
+    for table in ('place_custom_values','key_place_custom_values','key_spot_custom_values','sub_spot_custom_values'):
+        cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
+        if 'description' not in cols:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN description TEXT DEFAULT ''")
+    # Migration: add gallery_images to module_entries
+    me_cols=[c['name'] for c in db.execute("PRAGMA table_info(module_entries)").fetchall()]
+    if 'gallery_images' not in me_cols:
+        db.execute("ALTER TABLE module_entries ADD COLUMN gallery_images TEXT DEFAULT ''")
     db.commit()
 
 def _generate_dham_code(title, db):
@@ -950,11 +959,11 @@ def admin_place_edit(place_id):
     tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall()
     ptags=[r['tag_id'] for r in db.execute("SELECT tag_id FROM place_tags WHERE place_id=?",(place_id,)).fetchall()]
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','place') ORDER BY sort_order").fetchall()
-    cvs={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible']} for r in db.execute("SELECT field_def_id,value,is_visible FROM place_custom_values WHERE place_id=?",(place_id,)).fetchall()}
+    cvs={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM place_custom_values WHERE place_id=?",(place_id,)).fetchall()}
     kps=db.execute("SELECT * FROM key_places WHERE parent_place_id=? ORDER BY sort_order",(place_id,)).fetchall()
     kpc={}
     for kp in kps:
-        kpc[kp['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible']} for r in db.execute("SELECT field_def_id,value,is_visible FROM key_place_custom_values WHERE key_place_id=?",(kp['id'],)).fetchall()}
+        kpc[kp['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM key_place_custom_values WHERE key_place_id=?",(kp['id'],)).fetchall()}
     # Get key spots count per key place
     kp_spot_counts={}
     for kp in kps:
@@ -1041,7 +1050,8 @@ def _save_place(place_id):
                 val=','.join(paths)
         if not val: val=f.get(f"cf_{cf['id']}",'')
         iv=1 if f.get(f"cf_vis_{cf['id']}") else 0
-        db.execute("INSERT OR REPLACE INTO place_custom_values (place_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(place_id,cf['id'],val,iv))
+        desc=f.get(f"cf_desc_{cf['id']}",'')
+        db.execute("INSERT OR REPLACE INTO place_custom_values (place_id,field_def_id,value,is_visible,description) VALUES (?,?,?,?,?)",(place_id,cf['id'],val,iv,desc))
     # Key Places (Tier 2)
     existing_kpids=[r['id'] for r in db.execute("SELECT id FROM key_places WHERE parent_place_id=?",(place_id,)).fetchall()]
     # Get dham_code for hierarchy ID generation
@@ -1115,7 +1125,8 @@ def _save_place(place_id):
                 if uf and uf.filename: u=save_upload(uf); kcv=u if u else kcv
             if not kcv: kcv=f.get(f"kp_{kpi}_cf_{cf['id']}",'')
             kcvis=1 if f.get(f"kp_{kpi}_cf_vis_{cf['id']}") else 0
-            if kcv or kcvis: db.execute("INSERT OR REPLACE INTO key_place_custom_values (key_place_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(kpid,cf['id'],kcv,kcvis))
+            kcdesc=f.get(f"kp_{kpi}_cf_desc_{cf['id']}",'')
+            if kcv or kcvis: db.execute("INSERT OR REPLACE INTO key_place_custom_values (key_place_id,field_def_id,value,is_visible,description) VALUES (?,?,?,?,?)",(kpid,cf['id'],kcv,kcvis,kcdesc))
         kpi+=1
     for oid in existing_kpids:
         if oid not in submitted_kpids: db.execute("DELETE FROM key_places WHERE id=?",(oid,))
@@ -1138,7 +1149,7 @@ def admin_key_place_spots(kp_id):
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
     ks_customs={}
     for s in spots:
-        ks_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible']} for r in db.execute("SELECT field_def_id,value,is_visible FROM key_spot_custom_values WHERE key_spot_id=?",(s['id'],)).fetchall()}
+        ks_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM key_spot_custom_values WHERE key_spot_id=?",(s['id'],)).fetchall()}
     return render_template('admin/key_spots.html',kp=kp,spots=spots,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),custom_fields=cfs,ks_customs=ks_customs,field_icons=FIELD_ICONS)
 
 @app.route('/admin/key-place/<int:kp_id>/spots/save', methods=['POST'])
@@ -1233,7 +1244,8 @@ def admin_key_spots_save(kp_id):
                     cv=','.join(paths)
             if not cv: cv=f.get(f"ks_{i}_cf_{cf['id']}",'')
             cfvis=1 if f.get(f"ks_{i}_cf_vis_{cf['id']}") else 0
-            if cv or cfvis: db.execute("INSERT OR REPLACE INTO key_spot_custom_values (key_spot_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(sid,cf['id'],cv,cfvis))
+            cfdesc=f.get(f"ks_{i}_cf_desc_{cf['id']}",'')
+            if cv or cfvis: db.execute("INSERT OR REPLACE INTO key_spot_custom_values (key_spot_id,field_def_id,value,is_visible,description) VALUES (?,?,?,?,?)",(sid,cf['id'],cv,cfvis,cfdesc))
         i+=1
     for oid in existing:
         if oid not in submitted: db.execute("DELETE FROM key_spots WHERE id=?",(oid,))
@@ -1250,7 +1262,7 @@ def admin_key_spot_subs(ks_id):
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
     ss_customs={}
     for s in subs:
-        ss_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible']} for r in db.execute("SELECT field_def_id,value,is_visible FROM sub_spot_custom_values WHERE sub_spot_id=?",(s['id'],)).fetchall()}
+        ss_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM sub_spot_custom_values WHERE sub_spot_id=?",(s['id'],)).fetchall()}
     return render_template('admin/sub_spots.html',ks=ks,subs=subs,sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),custom_fields=cfs,ss_customs=ss_customs,field_icons=FIELD_ICONS)
 
 @app.route('/admin/key-spot/<int:ks_id>/subs/save', methods=['POST'])
@@ -1341,7 +1353,8 @@ def admin_sub_spots_save(ks_id):
                     cv=','.join(paths)
             if not cv: cv=f.get(f"ss_{i}_cf_{cf['id']}",'')
             cfvis=1 if f.get(f"ss_{i}_cf_vis_{cf['id']}") else 0
-            if cv or cfvis: db.execute("INSERT OR REPLACE INTO sub_spot_custom_values (sub_spot_id,field_def_id,value,is_visible) VALUES (?,?,?,?)",(sid,cf['id'],cv,cfvis))
+            cfdesc=f.get(f"ss_{i}_cf_desc_{cf['id']}",'')
+            if cv or cfvis: db.execute("INSERT OR REPLACE INTO sub_spot_custom_values (sub_spot_id,field_def_id,value,is_visible,description) VALUES (?,?,?,?,?)",(sid,cf['id'],cv,cfvis,cfdesc))
         i+=1
     for oid in existing:
         if oid not in submitted: db.execute("DELETE FROM sub_spots WHERE id=?",(oid,))
@@ -1394,8 +1407,33 @@ def admin_entry_new():
     if request.method=='POST':
         t=request.form['title']; s=slugify(t)
         if db.execute("SELECT id FROM module_entries WHERE slug=? AND module_id=?",(s,request.form['module_id'])).fetchone(): s+='-'+uuid.uuid4().hex[:4]
-        db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,custom_fields,featured_image,status,sort_order,created_by) VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (request.form['module_id'],request.form.get('place_id',type=int) or None,t,s,request.form.get('content',''),request.form.get('custom_fields','{}'),request.form.get('featured_image',''),request.form.get('status','draft'),request.form.get('sort_order',0,type=int),session['user_id']))
+        # Handle featured image
+        fi=''
+        if 'featured_image_file' in request.files:
+            uf=request.files['featured_image_file']
+            if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
+        if not fi and 'featured_image_cam' in request.files:
+            uf=request.files['featured_image_cam']
+            if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
+        # Handle gallery images
+        gi_paths=[]
+        idx=0
+        while True:
+            nk=f'entry_new_gallery_{idx}'
+            if nk not in request.files: break
+            gf=request.files[nk]
+            if gf and gf.filename:
+                rp=save_upload(gf,'images')
+                if rp: gi_paths.append(rp)
+            idx+=1
+        if 'gallery_files' in request.files:
+            for gf in request.files.getlist('gallery_files'):
+                if gf and gf.filename:
+                    rp=save_upload(gf,'images')
+                    if rp: gi_paths.append(rp)
+        gi_str=','.join(gi_paths)
+        db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,custom_fields,featured_image,gallery_images,status,sort_order,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (request.form['module_id'],request.form.get('place_id',type=int) or None,t,s,request.form.get('content',''),request.form.get('custom_fields','{}'),fi,gi_str,request.form.get('status','draft'),request.form.get('sort_order',0,type=int),session['user_id']))
         db.commit(); flash('Created!','success'); return redirect(url_for('admin_entries'))
     return render_template('admin/entry_form.html',entry=None,modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall(),places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall(),editing=False)
 
@@ -1405,8 +1443,36 @@ def admin_entry_edit(entry_id):
     db=get_db(); entry=db.execute("SELECT * FROM module_entries WHERE id=?",(entry_id,)).fetchone()
     if not entry: abort(404)
     if request.method=='POST':
-        db.execute("UPDATE module_entries SET module_id=?,place_id=?,title=?,content=?,custom_fields=?,featured_image=?,status=?,sort_order=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (request.form['module_id'],request.form.get('place_id',type=int) or None,request.form['title'],request.form.get('content',''),request.form.get('custom_fields','{}'),request.form.get('featured_image',''),request.form.get('status','draft'),request.form.get('sort_order',0,type=int),entry_id))
+        f=request.form
+        # Handle featured image
+        fi=f.get('featured_image_existing','').strip()
+        orig_fi=fi
+        if 'featured_image_file' in request.files:
+            uf=request.files['featured_image_file']
+            if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
+        if fi==orig_fi and 'featured_image_cam' in request.files:
+            uf=request.files['featured_image_cam']
+            if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
+        # Handle gallery images
+        existing_gi=f.get('gallery_existing','').strip()
+        gi_list=[x.strip() for x in existing_gi.split(',') if x.strip()] if existing_gi else []
+        idx=0
+        while True:
+            nk=f'entry_new_gallery_{idx}'
+            if nk not in request.files: break
+            gf=request.files[nk]
+            if gf and gf.filename:
+                rp=save_upload(gf,'images')
+                if rp: gi_list.append(rp)
+            idx+=1
+        if 'gallery_files' in request.files:
+            for gf in request.files.getlist('gallery_files'):
+                if gf and gf.filename:
+                    rp=save_upload(gf,'images')
+                    if rp: gi_list.append(rp)
+        gi_str=','.join(gi_list)
+        db.execute("UPDATE module_entries SET module_id=?,place_id=?,title=?,content=?,custom_fields=?,featured_image=?,gallery_images=?,status=?,sort_order=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (f['module_id'],f.get('place_id',type=int) or None,f['title'],f.get('content',''),f.get('custom_fields','{}'),fi,gi_str,f.get('status','draft'),f.get('sort_order',0,type=int),entry_id))
         db.commit(); flash('Updated!','success'); return redirect(url_for('admin_entries'))
     return render_template('admin/entry_form.html',entry=entry,modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall(),places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall(),editing=True)
 
