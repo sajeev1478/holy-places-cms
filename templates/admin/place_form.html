@@ -314,9 +314,7 @@
 {% else %}<audio controls style="width:100%;height:28px;margin-top:4px"><source src="{{ av.external_url }}"></audio>{% endif %}
 {% endif %}
 </div>
-<form method="POST" action="{{ url_for('admin_av_delete', av_id=av.id) }}" style="flex-shrink:0" onsubmit="return confirm('Delete this {{ av.media_type }}?') && confirm('Are you sure? This cannot be undone.')">
-<button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete"><i class="fas fa-trash"></i></button>
-</form>
+<button type="button" class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteAudioVideo({{ av.id }}, '{{ av.media_type }}')"><i class="fas fa-trash"></i></button>
 </div>
 </div>
 {% endfor %}
@@ -325,15 +323,15 @@
 {% endif %}
 <details style="margin-top:10px">
 <summary style="font-size:12px;font-weight:600;cursor:pointer;color:var(--primary)"><i class="fas fa-plus"></i> Add Audio/Video</summary>
-<form method="POST" action="{{ url_for('admin_av_add') }}" enctype="multipart/form-data" style="margin-top:8px;background:var(--bg);padding:10px;border-radius:8px">
-<input type="hidden" name="tier" value="T1">
-<input type="hidden" name="place_ref_id" value="{{ place.id }}">
-<div style="margin-bottom:6px"><select name="media_type" class="form-control" style="font-size:12px"><option value="audio">🎵 Audio</option><option value="video">🎬 Video</option></select></div>
-<div style="margin-bottom:6px"><input type="file" name="av_file" class="form-control" accept="audio/*,video/*" style="font-size:11px"><div style="font-size:10px;color:var(--text-light);margin-top:2px">OR enter an external URL:</div></div>
-<div style="margin-bottom:6px"><input name="external_url" class="form-control" placeholder="YouTube/Vimeo URL or audio link" style="font-size:11px"></div>
-<div style="margin-bottom:6px"><input name="description" class="form-control" placeholder="📝 Description" style="font-size:11px"></div>
-<button type="submit" class="btn btn-primary btn-sm" style="width:100%;font-size:11px"><i class="fas fa-plus"></i> Add</button>
-</form>
+<div id="avAddForm" style="margin-top:8px;background:var(--bg);padding:10px;border-radius:8px">
+<input type="hidden" id="avTier" value="T1">
+<input type="hidden" id="avRefId" value="{{ place.id }}">
+<div style="margin-bottom:6px"><select id="avMediaType" class="form-control" style="font-size:12px"><option value="audio">🎵 Audio</option><option value="video">🎬 Video</option></select></div>
+<div style="margin-bottom:6px"><input type="file" id="avFile" class="form-control" accept="audio/*,video/*" style="font-size:11px"><div style="font-size:10px;color:var(--text-light);margin-top:2px">OR enter an external URL:</div></div>
+<div style="margin-bottom:6px"><input id="avExternalUrl" class="form-control" placeholder="YouTube/Vimeo URL or audio link" style="font-size:11px"></div>
+<div style="margin-bottom:6px"><input id="avDescription" class="form-control" placeholder="📝 Description" style="font-size:11px"></div>
+<button type="button" class="btn btn-primary btn-sm" style="width:100%;font-size:11px" onclick="addAudioVideo()"><i class="fas fa-plus"></i> Add</button>
+</div>
 </details>
 </div>
 {% endif %}
@@ -650,6 +648,27 @@ document.addEventListener('DOMContentLoaded', function(){
   {% if editing %}{% for kp in key_places %}
   initLocationPicker('loc_kp_{{ loop.index0 }}','kp_{{ loop.index0 }}_latitude','kp_{{ loop.index0 }}_longitude');
   {% endfor %}{% endif %}
+  // ─── Audio/Video Library (JS-based to avoid nested forms) ───
+  window.deleteAudioVideo = function(avId, mediaType) {
+    if (!confirm('Delete this ' + mediaType + '?')) return;
+    if (!confirm('Are you sure? This cannot be undone.')) return;
+    fetch('/admin/audio-video/' + avId + '/delete', {method:'POST'})
+      .then(function(r){ location.reload(); })
+      .catch(function(e){ alert('Error deleting: ' + e); });
+  };
+  window.addAudioVideo = function() {
+    var fd = new FormData();
+    fd.append('tier', document.getElementById('avTier').value);
+    fd.append('place_ref_id', document.getElementById('avRefId').value);
+    fd.append('media_type', document.getElementById('avMediaType').value);
+    var fileInput = document.getElementById('avFile');
+    if (fileInput.files.length > 0) fd.append('av_file', fileInput.files[0]);
+    fd.append('external_url', document.getElementById('avExternalUrl').value);
+    fd.append('description', document.getElementById('avDescription').value);
+    fetch('/admin/audio-video/add', {method:'POST', body:fd})
+      .then(function(r){ location.reload(); })
+      .catch(function(e){ alert('Error adding: ' + e); });
+  };
 });
 </script>
 {% endblock %}

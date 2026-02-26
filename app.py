@@ -2220,7 +2220,7 @@ def _resolve_itinerary_place(tier, ref_id, db):
     def _get_audio_video(tier, ref_id):
         return [dict(r) for r in db.execute("SELECT * FROM place_audio_video WHERE tier=? AND place_ref_id=? ORDER BY sort_order", (tier, ref_id)).fetchall()]
     if tier == 'T1':
-        r = db.execute("SELECT id,title,slug,short_description,full_content,featured_image,latitude,longitude,state,city,country FROM places WHERE id=?", (ref_id,)).fetchone()
+        r = db.execute("SELECT id,title,slug,short_description,full_content,featured_image,latitude,longitude,state,city,country,hierarchy_id FROM places WHERE id=?", (ref_id,)).fetchone()
         if r:
             cfs = db.execute("SELECT cfd.label, cfd.name as field_name, cfd.field_type, pcv.value, pcv.description FROM place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.place_id=? AND pcv.is_visible=1 AND pcv.value != ''", (ref_id,)).fetchall()
             gal = db.execute("SELECT GROUP_CONCAT(m.filename) as gi FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image'", (ref_id,)).fetchone()
@@ -2300,7 +2300,8 @@ def admin_itinerary_edit(itin_id):
                 'title': resolved['title'], 'short_description': resolved.get('short_description',''),
                 'admin_notes': rp['admin_notes'] or '', 'time_group': rp['time_group'] or '',
                 'latitude': resolved.get('latitude'), 'longitude': resolved.get('longitude'),
-                'tier_label': resolved.get('tier_label','')
+                'tier_label': resolved.get('tier_label',''),
+                'hierarchy_id': resolved.get('hierarchy_id','')
             })
     return render_template('admin/itinerary_form.html', itinerary=itin, selected_places=selected_places)
 
@@ -2318,15 +2319,20 @@ def _save_itinerary(itin_id):
         flash('Yatra name is required.','error')
         return redirect(request.url)
 
-    # Generate slug: ddmmyyyy-itinerary-groupname
-    slug_base = group_name if group_name else title
-    date_prefix = datetime.now().strftime('%d%m%Y')
-    slug = date_prefix + '-itinerary-' + slugify(slug_base)
-
-    # Check slug uniqueness
-    existing = db.execute("SELECT id FROM itineraries WHERE slug=? AND id!=?", (slug, itin_id or 0)).fetchone()
-    if existing:
-        slug = slug + '-' + str(int(datetime.now().timestamp()) % 10000)
+    # Generate slug: ddmmyyyy-itinerary-groupname (only for new itineraries)
+    if itin_id:
+        # Keep existing slug on edit to avoid breaking shared links
+        existing_itin = db.execute("SELECT slug FROM itineraries WHERE id=?", (itin_id,)).fetchone()
+        slug = existing_itin['slug'] if existing_itin else ''
+    
+    if not itin_id or not slug:
+        slug_base = group_name if group_name else title
+        date_prefix = datetime.now().strftime('%d%m%Y')
+        slug = date_prefix + '-itinerary-' + slugify(slug_base)
+        # Check slug uniqueness
+        existing = db.execute("SELECT id FROM itineraries WHERE slug=? AND id!=?", (slug, itin_id or 0)).fetchone()
+        if existing:
+            slug = slug + '-' + str(int(datetime.now().timestamp()) % 10000)
 
     
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')

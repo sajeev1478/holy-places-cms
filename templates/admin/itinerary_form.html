@@ -155,6 +155,7 @@ Search and add places above. They will appear here in order.
 <div class="sp-title">
 <span class="sp-tier" style="background:{{ '#C76B8F' if sp.tier=='T1' else '#2E86AB' if sp.tier=='T2' else '#E74845' if sp.tier=='T3' else '#9C27B0' }}">{{ sp.tier }}</span>
 {{ sp.title }}
+{% if sp.hierarchy_id %}<span style="font-size:10px;padding:1px 6px;background:#f0f0f0;color:#666;border-radius:50px;font-weight:500;margin-left:4px">{{ sp.hierarchy_id }}</span>{% endif %}
 </div>
 <div class="sp-desc">{{ sp.short_description or '' }}</div>
 <div class="sp-extras">
@@ -193,14 +194,17 @@ Search and add places above. They will appear here in order.
 <div class="form-actions">
 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if itinerary else 'Create' }} Itinerary</button>
 <a href="{{ url_for('admin_itineraries') }}" class="btn btn-secondary">Cancel</a>
+</div>
+</form>
+
 {% if itinerary %}
-<form method="POST" action="{{ url_for('admin_itinerary_delete', itin_id=itinerary.id) }}" style="margin-left:auto"
+<div style="display:flex;justify-content:flex-end;margin-top:-8px;margin-bottom:20px">
+<form method="POST" action="{{ url_for('admin_itinerary_delete', itin_id=itinerary.id) }}"
   onsubmit="return confirm('Delete this itinerary?')">
 <button type="submit" class="btn btn-danger" style="background:#E74845;color:white;border:none"><i class="fas fa-trash"></i> Delete</button>
 </form>
-{% endif %}
 </div>
-</form>
+{% endif %}
 
 <div class="copy-toast" id="copyToast" style="position:fixed;bottom:20px;right:20px;background:#2E7D32;color:white;padding:12px 24px;border-radius:10px;font-size:14px;display:none;z-index:1000;box-shadow:0 6px 24px rgba(0,0,0,.2)">✓ Copied!</div>
 
@@ -232,9 +236,10 @@ searchInput.addEventListener('input', function(){
                     <div class="psr-item" data-idx="${i}">
                         <span class="psr-tier" style="background:${p.color}">${p.tier}</span>
                         <div class="psr-info">
-                            <div class="psr-title">${p.title}</div>
+                            <div class="psr-title">${p.title}${p.hid ? ' <span style="font-size:10px;padding:1px 6px;background:#f0f0f0;color:#666;border-radius:50px;font-weight:500;margin-left:4px">'+p.hid+'</span>' : ''}</div>
                             <div class="psr-desc">${(p.desc||'').replace(/</g,'&lt;')}</div>
                             ${p.parent ? '<div class="psr-parent"><i class="fas fa-sitemap" style="font-size:10px"></i> '+p.parent.replace(/</g,'&lt;')+'</div>' : ''}
+                            ${p.location ? '<div class="psr-parent"><i class="fas fa-map-marker-alt" style="font-size:10px"></i> '+p.location.replace(/</g,'&lt;')+'</div>' : ''}
                         </div>
                     </div>
                 `).join('');
@@ -288,6 +293,7 @@ function addPlace(p){
             <div class="sp-title">
                 <span class="sp-tier" style="background:${colorMap[p.tier]}">${p.tier}</span>
                 ${p.title}
+                ${p.hid ? '<span style="font-size:10px;padding:1px 6px;background:#f0f0f0;color:#666;border-radius:50px;font-weight:500;margin-left:4px">'+p.hid+'</span>' : ''}
             </div>
             <div class="sp-desc">${p.desc||''}</div>
             <div class="sp-extras">
