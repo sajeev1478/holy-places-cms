@@ -1,0 +1,111 @@
+{% extends "admin/base.html" %}
+{% block title %}Itineraries{% endblock %}
+{% block content %}
+<style>
+.itin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.itin-header h1{font-size:24px;font-weight:700;display:flex;align-items:center;gap:10px}
+.itin-grid{display:grid;gap:16px}
+.itin-card{background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.04);border:1px solid var(--border-color);transition:all .2s;position:relative}
+.itin-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.08);transform:translateY(-1px)}
+.itin-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+.itin-title{font-size:18px;font-weight:700;color:var(--text-primary)}
+.itin-meta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:13px;color:var(--text-secondary)}
+.itin-meta span{display:flex;align-items:center;gap:4px}
+.itin-desc{font-size:14px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px}
+.itin-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:4px 12px;border-radius:50px}
+.itin-status.published{background:#E8F5E9;color:#2E7D32}
+.itin-status.draft{background:#FFF3E0;color:#E65100}
+.itin-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.itin-actions .btn{font-size:12px;padding:6px 14px;border-radius:8px}
+.itin-link{font-size:12px;color:var(--primary);word-break:break-all;display:flex;align-items:center;gap:4px;background:var(--bg-secondary);padding:6px 12px;border-radius:8px;margin-bottom:12px}
+.itin-link i{flex-shrink:0}
+.itin-empty{text-align:center;padding:80px 20px;color:var(--text-secondary)}
+.itin-empty i{font-size:64px;color:var(--border-color);margin-bottom:16px;display:block}
+.share-btn{cursor:pointer;background:none;border:1px solid var(--border-color);padding:6px 12px;border-radius:8px;font-size:12px;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;transition:all .2s}
+.share-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(199,107,143,.05)}
+.copy-toast{position:fixed;bottom:20px;right:20px;background:#2E7D32;color:white;padding:12px 24px;border-radius:10px;font-size:14px;display:none;z-index:1000;box-shadow:0 6px 24px rgba(0,0,0,.2);animation:fadeInUp .3s}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+
+<div class="itin-header">
+<h1><i class="fas fa-route" style="color:var(--primary)"></i> Yatra Itineraries</h1>
+<a href="{{ url_for('admin_itinerary_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Create Itinerary</a>
+</div>
+
+{% if itineraries|length == 0 %}
+<div class="itin-empty">
+<i class="fas fa-route"></i>
+<h3>No Itineraries Yet</h3>
+<p style="margin:8px 0 20px">Create your first yatra itinerary to guide devotees through sacred places.</p>
+<a href="{{ url_for('admin_itinerary_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Create First Itinerary</a>
+</div>
+{% else %}
+<div class="itin-grid">
+{% for itin in itineraries %}
+<div class="itin-card">
+<div class="itin-card-top">
+<div>
+<div class="itin-title">{{ itin.title }}</div>
+<div class="itin-meta">
+{% if itin.leader_name %}<span><i class="fas fa-user"></i> {{ itin.leader_name }}</span>{% endif %}
+{% if itin.group_name %}<span><i class="fas fa-users"></i> {{ itin.group_name }}</span>{% endif %}
+<span><i class="fas fa-map-marker-alt"></i> {{ itin.place_count }} places</span>
+<span><i class="fas fa-clock"></i> {{ itin.updated_at }}</span>
+</div>
+</div>
+<span class="itin-status {{ itin.status }}">
+{% if itin.status == 'published' %}● Published{% else %}● Draft{% endif %}
+</span>
+</div>
+{% if itin.short_description %}<div class="itin-desc">{{ itin.short_description }}</div>{% endif %}
+{% if itin.status == 'published' %}
+<div class="itin-link">
+<i class="fas fa-link"></i>
+<span id="link-{{ itin.id }}">{{ request.host_url }}{{ itin.slug }}</span>
+<button class="share-btn" onclick="copyLink('{{ itin.slug }}', {{ itin.id }})" title="Copy link">
+<i class="fas fa-copy"></i> Copy
+</button>
+<button class="share-btn" onclick="shareItinerary('{{ itin.title }}', '{{ itin.slug }}')" title="Share">
+<i class="fas fa-share-alt"></i> Share
+</button>
+</div>
+{% endif %}
+<div class="itin-actions">
+<a href="{{ url_for('admin_itinerary_edit', itin_id=itin.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+{% if itin.status == 'published' %}
+<a href="/{{ itin.slug }}" target="_blank" class="btn btn-secondary"><i class="fas fa-external-link-alt"></i> View</a>
+{% endif %}
+<form method="POST" action="{{ url_for('admin_itinerary_duplicate', itin_id=itin.id) }}" style="display:inline">
+<button type="submit" class="btn btn-secondary"><i class="fas fa-copy"></i> Duplicate</button>
+</form>
+<form method="POST" action="{{ url_for('admin_itinerary_delete', itin_id=itin.id) }}" style="display:inline"
+  onsubmit="return confirm('Delete this itinerary? This cannot be undone.')">
+<button type="submit" class="btn btn-danger" style="background:#E74845;color:white;border:none"><i class="fas fa-trash"></i> Delete</button>
+</form>
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+<div class="copy-toast" id="copyToast">✓ Link copied to clipboard!</div>
+
+<script>
+function copyLink(slug, id){
+    const url = window.location.origin + '/' + slug;
+    navigator.clipboard.writeText(url).then(()=>{
+        const toast = document.getElementById('copyToast');
+        toast.style.display='block';
+        setTimeout(()=> toast.style.display='none', 2000);
+    });
+}
+function shareItinerary(title, slug){
+    const url = window.location.origin + '/' + slug;
+    if(navigator.share){
+        navigator.share({title: title + ' - Yatra Itinerary', url: url});
+    } else {
+        copyLink(slug);
+    }
+}
+</script>
+{% endblock %}

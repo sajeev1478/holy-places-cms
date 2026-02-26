@@ -155,6 +155,10 @@ def init_db():
     CREATE TABLE IF NOT EXISTS site_settings (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT UNIQUE NOT NULL, value TEXT DEFAULT '');
     CREATE TABLE IF NOT EXISTS feedback_reports (id INTEGER PRIMARY KEY AUTOINCREMENT, report_type TEXT DEFAULT 'error', name TEXT, email TEXT NOT NULL, message TEXT NOT NULL, page_url TEXT, tier_info TEXT, captcha_ok INTEGER DEFAULT 0, status TEXT DEFAULT 'new', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT NOT NULL, entity_type TEXT, entity_id INTEGER, details TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+
+    /* ─── Itinerary System ─── */
+    CREATE TABLE IF NOT EXISTS itineraries (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, leader_name TEXT DEFAULT '', group_name TEXT DEFAULT '', short_description TEXT DEFAULT '', full_content TEXT DEFAULT '', status TEXT DEFAULT 'draft', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS itinerary_places (id INTEGER PRIMARY KEY AUTOINCREMENT, itinerary_id INTEGER NOT NULL, tier TEXT NOT NULL, place_ref_id INTEGER NOT NULL, sort_order INTEGER DEFAULT 0, admin_notes TEXT DEFAULT '', time_group TEXT DEFAULT '', FOREIGN KEY (itinerary_id) REFERENCES itineraries(id) ON DELETE CASCADE);
     ''')
     db.commit()
     # Migration: add gallery_captions column if not exists
@@ -879,7 +883,7 @@ def admin_logout(): session.clear(); flash('Logged out.','info'); return redirec
 @login_required
 def admin_dashboard():
     db=get_db()
-    stats={'places':db.execute("SELECT COUNT(*) FROM places").fetchone()[0],'published':db.execute("SELECT COUNT(*) FROM places WHERE status='published'").fetchone()[0],'key_places':db.execute("SELECT COUNT(*) FROM key_places").fetchone()[0],'entries':db.execute("SELECT COUNT(*) FROM module_entries").fetchone()[0],'media':db.execute("SELECT COUNT(*) FROM media").fetchone()[0],'users':db.execute("SELECT COUNT(*) FROM users WHERE is_active=1").fetchone()[0],'modules':db.execute("SELECT COUNT(*) FROM modules WHERE is_active=1").fetchone()[0],'key_spots':db.execute("SELECT COUNT(*) FROM key_spots").fetchone()[0],'sub_spots':db.execute("SELECT COUNT(*) FROM sub_spots").fetchone()[0]}
+    stats={'places':db.execute("SELECT COUNT(*) FROM places").fetchone()[0],'published':db.execute("SELECT COUNT(*) FROM places WHERE status='published'").fetchone()[0],'key_places':db.execute("SELECT COUNT(*) FROM key_places").fetchone()[0],'entries':db.execute("SELECT COUNT(*) FROM module_entries").fetchone()[0],'media':db.execute("SELECT COUNT(*) FROM media").fetchone()[0],'users':db.execute("SELECT COUNT(*) FROM users WHERE is_active=1").fetchone()[0],'modules':db.execute("SELECT COUNT(*) FROM modules WHERE is_active=1").fetchone()[0],'key_spots':db.execute("SELECT COUNT(*) FROM key_spots").fetchone()[0],'sub_spots':db.execute("SELECT COUNT(*) FROM sub_spots").fetchone()[0],'itineraries':db.execute("SELECT COUNT(*) FROM itineraries").fetchone()[0]}
     return render_template('admin/dashboard.html',stats=stats,recent_places=db.execute("SELECT * FROM places ORDER BY updated_at DESC LIMIT 5").fetchall(),recent_log=db.execute("SELECT al.*,u.display_name FROM audit_log al LEFT JOIN users u ON al.user_id=u.id ORDER BY al.created_at DESC LIMIT 10").fetchall(),modules=db.execute("SELECT m.*,(SELECT COUNT(*) FROM module_entries me WHERE me.module_id=m.id) as entry_count FROM modules m ORDER BY m.sort_order").fetchall())
 
 # Custom Fields
@@ -1902,6 +1906,216 @@ def api_place_hierarchy(slug):
 def not_found(e):
     if request.path.startswith('/api/'): return jsonify({'error':'Not found'}),404
     return render_template('frontend/404.html'),404
+
+# ═══════════════════════════════════════════════════════════════
+# ─── Itinerary System: Admin + Frontend ───
+# ═══════════════════════════════════════════════════════════════
+
+def _resolve_itinerary_place(tier, ref_id, db):
+    """Fetch place data from appropriate tier table."""
+    if tier == 'T1':
+        r = db.execute("SELECT id,title,slug,short_description,full_content,featured_image,latitude,longitude,state,city,country FROM places WHERE id=?", (ref_id,)).fetchone()
+        if r:
+            cfs = db.execute("SELECT cfd.label, pcv.value FROM place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.place_id=? AND pcv.is_visible=1 AND pcv.value != ''", (ref_id,)).fetchall()
+            return dict(r) | {'custom_fields': [dict(c) for c in cfs], 'tier': 'T1', 'tier_label': 'Holy Dham', 'url': f"/place/{r['slug']}"}
+    elif tier == 'T2':
+        r = db.execute("SELECT kp.*, p.slug as dham_slug FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?", (ref_id,)).fetchone()
+        if r:
+            cfs = db.execute("SELECT cfd.label, kpcv.value FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND kpcv.value != ''", (ref_id,)).fetchall()
+            d = dict(r)
+            d['custom_fields'] = [dict(c) for c in cfs]
+            d['tier'] = 'T2'; d['tier_label'] = 'Key Place'; d['url'] = f"/place/{r['dham_slug']}/key/{r['slug']}"
+            return d
+    elif tier == 'T3':
+        r = db.execute("SELECT ks.*, kp.slug as kp_slug, p.slug as dham_slug FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?", (ref_id,)).fetchone()
+        if r:
+            cfs = db.execute("SELECT cfd.label, kscv.value FROM key_spot_custom_values kscv JOIN custom_field_defs cfd ON kscv.field_def_id=cfd.id WHERE kscv.key_spot_id=? AND kscv.is_visible=1 AND kscv.value != ''", (ref_id,)).fetchall()
+            d = dict(r)
+            d['custom_fields'] = [dict(c) for c in cfs]
+            d['tier'] = 'T3'; d['tier_label'] = 'Key Spot'; d['url'] = f"/place/{r['dham_slug']}/key/{r['kp_slug']}/spot/{r['slug']}"
+            return d
+    elif tier == 'T4':
+        r = db.execute("SELECT ss.*, ks.slug as ks_slug, kp.slug as kp_slug, p.slug as dham_slug FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ss.id=?", (ref_id,)).fetchone()
+        if r:
+            cfs = db.execute("SELECT cfd.label, sscv.value FROM sub_spot_custom_values sscv JOIN custom_field_defs cfd ON sscv.field_def_id=cfd.id WHERE sscv.sub_spot_id=? AND sscv.is_visible=1 AND sscv.value != ''", (ref_id,)).fetchall()
+            d = dict(r)
+            d['custom_fields'] = [dict(c) for c in cfs]
+            d['tier'] = 'T4'; d['tier_label'] = 'Key Point'; d['url'] = f"/place/{r['dham_slug']}/key/{r['kp_slug']}/spot/{r['ks_slug']}/sub/{r['slug']}"
+            return d
+    return None
+
+# ─── Admin: Itinerary List ───
+@app.route('/admin/itineraries')
+@login_required
+def admin_itineraries():
+    db = get_db()
+    itineraries = db.execute("""
+        SELECT i.*, u.display_name as creator_name,
+        (SELECT COUNT(*) FROM itinerary_places ip WHERE ip.itinerary_id=i.id) as place_count
+        FROM itineraries i LEFT JOIN users u ON i.created_by=u.id
+        ORDER BY i.updated_at DESC
+    """).fetchall()
+    return render_template('admin/itineraries.html', itineraries=itineraries)
+
+# ─── Admin: Create Itinerary ───
+@app.route('/admin/itineraries/new', methods=['GET','POST'])
+@login_required
+def admin_itinerary_new():
+    if request.method == 'POST':
+        return _save_itinerary(None)
+    return render_template('admin/itinerary_form.html', itinerary=None, selected_places=[])
+
+# ─── Admin: Edit Itinerary ───
+@app.route('/admin/itineraries/<int:itin_id>/edit', methods=['GET','POST'])
+@login_required
+def admin_itinerary_edit(itin_id):
+    db = get_db()
+    itin = db.execute("SELECT * FROM itineraries WHERE id=?", (itin_id,)).fetchone()
+    if not itin: flash('Itinerary not found.','error'); return redirect(url_for('admin_itineraries'))
+    if request.method == 'POST':
+        return _save_itinerary(itin_id)
+    # Load selected places with resolved data
+    raw_places = db.execute("SELECT * FROM itinerary_places WHERE itinerary_id=? ORDER BY sort_order", (itin_id,)).fetchall()
+    selected_places = []
+    for rp in raw_places:
+        resolved = _resolve_itinerary_place(rp['tier'], rp['place_ref_id'], db)
+        if resolved:
+            selected_places.append({
+                'tier': rp['tier'], 'place_ref_id': rp['place_ref_id'],
+                'title': resolved['title'], 'short_description': resolved.get('short_description',''),
+                'admin_notes': rp['admin_notes'] or '', 'time_group': rp['time_group'] or '',
+                'latitude': resolved.get('latitude'), 'longitude': resolved.get('longitude'),
+                'tier_label': resolved.get('tier_label','')
+            })
+    return render_template('admin/itinerary_form.html', itinerary=itin, selected_places=selected_places)
+
+def _save_itinerary(itin_id):
+    db = get_db()
+    f = request.form
+    title = f.get('title','').strip()
+    leader_name = f.get('leader_name','').strip()
+    group_name = f.get('group_name','').strip()
+    short_description = f.get('short_description','').strip()
+    full_content = f.get('full_content','').strip()
+    status = f.get('status','draft')
+
+    if not title:
+        flash('Yatra name is required.','error')
+        return redirect(request.url)
+
+    # Generate slug from group_name (or title fallback)
+    slug_base = group_name if group_name else title
+    slug = 'itinerary-' + slugify(slug_base)
+
+    # Check slug uniqueness
+    existing = db.execute("SELECT id FROM itineraries WHERE slug=? AND id!=?", (slug, itin_id or 0)).fetchone()
+    if existing:
+        slug = slug + '-' + str(int(datetime.now().timestamp()) % 10000)
+
+    
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    if itin_id:
+        db.execute("""UPDATE itineraries SET title=?, slug=?, leader_name=?, group_name=?, short_description=?,
+            full_content=?, status=?, updated_at=? WHERE id=?""",
+            (title, slug, leader_name, group_name, short_description, full_content, status, now, itin_id))
+    else:
+        cur = db.execute("""INSERT INTO itineraries (title,slug,leader_name,group_name,short_description,full_content,status,created_by,created_at,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?)""",
+            (title, slug, leader_name, group_name, short_description, full_content, status,
+             session.get('user_id'), now, now))
+        itin_id = cur.lastrowid
+
+    # Save places
+    db.execute("DELETE FROM itinerary_places WHERE itinerary_id=?", (itin_id,))
+    tiers = f.getlist('place_tier[]')
+    ref_ids = f.getlist('place_ref_id[]')
+    notes = f.getlist('place_notes[]')
+    time_groups = f.getlist('place_time_group[]')
+    for idx, (tier, ref_id) in enumerate(zip(tiers, ref_ids)):
+        note = notes[idx] if idx < len(notes) else ''
+        tg = time_groups[idx] if idx < len(time_groups) else ''
+        db.execute("INSERT INTO itinerary_places (itinerary_id,tier,place_ref_id,sort_order,admin_notes,time_group) VALUES (?,?,?,?,?,?)",
+            (itin_id, tier, int(ref_id), idx, note, tg))
+
+    db.commit()
+    log_action(session.get('user_id'), 'update' if itin_id else 'create', 'itinerary', itin_id)
+    flash('Itinerary saved successfully!', 'success')
+    return redirect(url_for('admin_itinerary_edit', itin_id=itin_id))
+
+# ─── Admin: Delete Itinerary ───
+@app.route('/admin/itineraries/<int:itin_id>/delete', methods=['POST'])
+@login_required
+def admin_itinerary_delete(itin_id):
+    db = get_db()
+    db.execute("DELETE FROM itineraries WHERE id=?", (itin_id,))
+    db.commit()
+    log_action(session.get('user_id'), 'delete', 'itinerary', itin_id)
+    flash('Itinerary deleted.', 'info')
+    return redirect(url_for('admin_itineraries'))
+
+# ─── Admin: Duplicate Itinerary ───
+@app.route('/admin/itineraries/<int:itin_id>/duplicate', methods=['POST'])
+@login_required
+def admin_itinerary_duplicate(itin_id):
+    db = get_db()
+    
+    orig = db.execute("SELECT * FROM itineraries WHERE id=?", (itin_id,)).fetchone()
+    if not orig: flash('Not found.','error'); return redirect(url_for('admin_itineraries'))
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    new_title = orig['title'] + ' (Copy)'
+    new_slug = 'itinerary-' + slugify(new_title) + '-' + str(int(datetime.now().timestamp()) % 10000)
+    cur = db.execute("""INSERT INTO itineraries (title,slug,leader_name,group_name,short_description,full_content,status,created_by,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?)""",
+        (new_title, new_slug, orig['leader_name'], orig['group_name'] + ' Copy',
+         orig['short_description'], orig['full_content'], 'draft', session.get('user_id'), now, now))
+    new_id = cur.lastrowid
+    for p in db.execute("SELECT * FROM itinerary_places WHERE itinerary_id=? ORDER BY sort_order", (itin_id,)).fetchall():
+        db.execute("INSERT INTO itinerary_places (itinerary_id,tier,place_ref_id,sort_order,admin_notes,time_group) VALUES (?,?,?,?,?,?)",
+            (new_id, p['tier'], p['place_ref_id'], p['sort_order'], p['admin_notes'], p['time_group']))
+    db.commit()
+    flash('Itinerary duplicated!', 'success')
+    return redirect(url_for('admin_itinerary_edit', itin_id=new_id))
+
+# ─── API: Search Places for Itinerary Builder ───
+@app.route('/admin/api/itinerary-place-search')
+@login_required
+def admin_itinerary_place_search():
+    q = request.args.get('q','').strip()
+    if not q or len(q) < 1: return jsonify([])
+    db = get_db(); like = f'%{q}%'; results = []
+    # T1
+    for r in db.execute("SELECT id,title,short_description,hierarchy_id,city,state,latitude,longitude FROM places WHERE (title LIKE ? OR city LIKE ? OR state LIKE ? OR hierarchy_id LIKE ?) AND status='published' ORDER BY title LIMIT 8", (like,like,like,like)).fetchall():
+        results.append({'tier':'T1','tier_label':'Holy Dham','icon':'🏛️','color':'#C76B8F','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','location':f"{r['city'] or ''}{', '+r['state'] if r['state'] else ''}","lat":r['latitude'],'lng':r['longitude']})
+    # T2
+    for r in db.execute("SELECT kp.id,kp.title,kp.short_description,kp.hierarchy_id,kp.latitude,kp.longitude,p.title as dham_title,p.city,p.state FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE (kp.title LIKE ? OR kp.hierarchy_id LIKE ?) AND kp.is_visible=1 ORDER BY kp.title LIMIT 8", (like,like)).fetchall():
+        results.append({'tier':'T2','tier_label':'Key Place','icon':'📍','color':'#2E86AB','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':r['dham_title'],'location':f"{r['city'] or ''}{', '+r['state'] if r['state'] else ''}","lat":r['latitude'],'lng':r['longitude']})
+    # T3
+    for r in db.execute("SELECT ks.id,ks.title,ks.short_description,ks.hierarchy_id,ks.latitude,ks.longitude,kp.title as kp_title,p.title as dham_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE (ks.title LIKE ? OR ks.hierarchy_id LIKE ?) AND ks.is_visible=1 ORDER BY ks.title LIMIT 8", (like,like)).fetchall():
+        results.append({'tier':'T3','tier_label':'Key Spot','icon':'🎯','color':'#E74845','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':f"{r['kp_title']} → {r['dham_title']}","lat":r['latitude'],'lng':r['longitude']})
+    # T4
+    for r in db.execute("SELECT ss.id,ss.title,ss.short_description,ss.hierarchy_id,ss.latitude,ss.longitude,ks.title as ks_title,kp.title as kp_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE (ss.title LIKE ? OR ss.hierarchy_id LIKE ?) AND ss.is_visible=1 ORDER BY ss.title LIMIT 8", (like,like)).fetchall():
+        results.append({'tier':'T4','tier_label':'Key Point','icon':'✦','color':'#9C27B0','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':f"{r['ks_title']} → {r['kp_title']}","lat":r['latitude'],'lng':r['longitude']})
+    return jsonify(results[:30])
+
+# ─── Frontend: Public Itinerary View ───
+@app.route('/itinerary-<slug>')
+def public_itinerary(slug):
+    db = get_db()
+    full_slug = 'itinerary-' + slug
+    itin = db.execute("SELECT * FROM itineraries WHERE slug=? AND status='published'", (full_slug,)).fetchone()
+    if not itin:
+        return render_template('frontend/404.html'), 404
+    raw_places = db.execute("SELECT * FROM itinerary_places WHERE itinerary_id=? ORDER BY sort_order", (itin['id'],)).fetchall()
+    places = []
+    for rp in raw_places:
+        resolved = _resolve_itinerary_place(rp['tier'], rp['place_ref_id'], db)
+        if resolved:
+            resolved['admin_notes'] = rp['admin_notes'] or ''
+            resolved['time_group'] = rp['time_group'] or ''
+            resolved['sort_order'] = rp['sort_order']
+            places.append(resolved)
+    return render_template('frontend/itinerary.html', itinerary=itin, places=places)
 
 with app.app_context(): init_db(); seed_db()
 if __name__=='__main__': app.run(debug=True,host='0.0.0.0',port=5000)

@@ -1,0 +1,409 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Edit' if itinerary else 'Create' }} Itinerary{% endblock %}
+{% block content %}
+<style>
+.itin-form-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.itin-form-header h1{font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-full{grid-column:1/-1}
+.field-label{display:block;font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px}
+.field-help{font-size:11px;color:var(--text-secondary);margin-top:4px}
+.field-input{width:100%;padding:10px 14px;border:1.5px solid var(--border-color);border-radius:10px;font-size:14px;font-family:inherit;transition:border-color .2s;background:white}
+.field-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(199,107,143,.1)}
+textarea.field-input{min-height:80px;resize:vertical}
+.form-card{background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.04);border:1px solid var(--border-color);margin-bottom:20px}
+.form-card h3{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--text-primary)}
+/* Place Search */
+.place-search-wrap{position:relative;margin-bottom:16px}
+.place-search-input{width:100%;padding:12px 16px 12px 42px;border:2px solid var(--border-color);border-radius:12px;font-size:14px;font-family:inherit;transition:all .2s;background:white}
+.place-search-input:focus{outline:none;border-color:var(--primary);box-shadow:0 4px 20px rgba(199,107,143,.12)}
+.place-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:15px}
+.place-search-results{position:absolute;top:calc(100%+4px);left:0;right:0;background:white;border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.15);border:1px solid var(--border-color);max-height:400px;overflow-y:auto;z-index:100;display:none}
+.place-search-results.active{display:block}
+.psr-item{display:flex;gap:12px;padding:12px 16px;cursor:pointer;transition:background .15s;align-items:center;border-bottom:1px solid #f5f5f5}
+.psr-item:last-child{border-bottom:none}
+.psr-item:hover{background:#FDF8F3}
+.psr-tier{font-size:9px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:50px;color:white;flex-shrink:0;text-transform:uppercase}
+.psr-info{flex:1;min-width:0}
+.psr-title{font-weight:600;font-size:14px}
+.psr-desc{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.psr-parent{font-size:11px;color:var(--text-secondary);margin-top:2px}
+.psr-empty{padding:20px;text-align:center;color:var(--text-secondary);font-size:13px}
+/* Selected Places List */
+.selected-places{min-height:60px;border:2px dashed var(--border-color);border-radius:12px;padding:8px;transition:border-color .2s}
+.selected-places.drag-over{border-color:var(--primary);background:rgba(199,107,143,.03)}
+.sp-empty{text-align:center;padding:40px 20px;color:var(--text-secondary);font-size:13px}
+.sp-item{display:flex;gap:12px;padding:12px;background:#FAFAFA;border-radius:10px;margin-bottom:6px;align-items:flex-start;cursor:grab;transition:all .2s;border:1px solid transparent;position:relative}
+.sp-item:hover{background:white;border-color:var(--border-color);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.sp-item.dragging{opacity:.4;transform:scale(.98)}
+.sp-drag{color:var(--text-secondary);font-size:16px;cursor:grab;padding:4px;flex-shrink:0;display:flex;align-items:center}
+.sp-num{width:28px;height:28px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.sp-info{flex:1;min-width:0}
+.sp-title{font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
+.sp-title .sp-tier{font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 6px;border-radius:50px;color:white}
+.sp-desc{font-size:12px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-extras{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.sp-extras select,.sp-extras input{font-size:12px;padding:4px 8px;border:1px solid var(--border-color);border-radius:6px;font-family:inherit;background:white}
+.sp-extras input{flex:1;min-width:150px}
+.sp-remove{background:none;border:none;color:#E74845;cursor:pointer;font-size:16px;padding:4px;flex-shrink:0;transition:transform .2s;border-radius:6px}
+.sp-remove:hover{transform:scale(1.15);background:rgba(231,72,69,.06)}
+.form-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:24px}
+.form-actions .btn{padding:10px 24px;font-size:14px}
+/* Rich Text Editor */
+.rte-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px;background:#f8f8f8;border:1.5px solid var(--border-color);border-bottom:none;border-radius:10px 10px 0 0}
+.rte-toolbar button{background:none;border:1px solid transparent;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--text-primary);transition:all .15s}
+.rte-toolbar button:hover{background:white;border-color:var(--border-color)}
+.rte-toolbar button.active{background:var(--primary);color:white}
+.rte-sep{width:1px;background:var(--border-color);margin:4px 4px}
+.rte-editor{border:1.5px solid var(--border-color);border-top:none;border-radius:0 0 10px 10px;min-height:200px;padding:16px;font-size:14px;line-height:1.7;background:white;outline:none;overflow-y:auto}
+.rte-editor:focus{border-color:var(--primary)}
+.rte-editor h2,.rte-editor h3{font-family:'Josefin Sans',serif}
+.rte-editor p{margin-bottom:8px}
+.share-link-box{background:#F8F5FF;border:1px solid #DDD;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;flex-wrap:wrap}
+.share-link-box code{background:white;padding:4px 10px;border-radius:6px;border:1px solid #ddd;font-size:12px;word-break:break-all;flex:1}
+@media(max-width:768px){
+.form-grid{grid-template-columns:1fr}
+.sp-extras{flex-direction:column}
+.sp-extras input,.sp-extras select{width:100%}
+}
+</style>
+
+<div class="itin-form-header">
+<h1><i class="fas fa-route" style="color:var(--primary)"></i> {{ 'Edit' if itinerary else 'Create' }} Itinerary</h1>
+<a href="{{ url_for('admin_itineraries') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> All Itineraries</a>
+</div>
+
+<form method="POST" id="itinForm">
+<!-- Basic Info Card -->
+<div class="form-card">
+<h3><i class="fas fa-info-circle" style="color:var(--primary)"></i> Basic Information</h3>
+<div class="form-grid">
+<div class="form-full">
+<label class="field-label">Yatra Name *</label>
+<input type="text" name="title" class="field-input" required value="{{ itinerary.title if itinerary else '' }}" placeholder="e.g. Vrindavan Parikrama Yatra">
+</div>
+<div>
+<label class="field-label">Leader Name</label>
+<input type="text" name="leader_name" class="field-input" value="{{ itinerary.leader_name if itinerary else '' }}" placeholder="e.g. HG Prabhu Das">
+</div>
+<div>
+<label class="field-label">Group Name</label>
+<input type="text" name="group_name" class="field-input" value="{{ itinerary.group_name if itinerary else '' }}" placeholder="e.g. iskcon-mumbai-youth">
+<div class="field-help">Used in the shareable URL: /itinerary-{group-name}</div>
+</div>
+<div class="form-full">
+<label class="field-label">Short Description</label>
+<input type="text" name="short_description" class="field-input" value="{{ itinerary.short_description if itinerary else '' }}" placeholder="1-2 line summary for the itinerary header" maxlength="250">
+</div>
+<div class="form-full">
+<label class="field-label">Status</label>
+<select name="status" class="field-input" style="max-width:200px">
+<option value="draft" {{ 'selected' if not itinerary or itinerary.status=='draft' }}>Draft</option>
+<option value="published" {{ 'selected' if itinerary and itinerary.status=='published' }}>Published</option>
+</select>
+</div>
+</div>
+</div>
+
+<!-- Detailed Description Card -->
+<div class="form-card">
+<h3><i class="fas fa-align-left" style="color:#2E86AB"></i> Detailed Description / Introduction</h3>
+<div class="field-help" style="margin-bottom:12px">Rich text introduction, instructions, mood-setting, Gaudiya philosophy context, etc.</div>
+<div class="rte-toolbar" id="rteToolbar">
+<button type="button" onclick="rteCmd('bold')" title="Bold"><b>B</b></button>
+<button type="button" onclick="rteCmd('italic')" title="Italic"><i>I</i></button>
+<button type="button" onclick="rteCmd('underline')" title="Underline"><u>U</u></button>
+<div class="rte-sep"></div>
+<button type="button" onclick="rteCmd('formatBlock','<h2>')" title="Heading 2">H2</button>
+<button type="button" onclick="rteCmd('formatBlock','<h3>')" title="Heading 3">H3</button>
+<button type="button" onclick="rteCmd('formatBlock','<p>')" title="Paragraph">P</button>
+<div class="rte-sep"></div>
+<button type="button" onclick="rteCmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+<button type="button" onclick="rteCmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+<div class="rte-sep"></div>
+<button type="button" onclick="rteCmd('createLink',prompt('Enter URL:'))" title="Link"><i class="fas fa-link"></i></button>
+<button type="button" onclick="rteCmd('removeFormat')" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
+</div>
+<div class="rte-editor" id="rteEditor" contenteditable="true">{{ itinerary.full_content|safe if itinerary and itinerary.full_content else '<p>Write your introduction here...</p>' }}</div>
+<input type="hidden" name="full_content" id="fullContentHidden">
+</div>
+
+<!-- Place Selection Card -->
+<div class="form-card">
+<h3><i class="fas fa-map-marked-alt" style="color:#E74845"></i> Select Places (T1–T4)</h3>
+<p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Search and add places from the existing database. Drag to reorder. Places always show latest data.</p>
+
+<div class="place-search-wrap">
+<i class="fas fa-search place-search-icon"></i>
+<input type="text" class="place-search-input" id="placeSearchInput" placeholder="Search by name, location, hierarchy ID..." autocomplete="off">
+<div class="place-search-results" id="placeSearchResults"></div>
+</div>
+
+<div class="selected-places" id="selectedPlaces">
+{% if selected_places|length == 0 %}
+<div class="sp-empty" id="spEmpty">
+<i class="fas fa-hand-pointer" style="font-size:32px;color:var(--border-color);display:block;margin-bottom:8px"></i>
+Search and add places above. They will appear here in order.
+</div>
+{% endif %}
+{% for sp in selected_places %}
+<div class="sp-item" draggable="true" data-tier="{{ sp.tier }}" data-ref-id="{{ sp.place_ref_id }}">
+<div class="sp-drag"><i class="fas fa-grip-vertical"></i></div>
+<div class="sp-num">{{ loop.index }}</div>
+<div class="sp-info">
+<div class="sp-title">
+<span class="sp-tier" style="background:{{ '#C76B8F' if sp.tier=='T1' else '#2E86AB' if sp.tier=='T2' else '#E74845' if sp.tier=='T3' else '#9C27B0' }}">{{ sp.tier }}</span>
+{{ sp.title }}
+</div>
+<div class="sp-desc">{{ sp.short_description or '' }}</div>
+<div class="sp-extras">
+<select class="time-group-select">
+<option value="">No time group</option>
+<option value="morning" {{ 'selected' if sp.time_group=='morning' }}>🌅 Morning Darshan</option>
+<option value="afternoon" {{ 'selected' if sp.time_group=='afternoon' }}>☀️ Afternoon</option>
+<option value="evening" {{ 'selected' if sp.time_group=='evening' }}>🌆 Evening Darshan</option>
+<option value="night" {{ 'selected' if sp.time_group=='night' }}>🌙 Night</option>
+</select>
+<input type="text" class="notes-input" placeholder="Admin notes/instructions for this stop..." value="{{ sp.admin_notes or '' }}">
+</div>
+</div>
+<input type="hidden" name="place_tier[]" value="{{ sp.tier }}">
+<input type="hidden" name="place_ref_id[]" value="{{ sp.place_ref_id }}">
+<input type="hidden" name="place_time_group[]" value="{{ sp.time_group or '' }}" class="time-group-hidden">
+<input type="hidden" name="place_notes[]" value="{{ sp.admin_notes or '' }}" class="notes-hidden">
+<button type="button" class="sp-remove" onclick="removePlace(this)" title="Remove"><i class="fas fa-times-circle"></i></button>
+</div>
+{% endfor %}
+</div>
+</div>
+
+{% if itinerary and itinerary.status == 'published' %}
+<div class="form-card">
+<h3><i class="fas fa-share-alt" style="color:#2E7D32"></i> Share This Itinerary</h3>
+<div class="share-link-box">
+<i class="fas fa-link" style="color:var(--primary)"></i>
+<code id="shareLink">{{ request.host_url }}{{ itinerary.slug }}</code>
+<button type="button" class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="copyShareLink()"><i class="fas fa-copy"></i> Copy Link</button>
+<button type="button" class="btn btn-secondary" style="font-size:12px;padding:6px 14px" onclick="shareNative()"><i class="fas fa-share-alt"></i> Share</button>
+</div>
+</div>
+{% endif %}
+
+<div class="form-actions">
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if itinerary else 'Create' }} Itinerary</button>
+<a href="{{ url_for('admin_itineraries') }}" class="btn btn-secondary">Cancel</a>
+{% if itinerary %}
+<form method="POST" action="{{ url_for('admin_itinerary_delete', itin_id=itinerary.id) }}" style="margin-left:auto"
+  onsubmit="return confirm('Delete this itinerary?')">
+<button type="submit" class="btn btn-danger" style="background:#E74845;color:white;border:none"><i class="fas fa-trash"></i> Delete</button>
+</form>
+{% endif %}
+</div>
+</form>
+
+<div class="copy-toast" id="copyToast" style="position:fixed;bottom:20px;right:20px;background:#2E7D32;color:white;padding:12px 24px;border-radius:10px;font-size:14px;display:none;z-index:1000;box-shadow:0 6px 24px rgba(0,0,0,.2)">✓ Copied!</div>
+
+<script>
+// ─── Rich Text Editor ───
+function rteCmd(cmd, val){
+    document.execCommand(cmd, false, val || null);
+    document.getElementById('rteEditor').focus();
+}
+
+// ─── Place Search ───
+let searchTimeout;
+const searchInput = document.getElementById('placeSearchInput');
+const searchResults = document.getElementById('placeSearchResults');
+
+searchInput.addEventListener('input', function(){
+    clearTimeout(searchTimeout);
+    const q = this.value.trim();
+    if(q.length < 1){ searchResults.classList.remove('active'); return; }
+    searchTimeout = setTimeout(()=>{
+        fetch('/admin/api/itinerary-place-search?q=' + encodeURIComponent(q))
+        .then(r=>r.json()).then(data=>{
+            if(data.length === 0){
+                searchResults.innerHTML = '<div class="psr-empty">No places found for "'+q+'"</div>';
+            } else {
+                searchResults.innerHTML = data.map(p=>`
+                    <div class="psr-item" onclick='addPlace(${JSON.stringify(p)})'>
+                        <span class="psr-tier" style="background:${p.color}">${p.tier}</span>
+                        <div class="psr-info">
+                            <div class="psr-title">${p.title}</div>
+                            <div class="psr-desc">${p.desc||''}</div>
+                            ${p.parent ? '<div class="psr-parent"><i class="fas fa-sitemap" style="font-size:10px"></i> '+p.parent+'</div>' : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            searchResults.classList.add('active');
+        });
+    }, 250);
+});
+
+searchInput.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') searchResults.classList.remove('active');
+});
+
+document.addEventListener('click', function(e){
+    if(!e.target.closest('.place-search-wrap')) searchResults.classList.remove('active');
+});
+
+// ─── Add Place ───
+function addPlace(p){
+    const container = document.getElementById('selectedPlaces');
+    const empty = document.getElementById('spEmpty');
+    if(empty) empty.remove();
+
+    // Check duplicate
+    const existing = container.querySelectorAll('.sp-item');
+    for(let item of existing){
+        if(item.dataset.tier === p.tier && item.dataset.refId === String(p.id)){
+            searchResults.classList.remove('active');
+            searchInput.value = '';
+            return alert('This place is already in the itinerary.');
+        }
+    }
+
+    const num = existing.length + 1;
+    const colorMap = {T1:'#C76B8F',T2:'#2E86AB',T3:'#E74845',T4:'#9C27B0'};
+    const div = document.createElement('div');
+    div.className = 'sp-item';
+    div.draggable = true;
+    div.dataset.tier = p.tier;
+    div.dataset.refId = p.id;
+    div.innerHTML = `
+        <div class="sp-drag"><i class="fas fa-grip-vertical"></i></div>
+        <div class="sp-num">${num}</div>
+        <div class="sp-info">
+            <div class="sp-title">
+                <span class="sp-tier" style="background:${colorMap[p.tier]}">${p.tier}</span>
+                ${p.title}
+            </div>
+            <div class="sp-desc">${p.desc||''}</div>
+            <div class="sp-extras">
+                <select class="time-group-select">
+                    <option value="">No time group</option>
+                    <option value="morning">🌅 Morning Darshan</option>
+                    <option value="afternoon">☀️ Afternoon</option>
+                    <option value="evening">🌆 Evening Darshan</option>
+                    <option value="night">🌙 Night</option>
+                </select>
+                <input type="text" class="notes-input" placeholder="Admin notes/instructions for this stop...">
+            </div>
+        </div>
+        <input type="hidden" name="place_tier[]" value="${p.tier}">
+        <input type="hidden" name="place_ref_id[]" value="${p.id}">
+        <input type="hidden" name="place_time_group[]" value="" class="time-group-hidden">
+        <input type="hidden" name="place_notes[]" value="" class="notes-hidden">
+        <button type="button" class="sp-remove" onclick="removePlace(this)" title="Remove"><i class="fas fa-times-circle"></i></button>
+    `;
+    container.appendChild(div);
+    initDragDrop();
+    searchResults.classList.remove('active');
+    searchInput.value = '';
+}
+
+// ─── Remove Place ───
+function removePlace(btn){
+    btn.closest('.sp-item').remove();
+    renumberPlaces();
+    const container = document.getElementById('selectedPlaces');
+    if(container.querySelectorAll('.sp-item').length === 0){
+        container.innerHTML = '<div class="sp-empty" id="spEmpty"><i class="fas fa-hand-pointer" style="font-size:32px;color:var(--border-color);display:block;margin-bottom:8px"></i>Search and add places above.</div>';
+    }
+}
+
+function renumberPlaces(){
+    document.querySelectorAll('#selectedPlaces .sp-item').forEach((item, i)=>{
+        item.querySelector('.sp-num').textContent = i + 1;
+    });
+}
+
+// ─── Drag & Drop ───
+function initDragDrop(){
+    const container = document.getElementById('selectedPlaces');
+    let dragItem = null;
+
+    container.querySelectorAll('.sp-item').forEach(item => {
+        item.addEventListener('dragstart', function(e){
+            dragItem = this;
+            setTimeout(()=> this.classList.add('dragging'), 0);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        item.addEventListener('dragend', function(){
+            this.classList.remove('dragging');
+            container.classList.remove('drag-over');
+            renumberPlaces();
+            dragItem = null;
+        });
+        item.addEventListener('dragover', function(e){
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const rect = this.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            if(e.clientY < midY){
+                container.insertBefore(dragItem, this);
+            } else {
+                container.insertBefore(dragItem, this.nextSibling);
+            }
+        });
+    });
+
+    container.addEventListener('dragover', function(e){
+        e.preventDefault();
+        this.classList.add('drag-over');
+    });
+    container.addEventListener('dragleave', function(e){
+        if(!this.contains(e.relatedTarget)) this.classList.remove('drag-over');
+    });
+    container.addEventListener('drop', function(e){
+        e.preventDefault();
+        this.classList.remove('drag-over');
+    });
+}
+
+// ─── Sync extras to hidden fields ───
+document.getElementById('selectedPlaces').addEventListener('change', function(e){
+    if(e.target.classList.contains('time-group-select')){
+        e.target.closest('.sp-item').querySelector('.time-group-hidden').value = e.target.value;
+    }
+});
+document.getElementById('selectedPlaces').addEventListener('input', function(e){
+    if(e.target.classList.contains('notes-input')){
+        e.target.closest('.sp-item').querySelector('.notes-hidden').value = e.target.value;
+    }
+});
+
+// ─── Form Submit ───
+document.getElementById('itinForm').addEventListener('submit', function(){
+    // Sync RTE content
+    document.getElementById('fullContentHidden').value = document.getElementById('rteEditor').innerHTML;
+    // Sync all extras
+    document.querySelectorAll('#selectedPlaces .sp-item').forEach(item => {
+        const tgSel = item.querySelector('.time-group-select');
+        const notesInp = item.querySelector('.notes-input');
+        if(tgSel) item.querySelector('.time-group-hidden').value = tgSel.value;
+        if(notesInp) item.querySelector('.notes-hidden').value = notesInp.value;
+    });
+});
+
+// ─── Share ───
+function copyShareLink(){
+    const link = document.getElementById('shareLink').textContent;
+    navigator.clipboard.writeText(link).then(()=>{
+        document.getElementById('copyToast').style.display='block';
+        setTimeout(()=> document.getElementById('copyToast').style.display='none', 2000);
+    });
+}
+function shareNative(){
+    const link = document.getElementById('shareLink').textContent;
+    if(navigator.share){
+        navigator.share({title: '{{ itinerary.title if itinerary else "Yatra" }} - Itinerary', url: link});
+    } else { copyShareLink(); }
+}
+
+// Init drag-drop on page load
+initDragDrop();
+</script>
+{% endblock %}

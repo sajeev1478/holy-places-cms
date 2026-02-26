@@ -672,6 +672,9 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_tags' }}" href="{{ url_for('admin_tags') }}">
 <i class="fas fa-tags"></i> Tags & Categories
 </a>
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_itineraries','admin_itinerary_new','admin_itinerary_edit') }}" href="{{ url_for('admin_itineraries') }}">
+<i class="fas fa-route"></i> Itineraries
+</a>
 </div>
 
 <div class="sidebar-section">

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>{{ itinerary.title }} – Holy Dham Yatra</title>
+<meta name="description" content="{{ itinerary.short_description or itinerary.title }}">
+<meta property="og:title" content="{{ itinerary.title }} – Holy Dham Yatra">
+<meta property="og:description" content="{{ itinerary.short_description or 'A guided yatra itinerary through sacred places' }}">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&family=Nunito+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--rose:#E8A0BF;--rose-deep:#C76B8F;--rose-pale:#F8E5EE;--rose-dark:#A04870;
+--cream:#FDF8F3;--cream-dark:#F5ECE2;--cream-deep:#EAD9C6;
+--saffron:#E89B4F;--sage:#8BAB8A;--sage-light:#D4E5D4;
+--text-dark:#2D1F2E;--text-mid:#5A4A5B;--text-light:#8A7A8B;
+--temple-gold:#C8A44E;--border:#E8DDD0;--white:#FFFFFF;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito Sans',sans-serif;background:var(--cream);color:var(--text-dark);line-height:1.6;overflow-x:hidden}
+::selection{background:var(--rose);color:white}
+a{color:var(--rose-deep);text-decoration:none;transition:color .3s}
+a:hover{color:var(--rose-dark)}
+img{max-width:100%;height:auto}
+
+/* ─── Hero Section ─── */
+.itin-hero{background:linear-gradient(135deg,#2D1F2E 0%,#5A2D4A 40%,#A04870 70%,#C76B8F 100%);color:white;padding:60px 20px 50px;text-align:center;position:relative;overflow:hidden}
+.itin-hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.itin-hero-content{position:relative;z-index:1;max-width:700px;margin:0 auto}
+.itin-lotus{font-size:42px;margin-bottom:12px;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,.2))}
+.itin-hero-tag{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:8px}
+.itin-hero h1{font-family:'Josefin Sans',sans-serif;font-size:clamp(26px,5vw,38px);font-weight:700;margin-bottom:12px;line-height:1.2}
+.itin-hero-desc{font-size:15px;color:rgba(255,255,255,.85);max-width:500px;margin:0 auto 20px;line-height:1.6}
+.itin-hero-meta{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;font-size:13px;color:rgba(255,255,255,.7)}
+.itin-hero-meta span{display:flex;align-items:center;gap:6px}
+.itin-hero-meta i{font-size:14px;color:var(--saffron)}
+.share-bar{display:flex;justify-content:center;gap:10px;margin-top:20px}
+.share-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 18px;border-radius:50px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s;backdrop-filter:blur(10px)}
+.share-btn:hover{background:rgba(255,255,255,.25);transform:translateY(-1px)}
+
+/* ─── Introduction ─── */
+.itin-intro{max-width:800px;margin:0 auto;padding:40px 20px}
+.itin-intro-content{background:white;border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(45,31,46,.06);border:1px solid var(--border);font-size:15px;line-height:1.8;color:var(--text-mid)}
+.itin-intro-content h2,.itin-intro-content h3{font-family:'Josefin Sans',sans-serif;color:var(--text-dark);margin:20px 0 8px}
+.itin-intro-content p{margin-bottom:12px}
+.itin-intro-content em{color:var(--rose-deep);font-style:italic}
+.itin-intro-content a{color:var(--rose-deep);text-decoration:underline}
+
+/* ─── Itinerary Flow ─── */
+.itin-flow{max-width:800px;margin:0 auto;padding:0 20px 60px}
+.itin-flow-header{text-align:center;margin-bottom:32px}
+.itin-flow-tag{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--rose-deep);margin-bottom:6px}
+.itin-flow-title{font-family:'Josefin Sans',sans-serif;font-size:clamp(22px,4vw,30px);color:var(--text-dark)}
+.itin-flow-sub{color:var(--text-light);font-size:14px;margin-top:4px}
+
+/* ─── Timeline ─── */
+.timeline{position:relative;padding-left:40px}
+.timeline::before{content:'';position:absolute;left:15px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--rose),var(--saffron),var(--sage));border-radius:2px}
+.timeline-group-label{position:relative;margin:28px 0 16px -40px;padding-left:40px}
+.timeline-group-label span{background:var(--saffron);color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:5px 16px;border-radius:50px;display:inline-block}
+
+.place-card{position:relative;background:white;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 2px 16px rgba(45,31,46,.05);border:1px solid var(--border);transition:all .3s}
+.place-card:hover{box-shadow:0 8px 32px rgba(45,31,46,.1);transform:translateY(-2px)}
+.place-card::before{content:'';position:absolute;left:-33px;top:28px;width:12px;height:12px;border-radius:50%;background:var(--rose-deep);border:3px solid var(--cream);z-index:1;box-shadow:0 2px 8px rgba(199,107,143,.3)}
+.place-card.completed::before{background:var(--sage)}
+
+.pc-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+.pc-num{width:36px;height:36px;background:linear-gradient(135deg,var(--rose-deep),var(--rose-dark));color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;flex-shrink:0;box-shadow:0 4px 12px rgba(199,107,143,.3)}
+.pc-num-wrap{flex-shrink:0}
+.pc-title-wrap{flex:1;min-width:0}
+.pc-tier{font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:50px;color:white;display:inline-block;margin-bottom:4px}
+.pc-title{font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:600;color:var(--text-dark);line-height:1.3}
+.pc-desc{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:12px}
+.pc-significance{font-size:13px;color:var(--text-mid);line-height:1.6;padding:12px 16px;background:var(--cream);border-radius:10px;border-left:3px solid var(--rose);margin-bottom:12px}
+.pc-significance strong{color:var(--text-dark);font-size:12px;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:4px}
+
+/* Custom Fields */
+.pc-custom-fields{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.pc-cf{font-size:13px;padding:10px 14px;background:var(--cream);border-radius:8px;border-left:3px solid var(--saffron)}
+.pc-cf-label{font-weight:600;color:var(--text-dark);font-size:11px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px}
+
+.pc-notes{font-size:13px;color:var(--saffron);padding:10px 14px;background:#FFF8F0;border-radius:10px;border:1px dashed var(--saffron);margin-bottom:12px;display:flex;align-items:flex-start;gap:8px}
+.pc-notes i{margin-top:2px;flex-shrink:0}
+
+.pc-image{border-radius:12px;overflow:hidden;margin-bottom:12px;max-height:220px}
+.pc-image img{width:100%;height:100%;object-fit:cover;display:block}
+
+.pc-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pc-btn{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:50px;border:1px solid var(--border);background:white;color:var(--text-mid);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s;text-decoration:none}
+.pc-btn:hover{border-color:var(--rose);color:var(--rose-deep);background:var(--rose-pale)}
+.pc-btn.map-btn{background:var(--sage-light);border-color:var(--sage);color:#3D6B3D}
+.pc-btn.map-btn:hover{background:var(--sage);color:white}
+
+/* Mark Completed */
+.pc-check{display:flex;align-items:center;gap:8px;margin-left:auto;cursor:pointer;font-size:12px;color:var(--text-light);font-family:'Plus Jakarta Sans',sans-serif}
+.pc-check input[type="checkbox"]{width:18px;height:18px;accent-color:var(--sage);cursor:pointer}
+.pc-check.checked{color:var(--sage);font-weight:600}
+
+/* ─── Footer ─── */
+.itin-footer{background:var(--text-dark);color:rgba(255,255,255,.6);text-align:center;padding:32px 20px;font-size:13px}
+.itin-footer a{color:var(--rose);text-decoration:none}
+.itin-footer .logo-mini{font-family:'Josefin Sans',sans-serif;font-size:18px;color:white;margin-bottom:8px}
+.itin-footer .logo-mini span{color:var(--rose)}
+
+/* ─── Progress Bar ─── */
+.progress-bar-wrap{position:fixed;top:0;left:0;right:0;z-index:100;height:4px;background:rgba(0,0,0,.05)}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--rose-deep),var(--saffron));width:0%;transition:width .3s;border-radius:0 2px 2px 0}
+
+/* ─── Back to Top ─── */
+.btt{position:fixed;bottom:20px;right:20px;width:44px;height:44px;background:var(--rose-deep);color:white;border:none;border-radius:50%;font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(199,107,143,.4);z-index:50;transition:all .2s}
+.btt:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(199,107,143,.5)}
+.btt.visible{display:flex}
+
+/* ─── Toast ─── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text-dark);color:white;padding:10px 24px;border-radius:50px;font-size:13px;display:none;z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,.25);font-family:'Plus Jakarta Sans',sans-serif}
+.toast.show{display:block;animation:toastIn .3s ease}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ─── Responsive ─── */
+@media(max-width:600px){
+.itin-hero{padding:48px 16px 40px}
+.itin-hero h1{font-size:24px}
+.itin-hero-meta{gap:12px;font-size:12px}
+.itin-intro{padding:24px 16px}
+.itin-intro-content{padding:20px}
+.itin-flow{padding:0 16px 40px}
+.timeline{padding-left:32px}
+.timeline::before{left:11px}
+.place-card{padding:18px}
+.place-card::before{left:-29px;width:10px;height:10px}
+.pc-header{gap:10px}
+.pc-num{width:30px;height:30px;font-size:12px}
+.pc-title{font-size:16px}
+.pc-actions{gap:6px}
+.share-bar{gap:6px}
+.share-btn{font-size:12px;padding:7px 14px}
+}
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<!-- Hero Section -->
+<div class="itin-hero">
+<div class="itin-hero-content">
+<span class="itin-lotus">🪷</span>
+<div class="itin-hero-tag">Yatra Itinerary</div>
+<h1>{{ itinerary.title }}</h1>
+{% if itinerary.short_description %}
+<div class="itin-hero-desc">{{ itinerary.short_description }}</div>
+{% endif %}
+<div class="itin-hero-meta">
+{% if itinerary.leader_name %}<span><i class="fas fa-user"></i> {{ itinerary.leader_name }}</span>{% endif %}
+{% if itinerary.group_name %}<span><i class="fas fa-users"></i> {{ itinerary.group_name }}</span>{% endif %}
+<span><i class="fas fa-map-marker-alt"></i> {{ places|length }} places</span>
+</div>
+<div class="share-bar">
+<button class="share-btn" onclick="shareItinerary()"><i class="fas fa-share-alt"></i> Share</button>
+<button class="share-btn" onclick="copyLink()"><i class="fas fa-copy"></i> Copy Link</button>
+</div>
+</div>
+</div>
+
+<!-- Introduction -->
+{% if itinerary.full_content and itinerary.full_content != '<p>Write your introduction here...</p>' %}
+<div class="itin-intro">
+<div class="itin-intro-content">
+{{ itinerary.full_content|safe }}
+</div>
+</div>
+{% endif %}
+
+<!-- Itinerary Flow -->
+<div class="itin-flow">
+<div class="itin-flow-header">
+<div class="itin-flow-tag">Your Journey</div>
+<div class="itin-flow-title">Places to Visit</div>
+<div class="itin-flow-sub">{{ places|length }} sacred stops in sequence</div>
+</div>
+
+<div class="timeline">
+{% set current_group = namespace(val='') %}
+{% for place in places %}
+{% if place.time_group and place.time_group != current_group.val %}
+{% set current_group.val = place.time_group %}
+<div class="timeline-group-label">
+<span>
+{% if place.time_group == 'morning' %}🌅 Morning Darshan
+{% elif place.time_group == 'afternoon' %}☀️ Afternoon
+{% elif place.time_group == 'evening' %}🌆 Evening Darshan
+{% elif place.time_group == 'night' %}🌙 Night
+{% else %}{{ place.time_group }}{% endif %}
+</span>
+</div>
+{% endif %}
+<div class="place-card" id="place-{{ loop.index }}">
+<div class="pc-header">
+<div class="pc-num-wrap"><div class="pc-num">{{ loop.index }}</div></div>
+<div class="pc-title-wrap">
+<span class="pc-tier" style="background:{{ '#C76B8F' if place.tier=='T1' else '#2E86AB' if place.tier=='T2' else '#E74845' if place.tier=='T3' else '#9C27B0' }}">{{ place.tier_label }}</span>
+<div class="pc-title">{{ place.title }}</div>
+</div>
+<label class="pc-check" onclick="toggleComplete(this, {{ loop.index }})">
+<input type="checkbox" id="check-{{ loop.index }}"> <span>Done</span>
+</label>
+</div>
+
+{% if place.featured_image %}
+<div class="pc-image">
+<img src="/static/uploads/{{ place.featured_image }}" alt="{{ place.title }}" loading="lazy">
+</div>
+{% endif %}
+
+{% if place.short_description %}
+<div class="pc-desc">{{ place.short_description }}</div>
+{% endif %}
+
+{% if place.full_content %}
+<div class="pc-significance">
+<strong>📜 Details & Significance</strong>
+{{ place.full_content|safe }}
+</div>
+{% endif %}
+
+{% if place.admin_notes %}
+<div class="pc-notes">
+<i class="fas fa-sticky-note"></i>
+<div>{{ place.admin_notes }}</div>
+</div>
+{% endif %}
+
+{% if place.custom_fields %}
+<div class="pc-custom-fields">
+{% for cf in place.custom_fields %}
+<div class="pc-cf">
+<span class="pc-cf-label">{{ cf.label }}</span>
+{{ cf.value|safe }}
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+<div class="pc-actions">
+{% if place.latitude and place.longitude %}
+<a href="https://www.google.com/maps?q={{ place.latitude }},{{ place.longitude }}" target="_blank" class="pc-btn map-btn">
+<i class="fas fa-map-marked-alt"></i> Open in Maps
+</a>
+{% endif %}
+{% if place.url %}
+<a href="{{ place.url }}" target="_blank" class="pc-btn">
+<i class="fas fa-info-circle"></i> Full Details
+</a>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+
+<!-- Footer -->
+<div class="itin-footer">
+<div class="logo-mini">🪷 Holy<span>Dham</span></div>
+<p>Created with Holy Dham CMS • A guided spiritual journey experience</p>
+<p style="margin-top:4px"><a href="/">Visit HolyDham →</a></p>
+</div>
+
+<!-- Back to Top -->
+<button class="btt" id="bttBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fas fa-chevron-up"></i></button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Progress Bar ───
+window.addEventListener('scroll', function(){
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+    // Back to top
+    document.getElementById('bttBtn').classList.toggle('visible', h.scrollTop > 400);
+});
+
+// ─── Mark as Completed ───
+function toggleComplete(label, idx){
+    const cb = document.getElementById('check-' + idx);
+    const card = document.getElementById('place-' + idx);
+    setTimeout(()=>{
+        if(cb.checked){
+            card.classList.add('completed');
+            label.classList.add('checked');
+            label.querySelector('span').textContent = '✓ Done';
+            card.style.opacity = '0.7';
+        } else {
+            card.classList.remove('completed');
+            label.classList.remove('checked');
+            label.querySelector('span').textContent = 'Done';
+            card.style.opacity = '1';
+        }
+        // Save to localStorage
+        try {
+            const key = 'itin_{{ itinerary.slug }}';
+            let state = JSON.parse(localStorage.getItem(key) || '{}');
+            state[idx] = cb.checked;
+            localStorage.setItem(key, JSON.stringify(state));
+        } catch(e){}
+    }, 10);
+}
+
+// Restore completed states
+try {
+    const key = 'itin_{{ itinerary.slug }}';
+    const state = JSON.parse(localStorage.getItem(key) || '{}');
+    Object.entries(state).forEach(([idx, checked]) => {
+        if(checked){
+            const cb = document.getElementById('check-' + idx);
+            const card = document.getElementById('place-' + idx);
+            const label = cb.closest('.pc-check');
+            if(cb && card){
+                cb.checked = true;
+                card.classList.add('completed');
+                card.style.opacity = '0.7';
+                if(label){ label.classList.add('checked'); label.querySelector('span').textContent = '✓ Done'; }
+            }
+        }
+    });
+} catch(e){}
+
+// ─── Share ───
+function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 2500);
+}
+function copyLink(){
+    navigator.clipboard.writeText(window.location.href).then(()=> showToast('✓ Link copied!'));
+}
+function shareItinerary(){
+    if(navigator.share){
+        navigator.share({
+            title: '{{ itinerary.title }} – Yatra Itinerary',
+            text: '{{ itinerary.short_description or "A guided yatra itinerary" }}',
+            url: window.location.href
+        });
+    } else { copyLink(); }
+}
+</script>
+</body>
+</html>
