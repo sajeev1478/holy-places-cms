@@ -1,162 +1,212 @@
 {% extends "admin/base.html" %}
+{% set place = d.place %}
+{% set kps = d.kps %}
+{% set kss = d.kss %}
+{% set sss = d.sss %}
 {% block title %}Photos – {{ place.title }}{% endblock %}
-{% block page_title %}📷 Capture Photos{% endblock %}
-{% block topbar_actions %}<a href="{{ url_for('admin_places') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Dhams</a>{% endblock %}
+{% block page_title %}📷 Capture Photos — {{ place.title }}{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_places') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>{% endblock %}
 
 {% block admin_content %}
 <style>
-.photo-notice{background:linear-gradient(135deg,#2E86AB15,#2E86AB08);border:1px solid #2E86AB30;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:13px;color:#1a6d8f}
-.photo-notice i{font-size:18px;flex-shrink:0}
-.photo-notice strong{color:#14536b}
-.tier-section{background:white;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.03);border:1px solid var(--border)}
-.tier-tag{font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:50px;color:white;display:inline-block;margin-bottom:6px}
-.tier-title{font-size:16px;font-weight:700;margin-bottom:4px}
-.tier-sub{font-size:12px;color:var(--text-light);margin-bottom:14px}
-.img-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;margin-bottom:12px}
-.img-preview{width:80px;height:80px;object-fit:cover;border-radius:10px;border:2px solid var(--border);flex-shrink:0}
-.img-upload-area{flex:1;min-width:200px}
-.cam-btn{background:linear-gradient(135deg,#2E86AB,#1a6d8f);color:white;border:none;padding:8px 16px;border-radius:50px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:6px}
-.cam-preview{display:none;margin-top:8px;max-width:150px;border-radius:8px;overflow:hidden;position:relative}
+.rp-notice{background:linear-gradient(135deg,#2E86AB12,#2E86AB06);border:1px solid #2E86AB30;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:13px;color:#1a6d8f}
+.rp-notice i{font-size:18px;flex-shrink:0}
+.tier-card{background:white;border-radius:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.03);border:1px solid var(--border);overflow:hidden}
+.tier-head{padding:16px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+.tier-head:hover{background:rgba(0,0,0,.015)}
+.tier-badge{font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:50px;color:white;flex-shrink:0}
+.tier-head-info{flex:1;min-width:0}
+.tier-head-title{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tier-head-sub{font-size:11px;color:var(--text-light);margin-top:1px}
+.tier-chevron{transition:transform .2s;color:var(--text-light)}
+.tier-card.open .tier-chevron{transform:rotate(180deg)}
+.tier-body{display:none;border-top:1px solid var(--border)}
+.tier-card.open .tier-body{display:block}
+.ro-section{padding:14px 20px;border-bottom:1px solid #f0ede8}
+.ro-section:last-child{border-bottom:none}
+.ro-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px}
+.ro-value{font-size:13px;color:var(--text);line-height:1.5}
+.ro-value.empty{font-style:italic;color:#bbb;font-size:12px}
+.ro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.ro-chip{display:inline-block;padding:3px 10px;background:#f3f0e8;border-radius:50px;font-size:11px;font-weight:600;margin:2px}
+.ro-img-row{display:flex;gap:6px;flex-wrap:wrap}
+.ro-img{width:50px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+.edit-section{padding:16px 20px;background:linear-gradient(135deg,#E3F2FD20,#BBDEFB10);border-top:2px solid #2E86AB30}
+.edit-section .es-label{font-size:11px;font-weight:700;color:#2E86AB;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.edit-section .es-label i{font-size:14px}
+.cam-btn{background:linear-gradient(135deg,#2E86AB,#1a6d8f);color:white;border:none;padding:7px 14px;border-radius:50px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:4px}
+.cam-preview{display:none;margin-top:6px;max-width:120px;border-radius:8px;overflow:hidden;position:relative}
 .cam-preview.active{display:block}
 .cam-preview img{width:100%;border-radius:8px}
-.cam-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;cursor:pointer;font-size:10px}
+.cam-remove{position:absolute;top:3px;right:3px;width:18px;height:18px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;cursor:pointer;font-size:9px}
 .cam-info{font-size:10px;color:var(--text-light);margin-top:4px;display:flex;align-items:center;gap:4px}
 .cam-info i{color:#2E86AB}
-.gal-new{margin-top:8px}
-.tier-divider{font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--border)}
-@media(max-width:600px){.img-row{flex-direction:column}.img-preview{width:60px;height:60px}}
+.tier-divider{font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border)}
+.ro-cf-item{background:#f8f6f0;border-radius:6px;padding:6px 10px;margin-bottom:3px;display:flex;gap:8px;align-items:baseline}
+.ro-cf-label{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap}
+.ro-cf-val{font-size:11px;color:var(--text-light);flex:1}
+@media(max-width:600px){.ro-grid{grid-template-columns:1fr}}
 </style>
 
-<div class="photo-notice">
+<div class="rp-notice">
 <i class="fas fa-info-circle"></i>
-<div><strong>Photo Capture Only</strong> — This page lets you upload or capture photos for all tiers. No other content (text, descriptions, status, etc.) can be changed here.</div>
+<div><strong>Photo Capture Mode</strong> — All data is shown for reference (read-only). You can only upload or capture photos. Text, descriptions, status, tags, location, and all other fields cannot be edited here.</div>
 </div>
 
 <form method="POST" enctype="multipart/form-data">
-<!-- T1: Holy Dham -->
-<div class="tier-section">
-<span class="tier-tag" style="background:#C76B8F">T1 HOLY DHAM</span>
-<div class="tier-title">{{ place.title }}</div>
-<div class="tier-sub">Featured Image & Gallery</div>
-<div class="img-row">
-{% if place.featured_image %}<img src="/static/uploads/{{ place.featured_image }}" class="img-preview" title="Current featured image">{% endif %}
-<div class="img-upload-area">
-<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Featured Image</label>
-<input type="file" name="t1_featured_file" accept="image/*" class="form-control" style="font-size:12px">
-<button type="button" class="cam-btn" onclick="this.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture</button>
-<input type="file" name="t1_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.nextElementSibling;p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
-<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.img-upload-area');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
-<div class="cam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
+
+{# ═══ MACROS ═══ #}
+
+{# Read-only data display #}
+{% macro ro_data(item, short_desc=none, full_content=none, lat=none, lng=none, status=none, tags=none, cfs=none, cvs=none) %}
+<div class="ro-section">
+<div class="ro-grid">
+<div><div class="ro-label">Status</div><div class="ro-value"><span class="badge badge-{{ status or 'draft' }}">{{ status or 'draft' }}</span></div></div>
+<div><div class="ro-label">Location</div><div class="ro-value">{% if lat and lng %}<span style="font-family:monospace;font-size:12px">{{ lat }}, {{ lng }}</span>{% else %}<span class="empty">Not set</span>{% endif %}</div></div>
+{% if short_desc %}<div style="grid-column:1/-1"><div class="ro-label">Short Description</div><div class="ro-value">{{ short_desc }}</div></div>{% endif %}
+{% if full_content %}<div style="grid-column:1/-1"><div class="ro-label">Description</div><div class="ro-value" style="font-size:12px;max-height:80px;overflow:hidden">{{ full_content|striptags|truncate(250) }}</div></div>{% endif %}
 </div>
 </div>
-{% if gallery_media %}
-<div style="margin-bottom:8px"><span style="font-size:12px;font-weight:600">Gallery ({{ gallery_media|length }} images)</span></div>
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">{% for gm in gallery_media %}<img src="/static/uploads/{{ gm.filename }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">{% endfor %}</div>
+{% if tags %}
+<div class="ro-section"><div class="ro-label">Tags</div>{% for t in tags %}<span class="ro-chip">{{ t }}</span>{% endfor %}</div>
 {% endif %}
-<div class="gal-new" id="t1_photo_gals"></div>
-<button type="button" class="btn btn-sm btn-secondary" style="font-size:11px" onclick="addPhotoGal('t1_photo')"><i class="fas fa-plus"></i> Add Gallery Images</button>
-<button type="button" class="cam-btn" style="background:linear-gradient(135deg,#8BAB8A,#6d8d6c);margin-left:6px" onclick="addPhotoCamGal('t1_photo')"><i class="fas fa-camera"></i> Capture Gallery</button>
+{% if cfs and cvs %}
+{% set ns = namespace(has=false) %}{% for cf in cfs %}{% if cvs.get(cf.id, {}).get('value') %}{% set ns.has = true %}{% endif %}{% endfor %}
+{% if ns.has %}
+<div class="ro-section"><div class="ro-label">Custom Fields</div>
+{% for cf in cfs %}{% set cv = cvs.get(cf.id, {}) %}{% if cv.get('value') %}
+<div class="ro-cf-item"><span class="ro-cf-label">{{ cf.label }}:</span>
+{% if cf.field_type == 'image' %}<img src="/static/uploads/{{ cv.value }}" style="width:30px;height:30px;border-radius:4px;object-fit:cover">
+{% elif cf.field_type in ('audio','video','audio_url','video_url') %}<span class="ro-cf-val">{{ cv.get('description','') or '(media file)' }}</span>
+{% elif cf.field_type == 'richtext' %}<span class="ro-cf-val">{{ cv.value|striptags|truncate(80) }}</span>
+{% else %}<span class="ro-cf-val">{{ cv.value|truncate(80) }}</span>{% endif %}
+</div>
+{% endif %}{% endfor %}
+</div>
+{% endif %}
+{% endif %}
+{% endmacro %}
+
+{# Editable photo section #}
+{% macro photo_edit(prefix, current_fi, gallery_imgs=none, gallery_media_list=none) %}
+<div class="edit-section">
+<div class="es-label"><i class="fas fa-camera"></i> Upload / Capture Photos</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+{% if current_fi %}<img src="/static/uploads/{{ current_fi }}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:2px solid var(--border)">{% endif %}
+<div style="flex:1">
+<label style="font-size:11px;font-weight:600;display:block;margin-bottom:3px">Featured Image</label>
+<input type="file" name="{{ prefix }}_featured_file" accept="image/*" class="form-control" style="font-size:11px">
+</div>
+</div>
+<button type="button" class="cam-btn" onclick="this.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture Featured</button>
+<input type="file" name="{{ prefix }}_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="showCamPrev(this)">
+<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="clearCamPrev(this)">✕</button></div>
+<div class="cam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
+{% if gallery_media_list %}
+<div style="margin-top:10px"><span style="font-size:11px;font-weight:600">Gallery ({{ gallery_media_list|length }})</span></div>
+<div class="ro-img-row" style="margin:4px 0 6px">{% for gm in gallery_media_list %}<img src="/static/uploads/{{ gm.filename }}" class="ro-img">{% endfor %}</div>
+{% elif gallery_imgs %}
+{% set imgs = gallery_imgs.split(',') | reject('equalto','') | list %}
+{% if imgs %}<div style="margin-top:10px"><span style="font-size:11px;font-weight:600">Gallery ({{ imgs|length }})</span></div>
+<div class="ro-img-row" style="margin:4px 0 6px">{% for gi in imgs %}<img src="/static/uploads/{{ gi.strip() }}" class="ro-img">{% endfor %}</div>{% endif %}
+{% endif %}
+<div id="{{ prefix }}_photo_gals" style="margin-top:6px"></div>
+<div style="margin-top:4px">
+<button type="button" class="btn btn-sm btn-secondary" style="font-size:10px" onclick="addGal('{{ prefix }}_photo')"><i class="fas fa-plus"></i> Add Gallery</button>
+<button type="button" class="cam-btn" style="font-size:10px;padding:5px 12px;background:linear-gradient(135deg,#8BAB8A,#5d7d5c);margin-left:4px" onclick="addCamGal('{{ prefix }}_photo')"><i class="fas fa-camera"></i> Capture Gallery</button>
+</div>
+</div>
+{% endmacro %}
+
+<!-- ═══ T1: HOLY DHAM ═══ -->
+<div class="tier-card open">
+<div class="tier-head" onclick="this.parentElement.classList.toggle('open')">
+<span class="tier-badge" style="background:#C76B8F">T1</span>
+<div class="tier-head-info">
+<div class="tier-head-title">🙏 {{ place.title }}</div>
+<div class="tier-head-sub">{{ place.city }}{% if place.city and place.state %}, {% endif %}{{ place.state }} · {{ place.hierarchy_id or '' }}</div>
+</div>
+<i class="fas fa-chevron-down tier-chevron"></i>
+</div>
+<div class="tier-body">
+{{ ro_data(place, place.short_description, place.full_content, place.latitude, place.longitude, place.status, d.tags, d.custom_fields, d.custom_values) }}
+{{ photo_edit('t1', place.featured_image, gallery_media_list=d.gallery_media) }}
+</div>
 </div>
 
-<!-- T2: Key Places -->
+<!-- ═══ T2: KEY PLACES ═══ -->
 {% if kps %}
 <div class="tier-divider">📍 Tier 2 — Key Places ({{ kps|length }})</div>
 {% for kp in kps %}
-<div class="tier-section">
-<span class="tier-tag" style="background:#2E86AB">T2</span>
-<div class="tier-title">{{ kp.title }}</div>
-<div class="img-row">
-{% if kp.featured_image %}<img src="/static/uploads/{{ kp.featured_image }}" class="img-preview">{% endif %}
-<div class="img-upload-area">
-<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Featured Image</label>
-<input type="file" name="kp_{{ kp.id }}_featured_file" accept="image/*" class="form-control" style="font-size:12px">
-<button type="button" class="cam-btn" onclick="this.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture</button>
-<input type="file" name="kp_{{ kp.id }}_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.nextElementSibling;p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
-<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.img-upload-area');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
-<div class="cam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
+<div class="tier-card">
+<div class="tier-head" onclick="this.parentElement.classList.toggle('open')">
+<span class="tier-badge" style="background:#2E86AB">T2</span>
+<div class="tier-head-info">
+<div class="tier-head-title">{{ kp.title }}</div>
+<div class="tier-head-sub">{{ kp.hierarchy_id or '' }}{% if kp.short_description %} · {{ kp.short_description|truncate(50) }}{% endif %}</div>
 </div>
+<i class="fas fa-chevron-down tier-chevron"></i>
 </div>
-{% if kp.gallery_images %}<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">{% for gi in kp.gallery_images.split(',') %}{% if gi.strip() %}<img src="/static/uploads/{{ gi.strip() }}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">{% endif %}{% endfor %}</div>{% endif %}
-<div class="gal-new" id="kp_{{ kp.id }}_photo_gals"></div>
-<button type="button" class="btn btn-sm btn-secondary" style="font-size:10px" onclick="addPhotoGal('kp_{{ kp.id }}_photo')"><i class="fas fa-plus"></i> Gallery</button>
-<button type="button" class="cam-btn" style="font-size:10px;padding:6px 12px;background:linear-gradient(135deg,#8BAB8A,#6d8d6c);margin-left:4px" onclick="addPhotoCamGal('kp_{{ kp.id }}_photo')"><i class="fas fa-camera"></i> Capture</button>
+<div class="tier-body">
+{{ ro_data(kp, kp.short_description, kp.full_content, kp.latitude, kp.longitude, 'published', cfs=d.kp_field_defs, cvs=d.kp_customs.get(kp.id, {})) }}
+{{ photo_edit('kp_' ~ kp.id, kp.featured_image, gallery_imgs=kp.gallery_images) }}
+</div>
 </div>
 {% endfor %}
 {% endif %}
 
-<!-- T3: Key Spots -->
+<!-- ═══ T3: KEY SPOTS ═══ -->
 {% if kss %}
 <div class="tier-divider">🎯 Tier 3 — Key Spots ({{ kss|length }})</div>
 {% for ks in kss %}
-<div class="tier-section">
-<span class="tier-tag" style="background:#E74845">T3</span>
-<div class="tier-title">{{ ks.title }}</div>
-<div class="tier-sub">{{ ks.kp_title }}</div>
-<div class="img-row">
-{% if ks.featured_image %}<img src="/static/uploads/{{ ks.featured_image }}" class="img-preview">{% endif %}
-<div class="img-upload-area">
-<input type="file" name="ks_{{ ks.id }}_featured_file" accept="image/*" class="form-control" style="font-size:12px">
-<button type="button" class="cam-btn" onclick="this.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture</button>
-<input type="file" name="ks_{{ ks.id }}_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.nextElementSibling;p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
-<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.img-upload-area');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
-<div class="cam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
+<div class="tier-card">
+<div class="tier-head" onclick="this.parentElement.classList.toggle('open')">
+<span class="tier-badge" style="background:#E74845">T3</span>
+<div class="tier-head-info">
+<div class="tier-head-title">{{ ks.title }}</div>
+<div class="tier-head-sub">{{ ks.kp_title }} · {{ ks.hierarchy_id or '' }}</div>
 </div>
+<i class="fas fa-chevron-down tier-chevron"></i>
 </div>
-{% if ks.gallery_images %}<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">{% for gi in ks.gallery_images.split(',') %}{% if gi.strip() %}<img src="/static/uploads/{{ gi.strip() }}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">{% endif %}{% endfor %}</div>{% endif %}
-<div class="gal-new" id="ks_{{ ks.id }}_photo_gals"></div>
-<button type="button" class="btn btn-sm btn-secondary" style="font-size:10px" onclick="addPhotoGal('ks_{{ ks.id }}_photo')"><i class="fas fa-camera"></i> Gallery</button>
+<div class="tier-body">
+{{ ro_data(ks, ks.short_description, ks.full_content, ks.latitude, ks.longitude, 'published') }}
+{{ photo_edit('ks_' ~ ks.id, ks.featured_image, gallery_imgs=ks.gallery_images) }}
+</div>
 </div>
 {% endfor %}
 {% endif %}
 
-<!-- T4: Sub Spots -->
+<!-- ═══ T4: KEY POINTS ═══ -->
 {% if sss %}
 <div class="tier-divider">✦ Tier 4 — Key Points ({{ sss|length }})</div>
 {% for ss in sss %}
-<div class="tier-section">
-<span class="tier-tag" style="background:#9C27B0">T4</span>
-<div class="tier-title">{{ ss.title }}</div>
-<div class="tier-sub">{{ ss.ks_title }} → {{ ss.kp_title }}</div>
-<div class="img-row">
-{% if ss.featured_image %}<img src="/static/uploads/{{ ss.featured_image }}" class="img-preview">{% endif %}
-<div class="img-upload-area">
-<input type="file" name="ss_{{ ss.id }}_featured_file" accept="image/*" class="form-control" style="font-size:12px">
-<button type="button" class="cam-btn" onclick="this.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture</button>
-<input type="file" name="ss_{{ ss.id }}_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.nextElementSibling;p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
-<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.img-upload-area');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
-<div class="cam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
+<div class="tier-card">
+<div class="tier-head" onclick="this.parentElement.classList.toggle('open')">
+<span class="tier-badge" style="background:#9C27B0">T4</span>
+<div class="tier-head-info">
+<div class="tier-head-title">{{ ss.title }}</div>
+<div class="tier-head-sub">{{ ss.ks_title }} → {{ ss.kp_title }}</div>
 </div>
+<i class="fas fa-chevron-down tier-chevron"></i>
 </div>
-<div class="gal-new" id="ss_{{ ss.id }}_photo_gals"></div>
-<button type="button" class="btn btn-sm btn-secondary" style="font-size:10px" onclick="addPhotoGal('ss_{{ ss.id }}_photo')"><i class="fas fa-camera"></i> Gallery</button>
+<div class="tier-body">
+{{ ro_data(ss, ss.short_description, ss.full_content, ss.latitude, ss.longitude, 'published') }}
+{{ photo_edit('ss_' ~ ss.id, ss.featured_image, gallery_imgs=ss.gallery_images) }}
+</div>
 </div>
 {% endfor %}
 {% endif %}
 
-<div style="position:sticky;bottom:0;background:var(--bg);padding:16px 0;border-top:1px solid var(--border);margin-top:20px;z-index:10">
+<div style="position:sticky;bottom:0;background:var(--bg);padding:14px 0;border-top:1px solid var(--border);margin-top:20px;z-index:10">
 <button type="submit" class="btn btn-primary" style="width:100%;max-width:400px"><i class="fas fa-save"></i> Save All Photos</button>
 </div>
 </form>
 
 <script>
-var galCounters = {};
-function addPhotoGal(prefix){
-    if(!galCounters[prefix]) galCounters[prefix]=0;
-    var c=document.getElementById(prefix+'_gals');
-    var div=document.createElement('div');
-    div.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:4px';
-    div.innerHTML='<input type="file" name="'+prefix+'_gallery_'+galCounters[prefix]+'" accept="image/*" class="form-control" style="font-size:11px;flex:1"><button type="button" class="btn btn-danger btn-sm btn-icon" style="flex-shrink:0" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>';
-    c.appendChild(div);
-    galCounters[prefix]++;
-}
-function addPhotoCamGal(prefix){
-    if(!galCounters[prefix]) galCounters[prefix]=0;
-    var c=document.getElementById(prefix+'_gals');
-    var div=document.createElement('div');
-    div.style.cssText='margin-bottom:4px';
-    div.innerHTML='<input type="file" name="'+prefix+'_gallery_'+galCounters[prefix]+'" accept="image/*" capture="environment" style="font-size:11px" onchange="var p=this.nextElementSibling;p.classList.add(\'active\');var r=new FileReader();r.onload=function(e){p.querySelector(\'img\').src=e.target.result};r.readAsDataURL(this.files[0])"><div class="cam-preview"><img><button type="button" class="cam-remove" onclick="this.closest(\'div\').parentElement.remove()">✕</button></div>';
-    c.appendChild(div);
-    galCounters[prefix]++;
-}
+function showCamPrev(inp){var p=inp.nextElementSibling;p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(inp.files[0])}
+function clearCamPrev(btn){var w=btn.closest('.edit-section');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''}
+var gc={};
+function addGal(pre){if(!gc[pre])gc[pre]=0;var c=document.getElementById(pre+'_gals'),d=document.createElement('div');d.style.cssText='display:flex;align-items:center;gap:6px;margin-bottom:4px';d.innerHTML='<input type="file" name="'+pre+'_gallery_'+gc[pre]+'" accept="image/*" class="form-control" style="font-size:11px;flex:1"><button type="button" class="btn btn-danger btn-sm btn-icon" style="flex-shrink:0" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>';c.appendChild(d);gc[pre]++}
+function addCamGal(pre){if(!gc[pre])gc[pre]=0;var c=document.getElementById(pre+'_gals'),d=document.createElement('div');d.style.cssText='margin-bottom:4px';d.innerHTML='<input type="file" name="'+pre+'_gallery_'+gc[pre]+'" accept="image/*" capture="environment" style="font-size:11px" onchange="showCamPrev(this)"><div class="cam-preview"><img><button type="button" class="cam-remove" onclick="this.closest(\'div\').parentElement.remove()">✕</button></div>';c.appendChild(d);gc[pre]++}
 </script>
 {% endblock %}

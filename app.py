@@ -1142,33 +1142,47 @@ def admin_place_delete(place_id):
 # ─── Restricted Access: Photo-Only & Location-Only Pages ───
 # ═══════════════════════════════════════════════════════════════
 
-def _user_is_photo_only():
-    """Check if current user ONLY has capture_photo permission (no manage_places)."""
-    u = get_current_user()
-    if not u: return False
-    if u['role'] == 'super_admin': return False
-    p = json.loads(u['permissions'] or '{}')
-    return p.get('capture_photo') and not p.get('manage_places') and not p.get('all')
-
-def _user_is_location_only():
-    """Check if current user ONLY has update_location permission (no manage_places)."""
-    u = get_current_user()
-    if not u: return False
-    if u['role'] == 'super_admin': return False
-    p = json.loads(u['permissions'] or '{}')
-    return p.get('update_location') and not p.get('manage_places') and not p.get('all')
-
-def _get_dham_hierarchy_for_restricted(place_id):
-    """Get full hierarchy data for photo/location pages."""
+def _load_full_dham_data(place_id):
+    """Load ALL dham data across all tiers for read-only display."""
     db = get_db()
     place = db.execute("SELECT * FROM places WHERE id=?", (place_id,)).fetchone()
-    if not place: return None, [], [], []
+    if not place: return None
+    data = {'place': place}
+    # Tags
+    data['tags'] = [r['name'] for r in db.execute("SELECT t.name FROM tags t JOIN place_tags pt ON t.id=pt.tag_id WHERE pt.place_id=?", (place_id,)).fetchall()]
+    # T1 custom fields
+    cfs = db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','place') ORDER BY sort_order").fetchall()
+    cvs = {r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM place_custom_values WHERE place_id=?",(place_id,)).fetchall()}
+    data['custom_fields'] = cfs
+    data['custom_values'] = cvs
+    # Gallery
+    data['gallery_media'] = db.execute("SELECT m.id,m.filename,m.caption FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order",(place_id,)).fetchall()
+    # T2 Key Places
     kps = db.execute("SELECT * FROM key_places WHERE parent_place_id=? ORDER BY sort_order", (place_id,)).fetchall()
-    kss = db.execute("SELECT ks.*,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order", (place_id,)).fetchall()
-    sss = db.execute("SELECT ss.*,ks.title as ks_title,kp.title as kp_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order", (place_id,)).fetchall()
-    return place, kps, kss, sss
+    data['kps'] = kps
+    kpc = {}
+    for kp in kps:
+        kpc[kp['id']] = {r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM key_place_custom_values WHERE key_place_id=?",(kp['id'],)).fetchall()}
+    data['kp_customs'] = kpc
+    # T3 Key Spots
+    data['kss'] = db.execute("SELECT ks.*,kp.title as kp_title,sc.name as cat_name,sc.icon as cat_icon FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order",(place_id,)).fetchall()
+    # T3 custom fields
+    ksc = {}
+    for ks in data['kss']:
+        ksc[ks['id']] = {r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM key_spot_custom_values WHERE key_spot_id=?",(ks['id'],)).fetchall()}
+    data['ks_customs'] = ksc
+    # T4 Sub Spots
+    data['sss'] = db.execute("SELECT ss.*,ks.title as ks_title,kp.title as kp_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order",(place_id,)).fetchall()
+    # T4 custom fields
+    ssc = {}
+    for ss in data['sss']:
+        ssc[ss['id']] = {r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM sub_spot_custom_values WHERE sub_spot_id=?",(ss['id'],)).fetchall()}
+    data['ss_customs'] = ssc
+    # kp custom field definitions (applies to key_place)
+    data['kp_field_defs'] = db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
+    return data
 
-# ─── Photo Capture Page (Restricted) ───
+# ─── Photo Capture Page (Restricted — Full Read-Only View) ───
 @app.route('/admin/places/<int:place_id>/photos', methods=['GET','POST'])
 @login_required
 def admin_place_photos(place_id):
@@ -1176,8 +1190,9 @@ def admin_place_photos(place_id):
     u = get_current_user()
     if not has_permission(u, 'capture_photo') and not has_permission(u, 'manage_places'):
         flash('Permission denied.', 'error'); return redirect(url_for('admin_dashboard'))
-    place, kps, kss, sss = _get_dham_hierarchy_for_restricted(place_id)
-    if not place: abort(404)
+    d = _load_full_dham_data(place_id)
+    if not d: abort(404)
+    place = d['place']
     if request.method == 'POST':
         # Save T1 featured image
         fi = place['featured_image'] or ''
@@ -1202,7 +1217,7 @@ def admin_place_photos(place_id):
                     if mid: db.execute("INSERT INTO place_media (place_id,media_id,media_role) VALUES (?,?,?)", (place_id, mid['id'], 'gallery'))
             idx += 1
         # Save T2 images
-        for kp in kps:
+        for kp in d['kps']:
             kpid = kp['id']
             kfi = kp['featured_image'] or ''
             for fname in (f'kp_{kpid}_featured_file', f'kp_{kpid}_featured_cam'):
@@ -1226,7 +1241,7 @@ def admin_place_photos(place_id):
                         db.execute("UPDATE key_places SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (ng, kpid))
                 gidx += 1
         # Save T3 images
-        for ks in kss:
+        for ks in d['kss']:
             ksid = ks['id']
             kfi = ks['featured_image'] or ''
             for fname in (f'ks_{ksid}_featured_file', f'ks_{ksid}_featured_cam'):
@@ -1250,7 +1265,7 @@ def admin_place_photos(place_id):
                         db.execute("UPDATE key_spots SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (ng, ksid))
                 gidx += 1
         # Save T4 images
-        for ss in sss:
+        for ss in d['sss']:
             ssid = ss['id']
             sfi = ss['featured_image'] or ''
             for fname in (f'ss_{ssid}_featured_file', f'ss_{ssid}_featured_cam'):
@@ -1277,10 +1292,9 @@ def admin_place_photos(place_id):
         log_action(session.get('user_id'), 'photo_update', 'place', place_id, place['title'])
         flash('Photos updated successfully!', 'success')
         return redirect(url_for('admin_place_photos', place_id=place_id))
-    gallery_media = db.execute("SELECT m.id,m.filename,m.caption FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order", (place_id,)).fetchall()
-    return render_template('admin/place_photos.html', place=place, kps=kps, kss=kss, sss=sss, gallery_media=gallery_media)
+    return render_template('admin/place_photos.html', d=d)
 
-# ─── Location Update Page (Restricted) ───
+# ─── Location Update Page (Restricted — Full Read-Only View) ───
 @app.route('/admin/places/<int:place_id>/location', methods=['GET','POST'])
 @login_required
 def admin_place_location(place_id):
@@ -1288,37 +1302,31 @@ def admin_place_location(place_id):
     u = get_current_user()
     if not has_permission(u, 'update_location') and not has_permission(u, 'manage_places'):
         flash('Permission denied.', 'error'); return redirect(url_for('admin_dashboard'))
-    place, kps, kss, sss = _get_dham_hierarchy_for_restricted(place_id)
-    if not place: abort(404)
+    d = _load_full_dham_data(place_id)
+    if not d: abort(404)
+    place = d['place']
     if request.method == 'POST':
         f = request.form
-        # T1 location
         lat = f.get('t1_latitude', type=float); lng = f.get('t1_longitude', type=float)
         if lat is not None and lng is not None:
             db.execute("UPDATE places SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (lat, lng, place_id))
-        # T2 locations
-        for kp in kps:
-            klat = f.get(f'kp_{kp["id"]}_latitude', type=float)
-            klng = f.get(f'kp_{kp["id"]}_longitude', type=float)
+        for kp in d['kps']:
+            klat = f.get(f'kp_{kp["id"]}_latitude', type=float); klng = f.get(f'kp_{kp["id"]}_longitude', type=float)
             if klat is not None and klng is not None:
                 db.execute("UPDATE key_places SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, kp['id']))
-        # T3 locations
-        for ks in kss:
-            klat = f.get(f'ks_{ks["id"]}_latitude', type=float)
-            klng = f.get(f'ks_{ks["id"]}_longitude', type=float)
+        for ks in d['kss']:
+            klat = f.get(f'ks_{ks["id"]}_latitude', type=float); klng = f.get(f'ks_{ks["id"]}_longitude', type=float)
             if klat is not None and klng is not None:
                 db.execute("UPDATE key_spots SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, ks['id']))
-        # T4 locations
-        for ss in sss:
-            slat = f.get(f'ss_{ss["id"]}_latitude', type=float)
-            slng = f.get(f'ss_{ss["id"]}_longitude', type=float)
+        for ss in d['sss']:
+            slat = f.get(f'ss_{ss["id"]}_latitude', type=float); slng = f.get(f'ss_{ss["id"]}_longitude', type=float)
             if slat is not None and slng is not None:
                 db.execute("UPDATE sub_spots SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (slat, slng, ss['id']))
         db.commit()
         log_action(session.get('user_id'), 'location_update', 'place', place_id, place['title'])
         flash('Locations updated successfully!', 'success')
         return redirect(url_for('admin_place_location', place_id=place_id))
-    return render_template('admin/place_location.html', place=place, kps=kps, kss=kss, sss=sss)
+    return render_template('admin/place_location.html', d=d)
 
 # ─── Key Spots (Tier 3) Admin ───
 @app.route('/admin/key-place/<int:kp_id>/spots')
