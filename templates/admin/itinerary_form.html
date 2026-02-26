@@ -226,16 +226,24 @@ searchInput.addEventListener('input', function(){
             if(data.length === 0){
                 searchResults.innerHTML = '<div class="psr-empty">No places found for "'+q+'"</div>';
             } else {
-                searchResults.innerHTML = data.map(p=>`
-                    <div class="psr-item" onclick='addPlace(${JSON.stringify(p)})'>
+                // Store results globally to avoid JSON-in-HTML issues
+                window._searchResults = data;
+                searchResults.innerHTML = data.map((p,i)=>`
+                    <div class="psr-item" data-idx="${i}">
                         <span class="psr-tier" style="background:${p.color}">${p.tier}</span>
                         <div class="psr-info">
                             <div class="psr-title">${p.title}</div>
-                            <div class="psr-desc">${p.desc||''}</div>
-                            ${p.parent ? '<div class="psr-parent"><i class="fas fa-sitemap" style="font-size:10px"></i> '+p.parent+'</div>' : ''}
+                            <div class="psr-desc">${(p.desc||'').replace(/</g,'&lt;')}</div>
+                            ${p.parent ? '<div class="psr-parent"><i class="fas fa-sitemap" style="font-size:10px"></i> '+p.parent.replace(/</g,'&lt;')+'</div>' : ''}
                         </div>
                     </div>
                 `).join('');
+                // Attach click handlers safely
+                searchResults.querySelectorAll('.psr-item').forEach(el=>{
+                    el.addEventListener('click', function(){
+                        addPlace(window._searchResults[parseInt(this.dataset.idx)]);
+                    });
+                });
             }
             searchResults.classList.add('active');
         });

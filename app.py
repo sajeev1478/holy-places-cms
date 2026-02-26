@@ -2400,19 +2400,20 @@ def admin_itinerary_place_search():
     q = request.args.get('q','').strip()
     if not q or len(q) < 1: return jsonify([])
     db = get_db(); like = f'%{q}%'; results = []
-    # T1
-    for r in db.execute("SELECT id,title,short_description,hierarchy_id,city,state,latitude,longitude FROM places WHERE (title LIKE ? OR city LIKE ? OR state LIKE ? OR hierarchy_id LIKE ?) AND status='published' ORDER BY title LIMIT 8", (like,like,like,like)).fetchall():
-        results.append({'tier':'T1','tier_label':'Holy Dham','icon':'🏛️','color':'#C76B8F','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','location':f"{r['city'] or ''}{', '+r['state'] if r['state'] else ''}","lat":r['latitude'],'lng':r['longitude']})
-    # T2
-    for r in db.execute("SELECT kp.id,kp.title,kp.short_description,kp.hierarchy_id,kp.latitude,kp.longitude,p.title as dham_title,p.city,p.state FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE (kp.title LIKE ? OR kp.hierarchy_id LIKE ?) AND kp.is_visible=1 ORDER BY kp.title LIMIT 8", (like,like)).fetchall():
-        results.append({'tier':'T2','tier_label':'Key Place','icon':'📍','color':'#2E86AB','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':r['dham_title'],'location':f"{r['city'] or ''}{', '+r['state'] if r['state'] else ''}","lat":r['latitude'],'lng':r['longitude']})
-    # T3
-    for r in db.execute("SELECT ks.id,ks.title,ks.short_description,ks.hierarchy_id,ks.latitude,ks.longitude,kp.title as kp_title,p.title as dham_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE (ks.title LIKE ? OR ks.hierarchy_id LIKE ?) AND ks.is_visible=1 ORDER BY ks.title LIMIT 8", (like,like)).fetchall():
-        results.append({'tier':'T3','tier_label':'Key Spot','icon':'🎯','color':'#E74845','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':f"{r['kp_title']} → {r['dham_title']}","lat":r['latitude'],'lng':r['longitude']})
-    # T4
-    for r in db.execute("SELECT ss.id,ss.title,ss.short_description,ss.hierarchy_id,ss.latitude,ss.longitude,ks.title as ks_title,kp.title as kp_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE (ss.title LIKE ? OR ss.hierarchy_id LIKE ?) AND ss.is_visible=1 ORDER BY ss.title LIMIT 8", (like,like)).fetchall():
-        results.append({'tier':'T4','tier_label':'Key Point','icon':'✦','color':'#9C27B0','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':f"{r['ks_title']} → {r['kp_title']}","lat":r['latitude'],'lng':r['longitude']})
-    return jsonify(results[:30])
+    # T1 — search title, city, state, hierarchy_id, short_description (no status filter for admin)
+    for r in db.execute("SELECT id,title,short_description,hierarchy_id,city,state,latitude,longitude FROM places WHERE (title LIKE ? OR city LIKE ? OR state LIKE ? OR hierarchy_id LIKE ? OR short_description LIKE ?) ORDER BY title LIMIT 10", (like,like,like,like,like)).fetchall():
+        results.append({'tier':'T1','tier_label':'Holy Dham','icon':'\U0001f3db\ufe0f','color':'#C76B8F','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','location':f"{r['city'] or ''}{', '+r['state'] if r['state'] else ''}",'lat':r['latitude'],'lng':r['longitude']})
+    # T2 — search title, hierarchy_id, short_description, parent dham title, city, state
+    for r in db.execute("SELECT kp.id,kp.title,kp.short_description,kp.hierarchy_id,kp.latitude,kp.longitude,p.title as dham_title,p.city,p.state FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE (kp.title LIKE ? OR kp.hierarchy_id LIKE ? OR kp.short_description LIKE ? OR p.title LIKE ? OR p.city LIKE ? OR p.state LIKE ?) ORDER BY kp.title LIMIT 10", (like,like,like,like,like,like)).fetchall():
+        results.append({'tier':'T2','tier_label':'Key Place','icon':'\U0001f4cd','color':'#2E86AB','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':r['dham_title'],'location':f"{r['city'] or ''}{', '+r['state'] if r['state'] else ''}",'lat':r['latitude'],'lng':r['longitude']})
+    # T3 — search title, hierarchy_id, short_description, parent key_place title, dham title
+    for r in db.execute("SELECT ks.id,ks.title,ks.short_description,ks.hierarchy_id,ks.latitude,ks.longitude,kp.title as kp_title,p.title as dham_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE (ks.title LIKE ? OR ks.hierarchy_id LIKE ? OR ks.short_description LIKE ? OR kp.title LIKE ? OR p.title LIKE ?) ORDER BY ks.title LIMIT 10", (like,like,like,like,like)).fetchall():
+        results.append({'tier':'T3','tier_label':'Key Spot','icon':'\U0001f3af','color':'#E74845','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':f"{r['kp_title']} \u2192 {r['dham_title']}",'lat':r['latitude'],'lng':r['longitude']})
+    # T4 — search title, hierarchy_id, short_description, parent key_spot title, key_place title
+    for r in db.execute("SELECT ss.id,ss.title,ss.short_description,ss.hierarchy_id,ss.latitude,ss.longitude,ks.title as ks_title,kp.title as kp_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE (ss.title LIKE ? OR ss.hierarchy_id LIKE ? OR ss.short_description LIKE ? OR ks.title LIKE ? OR kp.title LIKE ?) ORDER BY ss.title LIMIT 10", (like,like,like,like,like)).fetchall():
+        results.append({'tier':'T4','tier_label':'Key Point','icon':'\u2726','color':'#9C27B0','id':r['id'],'title':r['title'],'desc':r['short_description'] or '','hid':r['hierarchy_id'] or '','parent':f"{r['ks_title']} \u2192 {r['kp_title']}",'lat':r['latitude'],'lng':r['longitude']})
+    return jsonify(results[:40])
+
 
 # ─── Frontend: Public Itinerary View ───
 @app.route('/<slug>')
