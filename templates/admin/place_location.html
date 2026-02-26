@@ -1,0 +1,133 @@
+{% extends "admin/base.html" %}
+{% block title %}Location – {{ place.title }}{% endblock %}
+{% block page_title %}📍 Update Locations{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_places') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Dhams</a>{% endblock %}
+
+{% block admin_content %}
+<style>
+.loc-notice{background:linear-gradient(135deg,#8BAB8A15,#8BAB8A08);border:1px solid #8BAB8A30;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;font-size:13px;color:#3D6B3D}
+.loc-notice i{font-size:18px;flex-shrink:0}
+.loc-notice strong{color:#2a5a2a}
+.tier-section{background:white;border-radius:14px;padding:20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.03);border:1px solid var(--border)}
+.tier-tag{font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:50px;color:white;display:inline-block;margin-bottom:6px}
+.tier-title{font-size:16px;font-weight:700;margin-bottom:2px}
+.tier-sub{font-size:12px;color:var(--text-light);margin-bottom:10px}
+.loc-row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+.loc-row .form-group{margin-bottom:0}
+.loc-row label{font-size:11px;font-weight:600;display:block;margin-bottom:4px}
+.loc-row input{font-size:13px;padding:8px 10px}
+.loc-current{font-size:11px;color:var(--text-light);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.loc-current span{color:var(--primary);font-weight:600;font-family:monospace;font-size:12px}
+.gps-btn{background:linear-gradient(135deg,#8BAB8A,#6d8d6c);color:white;border:none;padding:8px 14px;border-radius:8px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;height:38px}
+.gps-btn:hover{opacity:.9}
+.tier-divider{font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--border)}
+@media(max-width:600px){.loc-row{grid-template-columns:1fr 1fr;gap:8px}.gps-btn{grid-column:1/-1}}
+</style>
+
+<div class="loc-notice">
+<i class="fas fa-info-circle"></i>
+<div><strong>Location Update Only</strong> — This page lets you update GPS coordinates for all tiers. No other content (text, images, status, etc.) can be changed here. Use the GPS button on-site for best accuracy.</div>
+</div>
+
+<form method="POST">
+<!-- T1: Holy Dham -->
+<div class="tier-section">
+<span class="tier-tag" style="background:#C76B8F">T1 HOLY DHAM</span>
+<div class="tier-title">{{ place.title }}</div>
+{% if place.latitude and place.longitude %}
+<div class="loc-current">📍 Current: <span>{{ place.latitude }}, {{ place.longitude }}</span></div>
+{% else %}
+<div class="loc-current">📍 No location set</div>
+{% endif %}
+<div class="loc-row">
+<div class="form-group"><label>Latitude</label><input name="t1_latitude" class="form-control" type="number" step="any" value="{{ place.latitude or '' }}"></div>
+<div class="form-group"><label>Longitude</label><input name="t1_longitude" class="form-control" type="number" step="any" value="{{ place.longitude or '' }}"></div>
+<button type="button" class="gps-btn" onclick="fillGPS(this)"><i class="fas fa-crosshairs"></i> Use GPS</button>
+</div>
+</div>
+
+<!-- T2: Key Places -->
+{% if kps %}
+<div class="tier-divider">📍 Tier 2 — Key Places ({{ kps|length }})</div>
+{% for kp in kps %}
+<div class="tier-section">
+<span class="tier-tag" style="background:#2E86AB">T2</span>
+<div class="tier-title">{{ kp.title }}</div>
+{% if kp.latitude and kp.longitude %}
+<div class="loc-current">📍 Current: <span>{{ kp.latitude }}, {{ kp.longitude }}</span></div>
+{% else %}<div class="loc-current">📍 No location set</div>{% endif %}
+<div class="loc-row">
+<div class="form-group"><label>Latitude</label><input name="kp_{{ kp.id }}_latitude" class="form-control" type="number" step="any" value="{{ kp.latitude or '' }}"></div>
+<div class="form-group"><label>Longitude</label><input name="kp_{{ kp.id }}_longitude" class="form-control" type="number" step="any" value="{{ kp.longitude or '' }}"></div>
+<button type="button" class="gps-btn" onclick="fillGPS(this)"><i class="fas fa-crosshairs"></i> GPS</button>
+</div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- T3: Key Spots -->
+{% if kss %}
+<div class="tier-divider">🎯 Tier 3 — Key Spots ({{ kss|length }})</div>
+{% for ks in kss %}
+<div class="tier-section">
+<span class="tier-tag" style="background:#E74845">T3</span>
+<div class="tier-title">{{ ks.title }}</div>
+<div class="tier-sub">{{ ks.kp_title }}</div>
+{% if ks.latitude and ks.longitude %}
+<div class="loc-current">📍 Current: <span>{{ ks.latitude }}, {{ ks.longitude }}</span></div>
+{% else %}<div class="loc-current">📍 No location set</div>{% endif %}
+<div class="loc-row">
+<div class="form-group"><label>Latitude</label><input name="ks_{{ ks.id }}_latitude" class="form-control" type="number" step="any" value="{{ ks.latitude or '' }}"></div>
+<div class="form-group"><label>Longitude</label><input name="ks_{{ ks.id }}_longitude" class="form-control" type="number" step="any" value="{{ ks.longitude or '' }}"></div>
+<button type="button" class="gps-btn" onclick="fillGPS(this)"><i class="fas fa-crosshairs"></i> GPS</button>
+</div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- T4: Sub Spots -->
+{% if sss %}
+<div class="tier-divider">✦ Tier 4 — Key Points ({{ sss|length }})</div>
+{% for ss in sss %}
+<div class="tier-section">
+<span class="tier-tag" style="background:#9C27B0">T4</span>
+<div class="tier-title">{{ ss.title }}</div>
+<div class="tier-sub">{{ ss.ks_title }} → {{ ss.kp_title }}</div>
+{% if ss.latitude and ss.longitude %}
+<div class="loc-current">📍 Current: <span>{{ ss.latitude }}, {{ ss.longitude }}</span></div>
+{% else %}<div class="loc-current">📍 No location set</div>{% endif %}
+<div class="loc-row">
+<div class="form-group"><label>Latitude</label><input name="ss_{{ ss.id }}_latitude" class="form-control" type="number" step="any" value="{{ ss.latitude or '' }}"></div>
+<div class="form-group"><label>Longitude</label><input name="ss_{{ ss.id }}_longitude" class="form-control" type="number" step="any" value="{{ ss.longitude or '' }}"></div>
+<button type="button" class="gps-btn" onclick="fillGPS(this)"><i class="fas fa-crosshairs"></i> GPS</button>
+</div>
+</div>
+{% endfor %}
+{% endif %}
+
+<div style="position:sticky;bottom:0;background:var(--bg);padding:16px 0;border-top:1px solid var(--border);margin-top:20px;z-index:10">
+<button type="submit" class="btn btn-primary" style="width:100%;max-width:400px"><i class="fas fa-save"></i> Save All Locations</button>
+</div>
+</form>
+
+<script>
+function fillGPS(btn){
+    if(!navigator.geolocation){ alert('GPS not available on this device.'); return; }
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting...';
+    btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(function(pos){
+        var row = btn.closest('.loc-row');
+        var inputs = row.querySelectorAll('input[type=number]');
+        inputs[0].value = pos.coords.latitude.toFixed(6);
+        inputs[1].value = pos.coords.longitude.toFixed(6);
+        btn.innerHTML = '<i class="fas fa-check"></i> Done';
+        btn.style.background = '#2E7D32';
+        setTimeout(function(){ btn.innerHTML = '<i class="fas fa-crosshairs"></i> GPS'; btn.style.background = ''; btn.disabled = false; }, 2000);
+    }, function(err){
+        alert('Could not get location: ' + err.message);
+        btn.innerHTML = '<i class="fas fa-crosshairs"></i> GPS';
+        btn.disabled = false;
+    }, {enableHighAccuracy: true, timeout: 15000});
+}
+</script>
+{% endblock %}

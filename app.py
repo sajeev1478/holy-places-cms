@@ -497,7 +497,7 @@ def seed_db():
     for mod,pid,t,s,c in [(3,ayd_id,'The Ramayana of Ayodhya','ramayana-of-ayodhya','<p>Ayodhya is the setting for the beginning and end of the Ramayana. From Rama\'s birth to His coronation after 14 years of exile, Ayodhya witnessed the leelas that defined dharma for all ages.</p>'),(3,ayd_id,'Sapt Hari Yatra','sapt-hari-yatra','<p>The Sapt Hari pilgrimage covers seven Vishnu temples: Guptahari, Chakrahari, Vishnuhari, Dharmahari, Bilvahari, Punyahari, and Chandrahari.</p>'),(4,ayd_id,'Ram Navami in Ayodhya','ram-navami-ayodhya','<p>Ram Navami on Chaitra Shukla Navami is Ayodhya\'s grandest festival with millions of devotees, grand processions, and Ramayana recitation.</p>'),(3,vrn_id,'Appearance of Sri Chaitanya','appearance-sri-chaitanya','<p>Sri Chaitanya appeared in Mayapur in 1486 CE amidst ecstatic chanting.</p>'),(4,None,'Gaura Purnima','gaura-purnima','<p>Celebrates Sri Chaitanya\'s appearance. Hundreds of thousands visit Mayapur.</p>')]:
         db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,status,created_by) VALUES (?,?,?,?,?,'published',1)", (mod,pid,t,s,c))
     # Permissions
-    for k,l,d,cat in [('manage_places','Manage Holy Dhams','Create/edit/delete dhams','content'),('manage_modules','Manage Modules','Configure modules','system'),('manage_entries','Manage Entries','Create/edit entries','content'),('manage_media','Manage Media','Upload media','media'),('publish_content','Publish Content','Publish/unpublish','content'),('manage_users','Manage Users','Manage accounts','system'),('manage_tags','Manage Tags','Manage categories','content'),('manage_fields','Manage Fields','Configure custom fields','system')]:
+    for k,l,d,cat in [('manage_places','Manage Holy Dhams','Create/edit/delete dhams','content'),('manage_modules','Manage Modules','Configure modules','system'),('manage_entries','Manage Entries','Create/edit entries','content'),('manage_media','Manage Media','Upload media','media'),('publish_content','Publish Content','Publish/unpublish','content'),('manage_users','Manage Users','Manage accounts','system'),('manage_tags','Manage Tags','Manage categories','content'),('manage_fields','Manage Fields','Configure custom fields','system'),('capture_photo','📷 Capture Photos Only','Upload/capture photos for all tiers. No other content can be changed.','field_access'),('update_location','📍 Update Location Only','Update GPS coordinates for all tiers. No other content can be changed.','field_access')]:
         db.execute("INSERT OR IGNORE INTO permission_definitions (permission_key,label,description,category) VALUES (?,?,?,?)", (k,l,d,cat))
     db.commit()
     _backfill_hierarchy_ids(db)
@@ -1137,6 +1137,188 @@ def _save_place(place_id):
 @login_required
 def admin_place_delete(place_id):
     db=get_db(); db.execute("DELETE FROM places WHERE id=?",(place_id,)); db.commit(); flash('Deleted.','info'); return redirect(url_for('admin_places'))
+
+# ═══════════════════════════════════════════════════════════════
+# ─── Restricted Access: Photo-Only & Location-Only Pages ───
+# ═══════════════════════════════════════════════════════════════
+
+def _user_is_photo_only():
+    """Check if current user ONLY has capture_photo permission (no manage_places)."""
+    u = get_current_user()
+    if not u: return False
+    if u['role'] == 'super_admin': return False
+    p = json.loads(u['permissions'] or '{}')
+    return p.get('capture_photo') and not p.get('manage_places') and not p.get('all')
+
+def _user_is_location_only():
+    """Check if current user ONLY has update_location permission (no manage_places)."""
+    u = get_current_user()
+    if not u: return False
+    if u['role'] == 'super_admin': return False
+    p = json.loads(u['permissions'] or '{}')
+    return p.get('update_location') and not p.get('manage_places') and not p.get('all')
+
+def _get_dham_hierarchy_for_restricted(place_id):
+    """Get full hierarchy data for photo/location pages."""
+    db = get_db()
+    place = db.execute("SELECT * FROM places WHERE id=?", (place_id,)).fetchone()
+    if not place: return None, [], [], []
+    kps = db.execute("SELECT * FROM key_places WHERE parent_place_id=? ORDER BY sort_order", (place_id,)).fetchall()
+    kss = db.execute("SELECT ks.*,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order", (place_id,)).fetchall()
+    sss = db.execute("SELECT ss.*,ks.title as ks_title,kp.title as kp_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order", (place_id,)).fetchall()
+    return place, kps, kss, sss
+
+# ─── Photo Capture Page (Restricted) ───
+@app.route('/admin/places/<int:place_id>/photos', methods=['GET','POST'])
+@login_required
+def admin_place_photos(place_id):
+    db = get_db()
+    u = get_current_user()
+    if not has_permission(u, 'capture_photo') and not has_permission(u, 'manage_places'):
+        flash('Permission denied.', 'error'); return redirect(url_for('admin_dashboard'))
+    place, kps, kss, sss = _get_dham_hierarchy_for_restricted(place_id)
+    if not place: abort(404)
+    if request.method == 'POST':
+        # Save T1 featured image
+        fi = place['featured_image'] or ''
+        for fname in ('t1_featured_file', 't1_featured_cam'):
+            if fname in request.files:
+                uf = request.files[fname]
+                if uf and uf.filename:
+                    u_path = save_upload(uf, 'images')
+                    if u_path: fi = u_path
+        if fi != (place['featured_image'] or ''):
+            db.execute("UPDATE places SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (fi, place_id))
+        # Save T1 gallery images
+        idx = 0
+        while True:
+            nk = f't1_photo_gallery_{idx}'
+            if nk not in request.files: break
+            gf = request.files[nk]
+            if gf and gf.filename:
+                rp = save_upload(gf, 'images')
+                if rp:
+                    mid = db.execute("SELECT id FROM media WHERE filename=?", (rp,)).fetchone()
+                    if mid: db.execute("INSERT INTO place_media (place_id,media_id,media_role) VALUES (?,?,?)", (place_id, mid['id'], 'gallery'))
+            idx += 1
+        # Save T2 images
+        for kp in kps:
+            kpid = kp['id']
+            kfi = kp['featured_image'] or ''
+            for fname in (f'kp_{kpid}_featured_file', f'kp_{kpid}_featured_cam'):
+                if fname in request.files:
+                    uf = request.files[fname]
+                    if uf and uf.filename:
+                        u_path = save_upload(uf, 'images')
+                        if u_path: kfi = u_path
+            if kfi != (kp['featured_image'] or ''):
+                db.execute("UPDATE key_places SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (kfi, kpid))
+            gidx = 0
+            while True:
+                nk = f'kp_{kpid}_photo_gallery_{gidx}'
+                if nk not in request.files: break
+                gf = request.files[nk]
+                if gf and gf.filename:
+                    rp = save_upload(gf, 'images')
+                    if rp:
+                        eg = kp['gallery_images'] or ''
+                        ng = (eg + ',' + rp) if eg else rp
+                        db.execute("UPDATE key_places SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (ng, kpid))
+                gidx += 1
+        # Save T3 images
+        for ks in kss:
+            ksid = ks['id']
+            kfi = ks['featured_image'] or ''
+            for fname in (f'ks_{ksid}_featured_file', f'ks_{ksid}_featured_cam'):
+                if fname in request.files:
+                    uf = request.files[fname]
+                    if uf and uf.filename:
+                        u_path = save_upload(uf, 'images')
+                        if u_path: kfi = u_path
+            if kfi != (ks['featured_image'] or ''):
+                db.execute("UPDATE key_spots SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (kfi, ksid))
+            gidx = 0
+            while True:
+                nk = f'ks_{ksid}_photo_gallery_{gidx}'
+                if nk not in request.files: break
+                gf = request.files[nk]
+                if gf and gf.filename:
+                    rp = save_upload(gf, 'images')
+                    if rp:
+                        eg = ks['gallery_images'] or ''
+                        ng = (eg + ',' + rp) if eg else rp
+                        db.execute("UPDATE key_spots SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (ng, ksid))
+                gidx += 1
+        # Save T4 images
+        for ss in sss:
+            ssid = ss['id']
+            sfi = ss['featured_image'] or ''
+            for fname in (f'ss_{ssid}_featured_file', f'ss_{ssid}_featured_cam'):
+                if fname in request.files:
+                    uf = request.files[fname]
+                    if uf and uf.filename:
+                        u_path = save_upload(uf, 'images')
+                        if u_path: sfi = u_path
+            if sfi != (ss['featured_image'] or ''):
+                db.execute("UPDATE sub_spots SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (sfi, ssid))
+            gidx = 0
+            while True:
+                nk = f'ss_{ssid}_photo_gallery_{gidx}'
+                if nk not in request.files: break
+                gf = request.files[nk]
+                if gf and gf.filename:
+                    rp = save_upload(gf, 'images')
+                    if rp:
+                        eg = ss['gallery_images'] or ''
+                        ng = (eg + ',' + rp) if eg else rp
+                        db.execute("UPDATE sub_spots SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (ng, ssid))
+                gidx += 1
+        db.commit()
+        log_action(session.get('user_id'), 'photo_update', 'place', place_id, place['title'])
+        flash('Photos updated successfully!', 'success')
+        return redirect(url_for('admin_place_photos', place_id=place_id))
+    gallery_media = db.execute("SELECT m.id,m.filename,m.caption FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order", (place_id,)).fetchall()
+    return render_template('admin/place_photos.html', place=place, kps=kps, kss=kss, sss=sss, gallery_media=gallery_media)
+
+# ─── Location Update Page (Restricted) ───
+@app.route('/admin/places/<int:place_id>/location', methods=['GET','POST'])
+@login_required
+def admin_place_location(place_id):
+    db = get_db()
+    u = get_current_user()
+    if not has_permission(u, 'update_location') and not has_permission(u, 'manage_places'):
+        flash('Permission denied.', 'error'); return redirect(url_for('admin_dashboard'))
+    place, kps, kss, sss = _get_dham_hierarchy_for_restricted(place_id)
+    if not place: abort(404)
+    if request.method == 'POST':
+        f = request.form
+        # T1 location
+        lat = f.get('t1_latitude', type=float); lng = f.get('t1_longitude', type=float)
+        if lat is not None and lng is not None:
+            db.execute("UPDATE places SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (lat, lng, place_id))
+        # T2 locations
+        for kp in kps:
+            klat = f.get(f'kp_{kp["id"]}_latitude', type=float)
+            klng = f.get(f'kp_{kp["id"]}_longitude', type=float)
+            if klat is not None and klng is not None:
+                db.execute("UPDATE key_places SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, kp['id']))
+        # T3 locations
+        for ks in kss:
+            klat = f.get(f'ks_{ks["id"]}_latitude', type=float)
+            klng = f.get(f'ks_{ks["id"]}_longitude', type=float)
+            if klat is not None and klng is not None:
+                db.execute("UPDATE key_spots SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (klat, klng, ks['id']))
+        # T4 locations
+        for ss in sss:
+            slat = f.get(f'ss_{ss["id"]}_latitude', type=float)
+            slng = f.get(f'ss_{ss["id"]}_longitude', type=float)
+            if slat is not None and slng is not None:
+                db.execute("UPDATE sub_spots SET latitude=?,longitude=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (slat, slng, ss['id']))
+        db.commit()
+        log_action(session.get('user_id'), 'location_update', 'place', place_id, place['title'])
+        flash('Locations updated successfully!', 'success')
+        return redirect(url_for('admin_place_location', place_id=place_id))
+    return render_template('admin/place_location.html', place=place, kps=kps, kss=kss, sss=sss)
 
 # ─── Key Spots (Tier 3) Admin ───
 @app.route('/admin/key-place/<int:kp_id>/spots')

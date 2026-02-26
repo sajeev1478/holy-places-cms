@@ -38,11 +38,21 @@
 <td>{{ place.view_count }}</td>
 <td style="font-size:12px;color:var(--text-light)">{{ place.updated_at[:10] if place.updated_at else '' }}</td>
 <td class="actions">
+{% if has_permission(current_user, 'manage_places') %}
 <a href="{{ url_for('admin_place_edit', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+{% endif %}
+{% if has_permission(current_user, 'capture_photo') %}
+<a href="{{ url_for('admin_place_photos', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Photos" style="{% if not has_permission(current_user, 'manage_places') %}background:#2E86AB15;color:#2E86AB;border-color:#2E86AB40{% endif %}"><i class="fas fa-camera"></i></a>
+{% endif %}
+{% if has_permission(current_user, 'update_location') %}
+<a href="{{ url_for('admin_place_location', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Location" style="{% if not has_permission(current_user, 'manage_places') %}background:#8BAB8A15;color:#3D6B3D;border-color:#8BAB8A40{% endif %}"><i class="fas fa-map-marker-alt"></i></a>
+{% endif %}
 <a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary btn-icon btn-sm" title="View"><i class="fas fa-eye"></i></a>
+{% if has_permission(current_user, 'manage_places') %}
 <form method="POST" action="{{ url_for('admin_place_delete', place_id=place.id) }}" style="display:inline" onsubmit="return confirm('Delete this dham?')">
 <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete"><i class="fas fa-trash"></i></button>
 </form>
+{% endif %}
 </td>
 </tr>
 {% endfor %}
