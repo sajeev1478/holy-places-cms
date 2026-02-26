@@ -154,8 +154,8 @@ img{max-width:100%;height:auto}
 <div class="itin-hero-desc">{{ itinerary.short_description }}</div>
 {% endif %}
 <div class="itin-hero-meta">
-{% if itinerary.leader_name %}<span><i class="fas fa-user"></i> {{ itinerary.leader_name }}</span>{% endif %}
-{% if itinerary.group_name %}<span><i class="fas fa-users"></i> {{ itinerary.group_name }}</span>{% endif %}
+{% if itinerary.leader_name %}<span><i class="fas fa-user"></i> <strong>Leader:</strong> {{ itinerary.leader_name }}</span>{% endif %}
+{% if itinerary.group_name %}<span><i class="fas fa-users"></i> <strong>Group:</strong> {{ itinerary.group_name }}</span>{% endif %}
 <span><i class="fas fa-map-marker-alt"></i> {{ places|length }} places</span>
 </div>
 <div class="share-bar">
@@ -236,10 +236,73 @@ img{max-width:100%;height:auto}
 {% if place.custom_fields %}
 <div class="pc-custom-fields">
 {% for cf in place.custom_fields %}
+{% if cf.field_type in ('text','number','textarea','richtext') %}
 <div class="pc-cf">
 <span class="pc-cf-label">{{ cf.label }}</span>
-{{ cf.value|safe }}
+{% if cf.field_type == 'richtext' %}{{ cf.value|safe }}{% else %}{{ cf.value }}{% endif %}
 </div>
+{% elif cf.field_type == 'audio' %}
+<div class="pc-cf" style="border-left-color:#8BAB8A">
+<span class="pc-cf-label">🎵 {{ cf.label }}</span>
+{% if cf.description %}<div style="font-size:12px;color:var(--text-mid);margin:4px 0">{{ cf.description }}</div>{% endif %}
+<audio controls style="width:100%;height:36px;margin-top:4px"><source src="/static/uploads/{{ cf.value }}"></audio>
+</div>
+{% elif cf.field_type == 'video' %}
+<div class="pc-cf" style="border-left-color:#9C27B0">
+<span class="pc-cf-label">🎬 {{ cf.label }}</span>
+{% if cf.description %}<div style="font-size:12px;color:var(--text-mid);margin:4px 0">{{ cf.description }}</div>{% endif %}
+<video controls style="width:100%;border-radius:8px;max-height:240px;margin-top:4px"><source src="/static/uploads/{{ cf.value }}"></video>
+</div>
+{% elif cf.field_type == 'url' and 'audio' in (cf.field_name or cf.label|lower) %}
+<div class="pc-cf" style="border-left-color:#8BAB8A">
+<span class="pc-cf-label">🔗 {{ cf.label }}</span>
+{% if cf.description %}<div style="font-size:12px;color:var(--text-mid);margin:4px 0">{{ cf.description }}</div>{% endif %}
+<audio controls style="width:100%;height:36px;margin-top:4px"><source src="{{ cf.value }}"></audio>
+</div>
+{% elif cf.field_type == 'url' and 'video' in (cf.field_name or cf.label|lower) %}
+<div class="pc-cf" style="border-left-color:#9C27B0">
+<span class="pc-cf-label">🔗 {{ cf.label }}</span>
+{% if cf.description %}<div style="font-size:12px;color:var(--text-mid);margin:4px 0">{{ cf.description }}</div>{% endif %}
+{% if 'youtube.com' in cf.value or 'youtu.be' in cf.value %}
+{% set vid_id = cf.value.split('v=')[1].split('&')[0] if 'v=' in cf.value else cf.value.split('/')[-1].split('?')[0] %}
+<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;margin-top:6px"><iframe src="https://www.youtube.com/embed/{{ vid_id }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>
+{% elif 'vimeo.com' in cf.value %}
+{% set vim_id = cf.value.split('/')[-1] %}
+<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;margin-top:6px"><iframe src="https://player.vimeo.com/video/{{ vim_id }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>
+{% else %}
+<video controls style="width:100%;border-radius:8px;max-height:240px;margin-top:4px"><source src="{{ cf.value }}"></video>
+{% endif %}
+</div>
+{% elif cf.field_type == 'url' %}
+<div class="pc-cf">
+<span class="pc-cf-label">{{ cf.label }}</span>
+{% if cf.description %}<div style="font-size:12px;color:var(--text-mid);margin:4px 0">{{ cf.description }}</div>{% endif %}
+<a href="{{ cf.value }}" target="_blank" style="color:var(--rose-deep);font-size:13px">{{ cf.value|truncate(50) }}</a>
+</div>
+{% endif %}
+{% endfor %}
+</div>
+{% endif %}
+
+{% if place.audio_video_items %}
+<div class="pc-custom-fields">
+{% for av in place.audio_video_items %}
+{% if av.media_type == 'audio' %}
+<div class="pc-cf" style="border-left-color:#8BAB8A">
+<span class="pc-cf-label">🎵 Audio{% if av.description %}: {{ av.description }}{% endif %}</span>
+{% if av.source_type == 'upload' %}<audio controls style="width:100%;height:36px;margin-top:4px"><source src="/static/uploads/{{ av.file_path }}"></audio>
+{% else %}<audio controls style="width:100%;height:36px;margin-top:4px"><source src="{{ av.external_url }}"></audio>{% endif %}
+</div>
+{% elif av.media_type == 'video' %}
+<div class="pc-cf" style="border-left-color:#9C27B0">
+<span class="pc-cf-label">🎬 Video{% if av.description %}: {{ av.description }}{% endif %}</span>
+{% if av.source_type == 'url' and ('youtube.com' in av.external_url or 'youtu.be' in av.external_url) %}
+{% set vid_id = av.external_url.split('v=')[1].split('&')[0] if 'v=' in av.external_url else av.external_url.split('/')[-1].split('?')[0] %}
+<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;margin-top:6px"><iframe src="https://www.youtube.com/embed/{{ vid_id }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>
+{% elif av.source_type == 'upload' %}<video controls style="width:100%;border-radius:8px;max-height:240px;margin-top:4px"><source src="/static/uploads/{{ av.file_path }}"></video>
+{% else %}<video controls style="width:100%;border-radius:8px;max-height:240px;margin-top:4px"><source src="{{ av.external_url }}"></video>{% endif %}
+</div>
+{% endif %}
 {% endfor %}
 </div>
 {% endif %}
@@ -251,11 +314,33 @@ img{max-width:100%;height:auto}
 </a>
 {% endif %}
 {% if place.url %}
-<a href="{{ place.url }}" target="_blank" class="pc-btn">
-<i class="fas fa-info-circle"></i> Full Details
-</a>
+<button class="pc-btn" onclick="toggleFullDetails({{ loop.index }})">
+<i class="fas fa-info-circle"></i> <span id="fd-btn-{{ loop.index }}">Full Details</span>
+</button>
 {% endif %}
 </div>
+
+{% if place.url %}
+<div class="pc-full-details" id="fd-{{ loop.index }}" style="display:none;margin-top:14px;padding:18px;background:var(--cream);border-radius:14px;border:1px solid var(--border)">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--text-dark)">📖 Full Details — {{ place.title }}</div>
+<button onclick="toggleFullDetails({{ loop.index }})" style="background:var(--rose-pale);border:1px solid var(--rose);color:var(--rose-deep);padding:5px 12px;border-radius:50px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><i class="fas fa-times"></i> Collapse</button>
+</div>
+{% if place.featured_image %}<img src="/static/uploads/{{ place.featured_image }}" style="width:100%;border-radius:10px;margin-bottom:12px;max-height:280px;object-fit:cover" loading="lazy">{% endif %}
+{% if place.short_description %}<p style="font-size:14px;color:var(--text-mid);margin-bottom:10px;line-height:1.6">{{ place.short_description }}</p>{% endif %}
+{% if place.full_content %}<div style="font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:12px">{{ place.full_content|safe }}</div>{% endif %}
+{% if place.city or place.state %}<div style="font-size:12px;color:var(--text-light);margin-bottom:6px"><i class="fas fa-map-pin" style="color:var(--saffron)"></i> {{ place.city }}{% if place.city and place.state %}, {% endif %}{{ place.state }}{% if place.country and place.country != 'India' %}, {{ place.country }}{% endif %}</div>{% endif %}
+{% if place.latitude and place.longitude %}<div style="font-size:12px;color:var(--text-light);margin-bottom:8px"><i class="fas fa-crosshairs" style="color:var(--sage)"></i> {{ place.latitude }}, {{ place.longitude }}</div>{% endif %}
+{% if place.gallery_images %}
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+{% for gi in place.gallery_images.split(',') if gi.strip() %}
+<img src="/static/uploads/{{ gi.strip() }}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border)" loading="lazy">
+{% endfor %}
+</div>
+{% endif %}
+<div style="margin-top:10px"><a href="{{ place.url }}" target="_blank" style="font-size:12px;color:var(--rose-deep);font-weight:600"><i class="fas fa-external-link-alt"></i> Open full page in new tab</a></div>
+</div>
+{% endif %}
 </div>
 {% endfor %}
 </div>
@@ -328,6 +413,20 @@ try {
         }
     });
 } catch(e){}
+
+// ─── Toggle Full Details Inline ───
+function toggleFullDetails(idx){
+    var panel = document.getElementById('fd-' + idx);
+    var btn = document.getElementById('fd-btn-' + idx);
+    if(panel.style.display === 'none'){
+        panel.style.display = 'block';
+        btn.textContent = 'Collapse Details';
+        panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+    } else {
+        panel.style.display = 'none';
+        btn.textContent = 'Full Details';
+    }
+}
 
 // ─── Share ───
 function showToast(msg){

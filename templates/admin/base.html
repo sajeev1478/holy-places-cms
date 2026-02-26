@@ -1425,5 +1425,21 @@ function camClear(uid){
   if(input) input.value='';
 }
 </script>
+<script>
+// Auto-add compress hint to all image file inputs
+document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('input[type="file"][accept*="image"]').forEach(function(inp){
+        if(inp.closest('.compress-hinted')) return;
+        var parent = inp.parentElement;
+        if(parent.querySelector('.img-compress-hint')) return;
+        var hint = document.createElement('div');
+        hint.className='img-compress-hint';
+        hint.style.cssText='font-size:10px;color:#8a7a8b;margin-top:3px;display:flex;align-items:center;gap:4px';
+        hint.innerHTML='<i class="fas fa-compress-arrows-alt" style="color:#8BAB8A;font-size:9px"></i> Images are auto-compressed on upload (max 1920px, optimized quality)';
+        inp.insertAdjacentElement('afterend', hint);
+        parent.classList.add('compress-hinted');
+    });
+});
+</script>
 </body>
 </html>

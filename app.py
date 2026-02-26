@@ -159,6 +159,7 @@ def init_db():
     /* ─── Itinerary System ─── */
     CREATE TABLE IF NOT EXISTS itineraries (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, leader_name TEXT DEFAULT '', group_name TEXT DEFAULT '', short_description TEXT DEFAULT '', full_content TEXT DEFAULT '', status TEXT DEFAULT 'draft', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS itinerary_places (id INTEGER PRIMARY KEY AUTOINCREMENT, itinerary_id INTEGER NOT NULL, tier TEXT NOT NULL, place_ref_id INTEGER NOT NULL, sort_order INTEGER DEFAULT 0, admin_notes TEXT DEFAULT '', time_group TEXT DEFAULT '', FOREIGN KEY (itinerary_id) REFERENCES itineraries(id) ON DELETE CASCADE);
+    CREATE TABLE IF NOT EXISTS place_audio_video (id INTEGER PRIMARY KEY AUTOINCREMENT, tier TEXT NOT NULL, place_ref_id INTEGER NOT NULL, media_type TEXT NOT NULL DEFAULT 'audio', source_type TEXT NOT NULL DEFAULT 'upload', file_path TEXT DEFAULT '', external_url TEXT DEFAULT '', description TEXT DEFAULT '', sort_order INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     ''')
     db.commit()
     # Migration: add gallery_captions column if not exists
@@ -974,7 +975,7 @@ def admin_place_edit(place_id):
     all_points=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color,ks.title as ks_title,ks.id as ks_id,ks.slug as ks_slug,sc2.name as ks_cat_name,sc2.icon as ks_cat_icon,kp.title as kp_title,kp.id as kp_id FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id JOIN key_spots ks ON ss.key_spot_id=ks.id LEFT JOIN spot_categories sc2 ON ks.category_id=sc2.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order",(place_id,)).fetchall()
     # Fetch gallery images from place_media
     gallery_media=db.execute("SELECT m.id,m.filename,m.original_name,m.file_type,m.caption FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order",(place_id,)).fetchall()
-    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points,gallery_media=gallery_media)
+    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points,gallery_media=gallery_media,t1_av=db.execute("SELECT * FROM place_audio_video WHERE tier='T1' AND place_ref_id=? ORDER BY sort_order",(place_id,)).fetchall())
 
 def _save_place(place_id):
     db=get_db(); f=request.form; title=f['title']; slug=slugify(title)
@@ -1670,6 +1671,53 @@ def admin_entry_edit(entry_id):
 @login_required
 def admin_entry_delete(entry_id): get_db().execute("DELETE FROM module_entries WHERE id=?",(entry_id,)); get_db().commit(); flash('Deleted.','info'); return redirect(url_for('admin_entries'))
 
+# ─── Audio/Video Management (Multi-item per place) ───
+@app.route('/admin/audio-video/add', methods=['POST'])
+@login_required
+def admin_av_add():
+    db = get_db()
+    f = request.form
+    tier = f.get('tier','T1')
+    place_ref_id = f.get('place_ref_id', type=int)
+    media_type = f.get('media_type','audio')
+    description = f.get('description','').strip()
+    source_type = 'upload'
+    file_path = ''
+    external_url = f.get('external_url','').strip()
+    if external_url:
+        source_type = 'url'
+    elif f'av_file' in request.files:
+        uf = request.files['av_file']
+        if uf and uf.filename:
+            rp = save_upload(uf, 'audio' if media_type == 'audio' else 'video')
+            if rp: file_path = rp
+    if not file_path and not external_url:
+        flash('Please upload a file or provide a URL.','error')
+        return redirect(request.referrer or url_for('admin_places'))
+    max_sort = db.execute("SELECT COALESCE(MAX(sort_order),0) FROM place_audio_video WHERE tier=? AND place_ref_id=?", (tier, place_ref_id)).fetchone()[0]
+    db.execute("INSERT INTO place_audio_video (tier,place_ref_id,media_type,source_type,file_path,external_url,description,sort_order) VALUES (?,?,?,?,?,?,?,?)",
+        (tier, place_ref_id, media_type, source_type, file_path, external_url, description, max_sort + 1))
+    db.commit()
+    flash(f'{media_type.title()} added!','success')
+    return redirect(request.referrer or url_for('admin_places'))
+
+@app.route('/admin/audio-video/<int:av_id>/delete', methods=['POST'])
+@login_required
+def admin_av_delete(av_id):
+    db = get_db()
+    db.execute("DELETE FROM place_audio_video WHERE id=?", (av_id,))
+    db.commit()
+    flash('Deleted.','info')
+    return redirect(request.referrer or url_for('admin_places'))
+
+@app.route('/admin/api/audio-video/<tier>/<int:ref_id>')
+@login_required
+def admin_av_list(tier, ref_id):
+    """API: Get audio/video items for a place."""
+    db = get_db()
+    items = db.execute("SELECT * FROM place_audio_video WHERE tier=? AND place_ref_id=? ORDER BY sort_order", (tier, ref_id)).fetchall()
+    return json.dumps([dict(r) for r in items]), 200, {'Content-Type': 'application/json'}
+
 # ─── Media ───
 @app.route('/admin/media')
 @login_required
@@ -2168,34 +2216,45 @@ def not_found(e):
 # ═══════════════════════════════════════════════════════════════
 
 def _resolve_itinerary_place(tier, ref_id, db):
-    """Fetch place data from appropriate tier table."""
+    """Fetch place data from appropriate tier table with full custom field info."""
+    def _get_audio_video(tier, ref_id):
+        return [dict(r) for r in db.execute("SELECT * FROM place_audio_video WHERE tier=? AND place_ref_id=? ORDER BY sort_order", (tier, ref_id)).fetchall()]
     if tier == 'T1':
         r = db.execute("SELECT id,title,slug,short_description,full_content,featured_image,latitude,longitude,state,city,country FROM places WHERE id=?", (ref_id,)).fetchone()
         if r:
-            cfs = db.execute("SELECT cfd.label, pcv.value FROM place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.place_id=? AND pcv.is_visible=1 AND pcv.value != ''", (ref_id,)).fetchall()
-            return dict(r) | {'custom_fields': [dict(c) for c in cfs], 'tier': 'T1', 'tier_label': 'Holy Dham', 'url': f"/place/{r['slug']}"}
+            cfs = db.execute("SELECT cfd.label, cfd.name as field_name, cfd.field_type, pcv.value, pcv.description FROM place_custom_values pcv JOIN custom_field_defs cfd ON pcv.field_def_id=cfd.id WHERE pcv.place_id=? AND pcv.is_visible=1 AND pcv.value != ''", (ref_id,)).fetchall()
+            gal = db.execute("SELECT GROUP_CONCAT(m.filename) as gi FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image'", (ref_id,)).fetchone()
+            d = dict(r)
+            d['gallery_images'] = gal['gi'] if gal and gal['gi'] else ''
+            d['custom_fields'] = [dict(c) for c in cfs]
+            d['audio_video_items'] = _get_audio_video('T1', ref_id)
+            d['tier'] = 'T1'; d['tier_label'] = 'Holy Dham'; d['url'] = f"/place/{r['slug']}"
+            return d
     elif tier == 'T2':
         r = db.execute("SELECT kp.*, p.slug as dham_slug FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?", (ref_id,)).fetchone()
         if r:
-            cfs = db.execute("SELECT cfd.label, kpcv.value FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND kpcv.value != ''", (ref_id,)).fetchall()
+            cfs = db.execute("SELECT cfd.label, cfd.name as field_name, cfd.field_type, kpcv.value, kpcv.description FROM key_place_custom_values kpcv JOIN custom_field_defs cfd ON kpcv.field_def_id=cfd.id WHERE kpcv.key_place_id=? AND kpcv.is_visible=1 AND kpcv.value != ''", (ref_id,)).fetchall()
             d = dict(r)
             d['custom_fields'] = [dict(c) for c in cfs]
+            d['audio_video_items'] = _get_audio_video('T2', ref_id)
             d['tier'] = 'T2'; d['tier_label'] = 'Key Place'; d['url'] = f"/place/{r['dham_slug']}/key/{r['slug']}"
             return d
     elif tier == 'T3':
         r = db.execute("SELECT ks.*, kp.slug as kp_slug, p.slug as dham_slug FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?", (ref_id,)).fetchone()
         if r:
-            cfs = db.execute("SELECT cfd.label, kscv.value FROM key_spot_custom_values kscv JOIN custom_field_defs cfd ON kscv.field_def_id=cfd.id WHERE kscv.key_spot_id=? AND kscv.is_visible=1 AND kscv.value != ''", (ref_id,)).fetchall()
+            cfs = db.execute("SELECT cfd.label, cfd.name as field_name, cfd.field_type, kscv.value, kscv.description FROM key_spot_custom_values kscv JOIN custom_field_defs cfd ON kscv.field_def_id=cfd.id WHERE kscv.key_spot_id=? AND kscv.is_visible=1 AND kscv.value != ''", (ref_id,)).fetchall()
             d = dict(r)
             d['custom_fields'] = [dict(c) for c in cfs]
+            d['audio_video_items'] = _get_audio_video('T3', ref_id)
             d['tier'] = 'T3'; d['tier_label'] = 'Key Spot'; d['url'] = f"/place/{r['dham_slug']}/key/{r['kp_slug']}/spot/{r['slug']}"
             return d
     elif tier == 'T4':
         r = db.execute("SELECT ss.*, ks.slug as ks_slug, kp.slug as kp_slug, p.slug as dham_slug FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ss.id=?", (ref_id,)).fetchone()
         if r:
-            cfs = db.execute("SELECT cfd.label, sscv.value FROM sub_spot_custom_values sscv JOIN custom_field_defs cfd ON sscv.field_def_id=cfd.id WHERE sscv.sub_spot_id=? AND sscv.is_visible=1 AND sscv.value != ''", (ref_id,)).fetchall()
+            cfs = db.execute("SELECT cfd.label, cfd.name as field_name, cfd.field_type, sscv.value, sscv.description FROM sub_spot_custom_values sscv JOIN custom_field_defs cfd ON sscv.field_def_id=cfd.id WHERE sscv.sub_spot_id=? AND sscv.is_visible=1 AND sscv.value != ''", (ref_id,)).fetchall()
             d = dict(r)
             d['custom_fields'] = [dict(c) for c in cfs]
+            d['audio_video_items'] = _get_audio_video('T4', ref_id)
             d['tier'] = 'T4'; d['tier_label'] = 'Key Point'; d['url'] = f"/place/{r['dham_slug']}/key/{r['kp_slug']}/spot/{r['ks_slug']}/sub/{r['slug']}"
             return d
     return None
@@ -2259,9 +2318,10 @@ def _save_itinerary(itin_id):
         flash('Yatra name is required.','error')
         return redirect(request.url)
 
-    # Generate slug from group_name (or title fallback)
+    # Generate slug: ddmmyyyy-itinerary-groupname
     slug_base = group_name if group_name else title
-    slug = 'itinerary-' + slugify(slug_base)
+    date_prefix = datetime.now().strftime('%d%m%Y')
+    slug = date_prefix + '-itinerary-' + slugify(slug_base)
 
     # Check slug uniqueness
     existing = db.execute("SELECT id FROM itineraries WHERE slug=? AND id!=?", (slug, itin_id or 0)).fetchone()
@@ -2320,7 +2380,7 @@ def admin_itinerary_duplicate(itin_id):
     if not orig: flash('Not found.','error'); return redirect(url_for('admin_itineraries'))
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     new_title = orig['title'] + ' (Copy)'
-    new_slug = 'itinerary-' + slugify(new_title) + '-' + str(int(datetime.now().timestamp()) % 10000)
+    new_slug = datetime.now().strftime('%d%m%Y') + '-itinerary-' + slugify(new_title) + '-' + str(int(datetime.now().timestamp()) % 10000)
     cur = db.execute("""INSERT INTO itineraries (title,slug,leader_name,group_name,short_description,full_content,status,created_by,created_at,updated_at)
         VALUES (?,?,?,?,?,?,?,?,?,?)""",
         (new_title, new_slug, orig['leader_name'], orig['group_name'] + ' Copy',
@@ -2355,11 +2415,13 @@ def admin_itinerary_place_search():
     return jsonify(results[:30])
 
 # ─── Frontend: Public Itinerary View ───
-@app.route('/itinerary-<slug>')
+@app.route('/<slug>')
 def public_itinerary(slug):
     db = get_db()
-    full_slug = 'itinerary-' + slug
-    itin = db.execute("SELECT * FROM itineraries WHERE slug=? AND status='published'", (full_slug,)).fetchone()
+    # Match date-prefixed itinerary slugs (e.g., 26022026-itinerary-chitra)
+    if 'itinerary' not in slug:
+        abort(404)
+    itin = db.execute("SELECT * FROM itineraries WHERE slug=? AND status='published'", (slug,)).fetchone()
     if not itin:
         return render_template('frontend/404.html'), 404
     raw_places = db.execute("SELECT * FROM itinerary_places WHERE itinerary_id=? ORDER BY sort_order", (itin['id'],)).fetchall()

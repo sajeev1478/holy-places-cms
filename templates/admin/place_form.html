@@ -298,6 +298,45 @@
 </div></div>
 <div class="field-toggle" style="padding-top:28px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if cv.get('is_visible',1) else 'Off' }}</span></label></div></div>
 {% endif %}{% endfor %}</div>{% endif %}
+{% if editing %}
+<div style="border-top:2px solid var(--border);padding-top:14px;margin-top:12px">
+<h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">🎵 Audio / Video Library</h4>
+{% if t1_av %}
+{% for av in t1_av %}
+<div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border)">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+<div style="flex:1;min-width:0">
+<div style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:{{ '#8BAB8A' if av.media_type=='audio' else '#9C27B0' }}">{{ '🎵 Audio' if av.media_type=='audio' else '🎬 Video' }}{% if av.source_type=='url' %} (URL){% endif %}</div>
+{% if av.description %}<div style="font-size:12px;color:var(--text);margin-top:2px">{{ av.description }}</div>{% endif %}
+<div style="font-size:10px;color:var(--text-light);margin-top:2px;word-break:break-all">{{ av.file_path or av.external_url }}</div>
+{% if av.media_type == 'audio' %}
+{% if av.source_type == 'upload' %}<audio controls style="width:100%;height:28px;margin-top:4px"><source src="/static/uploads/{{ av.file_path }}"></audio>
+{% else %}<audio controls style="width:100%;height:28px;margin-top:4px"><source src="{{ av.external_url }}"></audio>{% endif %}
+{% endif %}
+</div>
+<form method="POST" action="{{ url_for('admin_av_delete', av_id=av.id) }}" style="flex-shrink:0" onsubmit="return confirm('Delete this {{ av.media_type }}?') && confirm('Are you sure? This cannot be undone.')">
+<button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete"><i class="fas fa-trash"></i></button>
+</form>
+</div>
+</div>
+{% endfor %}
+{% else %}
+<div style="text-align:center;padding:10px;font-size:11px;color:var(--text-light);background:var(--bg);border-radius:8px">No audio/video added yet</div>
+{% endif %}
+<details style="margin-top:10px">
+<summary style="font-size:12px;font-weight:600;cursor:pointer;color:var(--primary)"><i class="fas fa-plus"></i> Add Audio/Video</summary>
+<form method="POST" action="{{ url_for('admin_av_add') }}" enctype="multipart/form-data" style="margin-top:8px;background:var(--bg);padding:10px;border-radius:8px">
+<input type="hidden" name="tier" value="T1">
+<input type="hidden" name="place_ref_id" value="{{ place.id }}">
+<div style="margin-bottom:6px"><select name="media_type" class="form-control" style="font-size:12px"><option value="audio">🎵 Audio</option><option value="video">🎬 Video</option></select></div>
+<div style="margin-bottom:6px"><input type="file" name="av_file" class="form-control" accept="audio/*,video/*" style="font-size:11px"><div style="font-size:10px;color:var(--text-light);margin-top:2px">OR enter an external URL:</div></div>
+<div style="margin-bottom:6px"><input name="external_url" class="form-control" placeholder="YouTube/Vimeo URL or audio link" style="font-size:11px"></div>
+<div style="margin-bottom:6px"><input name="description" class="form-control" placeholder="📝 Description" style="font-size:11px"></div>
+<button type="submit" class="btn btn-primary btn-sm" style="width:100%;font-size:11px"><i class="fas fa-plus"></i> Add</button>
+</form>
+</details>
+</div>
+{% endif %}
 <div style="border-top:2px solid var(--border);padding-top:16px;margin-top:auto">
 <h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Publishing</h4>
 <div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if not editing or place.status=='draft' }}>📝 Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>✅ Published</option><option value="archived" {{ 'selected' if editing and place.status=='archived' }}>📦 Archived</option></select></div>

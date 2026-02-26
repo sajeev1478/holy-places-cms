@@ -42,5 +42,30 @@
 {% if cv.description %}<div style="font-size:13px;color:var(--text-mid);margin-bottom:8px;line-height:1.5">{{ cv.description }}</div>{% endif %}
 <video controls style="width:100%;border-radius:10px;max-height:300px"><source src="/static/uploads/{{ cv.value }}"></video>
 </div>
+{% elif cv.value and cv.field_type == 'url' and 'audio' in (cv.label|lower) %}
+<div class="cf-block" style="background:var(--cream-dark);border-radius:14px;padding:16px;margin-bottom:16px">
+<div style="display:flex;align-items:center;gap:14px">
+<span style="font-size:24px">{{ cv.field_icon or '🔗' }}</span>
+<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text-light);margin-bottom:4px">{{ cv.label }}</div>
+{% if cv.description %}<div style="font-size:13px;color:var(--text-mid);margin-bottom:6px;line-height:1.5">{{ cv.description }}</div>{% endif %}
+<audio controls style="width:100%;height:36px"><source src="{{ cv.value }}"></audio>
+<div style="margin-top:4px"><a href="{{ cv.value }}" target="_blank" style="font-size:11px;color:var(--rose-deep)"><i class="fas fa-external-link-alt"></i> Open link</a></div>
+</div>
+</div>
+</div>
+{% elif cv.value and cv.field_type == 'url' and 'video' in (cv.label|lower) %}
+<div class="cf-block" style="background:var(--cream-dark);border-radius:14px;padding:16px;margin-bottom:16px">
+<div style="font-size:12px;font-weight:700;color:var(--text-light);margin-bottom:4px;display:flex;align-items:center;gap:6px"><span>{{ cv.field_icon or '🔗' }}</span> {{ cv.label }}</div>
+{% if cv.description %}<div style="font-size:13px;color:var(--text-mid);margin-bottom:8px;line-height:1.5">{{ cv.description }}</div>{% endif %}
+{% if 'youtube.com' in cv.value or 'youtu.be' in cv.value %}
+{% set vid_id = cv.value.split('v=')[1].split('&')[0] if 'v=' in cv.value else cv.value.split('/')[-1].split('?')[0] %}
+<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:10px;overflow:hidden"><iframe src="https://www.youtube.com/embed/{{ vid_id }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>
+{% elif 'vimeo.com' in cv.value %}
+{% set vim_id = cv.value.split('/')[-1] %}
+<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:10px;overflow:hidden"><iframe src="https://player.vimeo.com/video/{{ vim_id }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div>
+{% else %}
+<video controls style="width:100%;border-radius:10px;max-height:300px"><source src="{{ cv.value }}"></video>
+{% endif %}
+</div>
 {% endif %}{% endfor %}
 {% endif %}
