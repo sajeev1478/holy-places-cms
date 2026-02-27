@@ -368,8 +368,7 @@ function onTierLevelSelected() {
     label3.textContent = 'Select ' + (tierLabels[level] || 'Target');
     step3.style.display = '';
     setStep(3, 'active');
-    targetSel.length = 0;
-    populateSelect(targetSel, [{value:'', text:'⏳ Loading ' + (tierLabels[level]||'items') + '...'}]);
+    setSelectOptions(targetSel, [{v:'', t:'⏳ Loading ' + (tierLabels[level]||'items') + '...'}]);
     h3.style.display = 'none';
     updateHidden('', 0);
     hideSummary();
@@ -381,22 +380,22 @@ function onTierLevelSelected() {
         })
         .then(function(data) {
             if (!data || data.length === 0) {
-                populateSelect(targetSel, [{value:'', text:'— No items found —'}]);
+                setSelectOptions(targetSel, [{v:'', t:'— No items found —'}]);
                 h3.innerHTML = '<i class="fas fa-exclamation-circle"></i> No ' + (tierLabels[level]||'items') + ' found under <strong>' + escHtml(_selDhamName) + '</strong>. Add them first in Holy Dhams section.';
                 h3.className = 'tier-hint error'; h3.style.display = '';
                 return;
             }
-            var opts = [{value:'', text:'— Select from ' + data.length + ' ' + (tierLabels[level]||'items') + ' —'}];
+            var opts = [{v:'', t:'— Select from ' + data.length + ' ' + (tierLabels[level]||'items') + ' —'}];
             data.forEach(function(item) {
                 var lbl = item.parent ? item.title + ' (' + item.parent + ')' : item.title;
-                opts.push({value: String(item.id), text: lbl});
+                opts.push({v: String(item.id), t: lbl});
             });
-            populateSelect(targetSel, opts);
+            setSelectOptions(targetSel, opts);
             h3.innerHTML = '<i class="fas fa-list"></i> ' + data.length + ' ' + (tierLabels[level]||'items') + ' found under <strong>' + escHtml(_selDhamName) + '</strong>';
             h3.className = 'tier-hint success'; h3.style.display = '';
         })
         .catch(function(err) {
-            populateSelect(targetSel, [{value:'', text:'— Error loading —'}]);
+            setSelectOptions(targetSel, [{v:'', t:'— Error loading —'}]);
             h3.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load. ' + (err.message||'');
             h3.className = 'tier-hint error'; h3.style.display = '';
         });
@@ -419,16 +418,19 @@ function updateHidden(type, id) {
     document.getElementById('tierLinkIdHidden').value = id || 0;
 }
 
-/* Reliable cross-browser select population */
-function populateSelect(sel, options) {
-    /* options = [{value:'', text:'Pick...'}, {value:'1', text:'Name'}] */
-    while (sel.options.length > 0) sel.remove(0);
-    for (var i = 0; i < options.length; i++) {
-        var opt = document.createElement('option');
-        opt.value = options[i].value;
-        opt.textContent = options[i].text;
-        sel.appendChild(opt);
+/* Bulletproof cross-browser select population using new Option() */
+function clearSelect(sel) {
+    try { sel.options.length = 0; } catch(e) {
+        while (sel.firstChild) sel.removeChild(sel.firstChild);
     }
+}
+function setSelectOptions(sel, items) {
+    /* items = [{v:'', t:'Pick...'}, {v:'1', t:'Name'}] */
+    clearSelect(sel);
+    for (var i = 0; i < items.length; i++) {
+        sel.options[i] = new Option(items[i].t, items[i].v);
+    }
+    sel.selectedIndex = 0;
 }
 function showSummary(h) { document.getElementById('tierSummaryText').innerHTML = h; document.getElementById('tierSummary').style.display = ''; }
 function hideSummary() { document.getElementById('tierSummary').style.display = 'none'; }
