@@ -33,8 +33,20 @@
 .ecam-remove{position:absolute;top:6px;right:6px;width:24px;height:24px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
 .ecam-info{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-light);margin-top:6px;padding:4px 10px;background:var(--bg-cream);border-radius:50px;width:fit-content}
 .ecam-info i{color:#2E86AB}
+.tier-cascade{display:flex;flex-direction:column;gap:12px}
+.tier-step{display:flex;align-items:flex-start;gap:10px}
+.tier-step-num{width:24px;height:24px;min-width:24px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:22px}
+.tier-hint{font-size:11px;color:var(--text-light);margin-top:4px;display:flex;align-items:center;gap:4px;padding:4px 0}
+.tier-hint i{color:var(--primary);font-size:10px}
+.tier-hint.error{color:#E74845}
+.tier-hint.error i{color:#E74845}
+.tier-summary{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;background:#d4edda;border-radius:10px;font-size:13px;font-weight:600;color:#155724;border:1px solid #c3e6cb}
+.tier-summary span{flex:1}
+.tier-clear-btn{width:22px;height:22px;background:rgba(0,0,0,.1);color:#155724;border:none;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.tier-clear-btn:hover{background:rgba(0,0,0,.2)}
+select:disabled{opacity:.55;cursor:not-allowed;background:#f5f5f5}
 .no-schema-msg{color:var(--text-light);font-size:13px;font-style:italic;padding:16px;text-align:center}
-@media(max-width:900px){.entry-layout{grid-template-columns:1fr}.tier-link-row{grid-template-columns:1fr}}
+@media(max-width:900px){.entry-layout{grid-template-columns:1fr}.tier-step{flex-direction:column;gap:4px}.tier-step-num{margin-top:0}}
 </style>
 
 <form method="POST" enctype="multipart/form-data" class="admin-card" id="entryForm">
@@ -67,37 +79,62 @@
 <input name="title" class="form-control" value="{{ entry.title if editing else '' }}" required placeholder="Entry title">
 </div>
 
-<!-- Tier Linking -->
+<!-- Tier Linking (Cascading) -->
 <div class="entry-section">
 <div class="section-title">🔗 Link to Tier Hierarchy</div>
-<div class="tier-link-row">
-<div class="dyn-field">
-<label>Link Type</label>
-<select name="tier_link_type" id="tierLinkType" class="form-control" onchange="loadTierOptions(this.value)">
-<option value="">None (no linking)</option>
-<option value="dham" {{ 'selected' if editing and entry.tier_link_type=='dham' }}>🛕 Dham (T1)</option>
-<option value="key_place" {{ 'selected' if editing and entry.tier_link_type=='key_place' }}>📍 Key Place (T2)</option>
-<option value="key_spot" {{ 'selected' if editing and entry.tier_link_type=='key_spot' }}>⭐ Key Spot (T3)</option>
-<option value="sub_spot" {{ 'selected' if editing and entry.tier_link_type=='sub_spot' }}>📌 Sub Spot (T4)</option>
-</select>
-</div>
-<div class="dyn-field">
-<label>Link Target</label>
-<select name="tier_link_id" id="tierLinkId" class="form-control">
-<option value="0">Select...</option>
-{% if editing and entry.tier_link_type == 'dham' %}
-{% for p in places %}<option value="{{ p.id }}" {{ 'selected' if p.id == entry.tier_link_id }}>{{ p.title }}</option>{% endfor %}
-{% elif editing and entry.tier_link_type == 'key_place' %}
-{% for kp in key_places %}<option value="{{ kp.id }}" {{ 'selected' if kp.id == entry.tier_link_id }}>[{{ kp.dham_title }}] {{ kp.title }}</option>{% endfor %}
-{% elif editing and entry.tier_link_type == 'key_spot' %}
-{% for ks in key_spots %}<option value="{{ ks.id }}" {{ 'selected' if ks.id == entry.tier_link_id }}>[{{ ks.kp_title }}] {{ ks.title }}</option>{% endfor %}
-{% elif editing and entry.tier_link_type == 'sub_spot' %}
-{% for ss in sub_spots %}<option value="{{ ss.id }}" {{ 'selected' if ss.id == entry.tier_link_id }}>[{{ ss.ks_title }}] {{ ss.title }}</option>{% endfor %}
-{% endif %}
+<div class="tier-cascade">
+<!-- Step 1: Select Dham (T1) -->
+<div class="tier-step">
+<div class="tier-step-num">1</div>
+<div class="dyn-field" style="margin:0;flex:1">
+<label>Select Dham (Tier 1) *</label>
+<select id="tierDhamSelect" class="form-control" onchange="onDhamSelected(this.value)">
+<option value="">— Choose a Dham —</option>
+{% for p in places %}
+<option value="{{ p.id }}" {% if editing and entry.tier_link_type == 'dham' and entry.tier_link_id == p.id %}selected{% elif editing and entry.tier_link_type in ('key_place','key_spot','sub_spot') %}data-id="{{ p.id }}"{% endif %}>🛕 {{ p.title }}</option>
+{% endfor %}
 </select>
 </div>
 </div>
-<div style="font-size:11px;color:var(--text-light);margin-top:4px"><i class="fas fa-info-circle"></i> Optionally link this entry to a specific tier in the hierarchy</div>
+
+<!-- Step 2: Select Tier Level -->
+<div class="tier-step">
+<div class="tier-step-num">2</div>
+<div class="dyn-field" style="margin:0;flex:1">
+<label>Link to Tier Level</label>
+<select id="tierLevelSelect" class="form-control" onchange="onTierLevelSelected(this.value)" disabled>
+<option value="">— Select Dham first —</option>
+<option value="dham">🛕 This Dham itself (T1)</option>
+<option value="key_place">📍 Key Place (T2)</option>
+<option value="key_spot">⭐ Key Spot (T3)</option>
+<option value="sub_spot">📌 Sub Spot (T4)</option>
+</select>
+<div class="tier-hint" id="tierLevelHint"><i class="fas fa-arrow-up"></i> Please select a Dham first</div>
+</div>
+</div>
+
+<!-- Step 3: Select Target -->
+<div class="tier-step" id="tierTargetStep" style="display:none">
+<div class="tier-step-num">3</div>
+<div class="dyn-field" style="margin:0;flex:1">
+<label>Select Target</label>
+<select id="tierTargetSelect" class="form-control" onchange="onTargetSelected(this.value)" disabled>
+<option value="0">— Select tier level first —</option>
+</select>
+<div class="tier-hint" id="tierTargetHint" style="display:none"></div>
+</div>
+</div>
+</div>
+
+<!-- Hidden fields for form submission -->
+<input type="hidden" name="tier_link_type" id="tierLinkTypeHidden" value="{{ entry.tier_link_type if editing and entry.tier_link_type else '' }}">
+<input type="hidden" name="tier_link_id" id="tierLinkIdHidden" value="{{ entry.tier_link_id if editing and entry.tier_link_id else 0 }}">
+
+<!-- Summary badge -->
+<div id="tierSummary" class="tier-summary" style="display:none">
+<i class="fas fa-check-circle" style="color:#27ae60"></i> <span id="tierSummaryText"></span>
+<button type="button" class="tier-clear-btn" onclick="clearTierLink()" title="Clear linking">✕</button>
+</div>
 </div>
 
 <!-- Content (Rich Editor) -->
@@ -266,18 +303,207 @@ function escHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function loadTierOptions(type) {
-    var sel = document.getElementById('tierLinkId');
-    sel.innerHTML = '<option value="0">Loading...</option>';
-    if (!type) { sel.innerHTML = '<option value="0">Select link type first</option>'; return; }
-    fetch('/api/v1/tier-options/' + type).then(function(r){return r.json()}).then(function(data) {
-        var html = '<option value="0">Select...</option>';
+/* ═══ Cascading Tier Linking ═══ */
+var _selectedDhamId = 0;
+var _selectedDhamName = '';
+
+function onDhamSelected(dhamId) {
+    _selectedDhamId = parseInt(dhamId) || 0;
+    var dhamSel = document.getElementById('tierDhamSelect');
+    _selectedDhamName = dhamSel.options[dhamSel.selectedIndex] ? dhamSel.options[dhamSel.selectedIndex].text.replace(/^🛕\s*/, '') : '';
+
+    var levelSel = document.getElementById('tierLevelSelect');
+    var targetStep = document.getElementById('tierTargetStep');
+    var targetSel = document.getElementById('tierTargetSelect');
+    var hint = document.getElementById('tierLevelHint');
+
+    if (!_selectedDhamId) {
+        levelSel.disabled = true;
+        levelSel.value = '';
+        levelSel.querySelector('option[value=""]').textContent = '— Select Dham first —';
+        hint.innerHTML = '<i class="fas fa-arrow-up"></i> Please select a Dham first';
+        hint.className = 'tier-hint';
+        hint.style.display = '';
+        targetStep.style.display = 'none';
+        targetSel.disabled = true;
+        updateTierHidden('', 0);
+        return;
+    }
+
+    // Enable tier level selector
+    levelSel.disabled = false;
+    levelSel.value = '';
+    levelSel.querySelector('option[value=""]').textContent = '— Now choose tier level —';
+    hint.innerHTML = '<i class="fas fa-check"></i> <strong>' + escHtml(_selectedDhamName) + '</strong> selected. Now pick a tier level below.';
+    hint.className = 'tier-hint';
+    hint.style.display = '';
+    targetStep.style.display = 'none';
+    targetSel.disabled = true;
+    updateTierHidden('', 0);
+}
+
+function onTierLevelSelected(level) {
+    var targetStep = document.getElementById('tierTargetStep');
+    var targetSel = document.getElementById('tierTargetSelect');
+    var targetHint = document.getElementById('tierTargetHint');
+    var levelHint = document.getElementById('tierLevelHint');
+
+    if (!_selectedDhamId) {
+        // Shouldn't happen since it's disabled, but safety net
+        levelHint.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please select a Dham first!';
+        levelHint.className = 'tier-hint error';
+        levelHint.style.display = '';
+        return;
+    }
+
+    if (!level) {
+        targetStep.style.display = 'none';
+        updateTierHidden('', 0);
+        return;
+    }
+
+    levelHint.style.display = 'none';
+
+    if (level === 'dham') {
+        // Link directly to the Dham — no Step 3 needed
+        targetStep.style.display = 'none';
+        updateTierHidden('dham', _selectedDhamId);
+        showSummary('🛕 Linked to Dham: ' + _selectedDhamName);
+        return;
+    }
+
+    // Show Step 3 and load filtered options
+    targetStep.style.display = '';
+    targetSel.disabled = true;
+    targetSel.innerHTML = '<option value="0">⏳ Loading...</option>';
+    targetHint.style.display = 'none';
+    updateTierHidden('', 0);
+    hideSummary();
+
+    var tierLabels = { key_place: 'Key Places (T2)', key_spot: 'Key Spots (T3)', sub_spot: 'Sub Spots (T4)' };
+
+    fetch('/api/v1/tier-options/' + level + '?dham_id=' + _selectedDhamId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.length === 0) {
+            targetSel.innerHTML = '<option value="0">— No items found —</option>';
+            targetHint.innerHTML = '<i class="fas fa-info-circle"></i> No ' + (tierLabels[level]||'items') + ' found under <strong>' + escHtml(_selectedDhamName) + '</strong>. Add them in the Holy Dhams section first.';
+            targetHint.className = 'tier-hint';
+            targetHint.style.display = '';
+            targetSel.disabled = true;
+            return;
+        }
+        var html = '<option value="0">— Select ' + (tierLabels[level]||'target') + ' —</option>';
         data.forEach(function(item) {
-            var label = item.parent ? '[' + item.parent + '] ' + item.title : item.title;
+            var label = item.parent ? item.title + ' (' + item.parent + ')' : item.title;
             html += '<option value="' + item.id + '">' + label + '</option>';
         });
-        sel.innerHTML = html;
+        targetSel.innerHTML = html;
+        targetSel.disabled = false;
+        targetHint.innerHTML = '<i class="fas fa-list"></i> ' + data.length + ' ' + (tierLabels[level]||'items') + ' found under ' + escHtml(_selectedDhamName);
+        targetHint.className = 'tier-hint';
+        targetHint.style.display = '';
+    })
+    .catch(function() {
+        targetSel.innerHTML = '<option value="0">— Error loading —</option>';
+        targetHint.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load options. Please try again.';
+        targetHint.className = 'tier-hint error';
+        targetHint.style.display = '';
     });
+}
+
+function onTargetSelected(targetId) {
+    var level = document.getElementById('tierLevelSelect').value;
+    targetId = parseInt(targetId) || 0;
+    if (!targetId || !level) {
+        updateTierHidden('', 0);
+        hideSummary();
+        return;
+    }
+    updateTierHidden(level, targetId);
+    var targetSel = document.getElementById('tierTargetSelect');
+    var targetName = targetSel.options[targetSel.selectedIndex].text;
+    var tierEmojis = { key_place: '📍', key_spot: '⭐', sub_spot: '📌' };
+    showSummary((tierEmojis[level]||'') + ' Linked to: ' + targetName + ' (under ' + _selectedDhamName + ')');
+}
+
+function updateTierHidden(type, id) {
+    document.getElementById('tierLinkTypeHidden').value = type;
+    document.getElementById('tierLinkIdHidden').value = id;
+}
+
+function showSummary(text) {
+    var s = document.getElementById('tierSummary');
+    document.getElementById('tierSummaryText').innerHTML = text;
+    s.style.display = '';
+}
+
+function hideSummary() {
+    document.getElementById('tierSummary').style.display = 'none';
+}
+
+function clearTierLink() {
+    document.getElementById('tierDhamSelect').value = '';
+    document.getElementById('tierLevelSelect').value = '';
+    document.getElementById('tierLevelSelect').disabled = true;
+    document.getElementById('tierLevelSelect').querySelector('option[value=""]').textContent = '— Select Dham first —';
+    document.getElementById('tierTargetStep').style.display = 'none';
+    document.getElementById('tierTargetSelect').disabled = true;
+    document.getElementById('tierLevelHint').innerHTML = '<i class="fas fa-arrow-up"></i> Please select a Dham first';
+    document.getElementById('tierLevelHint').className = 'tier-hint';
+    document.getElementById('tierLevelHint').style.display = '';
+    updateTierHidden('', 0);
+    hideSummary();
+    _selectedDhamId = 0;
+    _selectedDhamName = '';
+}
+
+/* Restore state on edit */
+function restoreTierState() {
+    var savedType = document.getElementById('tierLinkTypeHidden').value;
+    var savedId = parseInt(document.getElementById('tierLinkIdHidden').value) || 0;
+    if (!savedType || !savedId) return;
+
+    if (savedType === 'dham') {
+        // Select the dham in dropdown 1
+        document.getElementById('tierDhamSelect').value = savedId;
+        onDhamSelected(savedId);
+        document.getElementById('tierLevelSelect').value = 'dham';
+        onTierLevelSelected('dham');
+    } else {
+        // For T2/T3/T4, we need to find which dham this belongs to
+        fetch('/api/v1/tier-options/' + savedType + '?dham_id=0')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var found = data.find(function(item) { return item.id === savedId; });
+            if (found && found.dham) {
+                // Find dham by name in the dropdown
+                var dhamSel = document.getElementById('tierDhamSelect');
+                for (var i = 0; i < dhamSel.options.length; i++) {
+                    if (dhamSel.options[i].text.replace(/^🛕\s*/, '').trim() === found.dham) {
+                        dhamSel.selectedIndex = i;
+                        onDhamSelected(dhamSel.value);
+                        break;
+                    }
+                }
+            } else if (found && found.parent) {
+                // fallback: just try to set the dham via the parent info
+                var dhamSel = document.getElementById('tierDhamSelect');
+                // We may need dham_id from API response — for now use broader approach
+                // Trigger level selection after short delay
+            }
+            // Set tier level
+            setTimeout(function() {
+                document.getElementById('tierLevelSelect').value = savedType;
+                onTierLevelSelected(savedType);
+                // After target loads, select the saved target
+                setTimeout(function() {
+                    document.getElementById('tierTargetSelect').value = savedId;
+                    onTargetSelected(savedId);
+                }, 600);
+            }, 300);
+        });
+    }
 }
 
 var avIdx = {{ audio_video_items|length }};
@@ -328,6 +554,10 @@ function entryGalDelete(btn, img){
 document.addEventListener('DOMContentLoaded', function() {
     var sel = document.getElementById('moduleSelect');
     if (sel.value) loadModuleFields(sel.value);
+    // Restore tier linking state if editing
+    {% if editing and entry.tier_link_type and entry.tier_link_id %}
+    setTimeout(restoreTierState, 200);
+    {% endif %}
 });
 </script>
 {% endblock %}

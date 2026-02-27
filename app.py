@@ -1728,7 +1728,7 @@ def admin_sub_spots_save(ks_id):
 @app.route('/admin/modules')
 @login_required
 def admin_modules():
-    return render_template('admin/modules.html',modules=get_db().execute("SELECT m.*,(SELECT COUNT(*) FROM module_entries me WHERE me.module_id=m.id) as entry_count,u.display_name as creator_name FROM modules m LEFT JOIN users u ON m.created_by=u.id ORDER BY m.sort_order").fetchall())
+    return render_template('admin/modules.html',modules=get_db().execute("SELECT m.*,(SELECT COUNT(*) FROM module_entries me WHERE me.module_id=m.id) as entry_count,u.display_name as creator_name FROM modules m LEFT JOIN users u ON m.created_by=u.id WHERE m.slug != 'holy-dhams' ORDER BY m.sort_order").fetchall())
 
 @app.route('/admin/modules/new', methods=['GET','POST'])
 @login_required
@@ -1760,7 +1760,7 @@ def admin_module_delete(mod_id): get_db().execute("DELETE FROM modules WHERE id=
 @app.route('/admin/entries/<int:mod_id>')
 @login_required
 def admin_entries(mod_id=None):
-    db=get_db(); params=[]; where_clauses=[]
+    db=get_db(); params=[]; where_clauses=["m.slug != 'holy-dhams'"]
     if mod_id: where_clauses.append("me.module_id=?"); params.append(mod_id)
     status_filter=request.args.get('status','')
     if status_filter: where_clauses.append("me.status=?"); params.append(status_filter)
@@ -1772,7 +1772,7 @@ def admin_entries(mod_id=None):
     if where_clauses: q+=" WHERE "+" AND ".join(where_clauses)
     q+=" ORDER BY me.updated_at DESC"
     entries=db.execute(q,params).fetchall()
-    modules=db.execute("SELECT * FROM modules ORDER BY sort_order").fetchall()
+    modules=db.execute("SELECT * FROM modules WHERE slug != 'holy-dhams' ORDER BY sort_order").fetchall()
     dhams=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
     return render_template('admin/entries.html',entries=entries,modules=modules,current_mod=mod_id,dhams=dhams,status_filter=status_filter,search_q=search_q,dham_filter=dham_filter)
 
@@ -1832,7 +1832,7 @@ def admin_entry_new():
         _save_entry_audio_video(db, entry_id, request)
         db.commit()
         flash('Created!','success'); return redirect(url_for('admin_entries'))
-    modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
+    modules=db.execute("SELECT * FROM modules WHERE is_active=1 AND slug != 'holy-dhams' ORDER BY sort_order").fetchall()
     places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
     key_places=db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()
     key_spots=db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()
@@ -1898,7 +1898,7 @@ def admin_entry_edit(entry_id):
         db.execute("DELETE FROM entry_audio_video WHERE entry_id=?",(entry_id,))
         _save_entry_audio_video(db, entry_id, request)
         db.commit(); flash('Updated!','success'); return redirect(url_for('admin_entries'))
-    modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
+    modules=db.execute("SELECT * FROM modules WHERE is_active=1 AND slug != 'holy-dhams' ORDER BY sort_order").fetchall()
     places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
     key_places=db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()
     key_spots=db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()
@@ -2449,14 +2449,27 @@ def api_module_schema(mod_id):
 @app.route('/api/v1/tier-options/<tier_type>')
 def api_tier_options(tier_type):
     db=get_db()
+    dham_id=request.args.get('dham_id',0,type=int)
     if tier_type=='dham':
         return jsonify([{'id':r['id'],'title':r['title']} for r in db.execute("SELECT id,title FROM places ORDER BY title").fetchall()])
     elif tier_type=='key_place':
-        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['dham_title']} for r in db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()])
+        q="SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id"
+        params=[]
+        if dham_id: q+=" WHERE kp.parent_place_id=?"; params.append(dham_id)
+        q+=" ORDER BY p.title,kp.title"
+        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['dham_title'],'dham':r['dham_title']} for r in db.execute(q,params).fetchall()])
     elif tier_type=='key_spot':
-        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['kp_title']} for r in db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()])
+        q="SELECT ks.id,ks.title,kp.title as kp_title,p.title as dham_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id"
+        params=[]
+        if dham_id: q+=" WHERE kp.parent_place_id=?"; params.append(dham_id)
+        q+=" ORDER BY kp.title,ks.title"
+        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['kp_title'],'dham':r['dham_title']} for r in db.execute(q,params).fetchall()])
     elif tier_type=='sub_spot':
-        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['ks_title']} for r in db.execute("SELECT ss.id,ss.title,ks.title as ks_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id ORDER BY ks.title,ss.title").fetchall()])
+        q="SELECT ss.id,ss.title,ks.title as ks_title,kp.title as kp_title,p.title as dham_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id"
+        params=[]
+        if dham_id: q+=" WHERE kp.parent_place_id=?"; params.append(dham_id)
+        q+=" ORDER BY ks.title,ss.title"
+        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['ks_title'],'kp':r['kp_title'],'dham':r['dham_title']} for r in db.execute(q,params).fetchall()])
     return jsonify([])
 
 @app.route('/api/v1/modules/<slug>/entries')
