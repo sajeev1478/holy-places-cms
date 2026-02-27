@@ -1,6 +1,6 @@
 {% extends "admin/base.html" %}
-{% block title %}{{ 'Edit' if editing else 'New' }} Entry{% endblock %}
-{% block page_title %}{{ 'Edit' if editing else 'New' }} Module Entry{% endblock %}
+{% block title %}{{ 'Edit' if editing else 'New' }} {{ selected_module.name if selected_module else 'Module' }} Entry{% endblock %}
+{% block page_title %}{{ selected_module.icon if selected_module else '📝' }} {{ 'Edit' if editing else 'New' }} {{ selected_module.name if selected_module else 'Module' }} Entry{% endblock %}
 
 {% block admin_content %}
 <style>
@@ -15,7 +15,20 @@
 .dyn-field input,.dyn-field textarea,.dyn-field select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:white;transition:border .2s}
 .dyn-field input:focus,.dyn-field textarea:focus,.dyn-field select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(199,107,143,.1)}
 .dyn-field textarea{min-height:60px;resize:vertical}
-.tier-link-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tier-cascade{display:flex;flex-direction:column;gap:14px}
+.tier-step{display:flex;align-items:flex-start;gap:10px}
+.tier-step-num{width:26px;height:26px;min-width:26px;background:#ccc;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:22px;transition:background .3s}
+.tier-step-num.active{background:var(--primary)}
+.tier-step-num.done{background:#27ae60}
+.tier-hint{font-size:11px;color:var(--text-light);margin-top:5px;display:flex;align-items:center;gap:4px;padding:4px 0}
+.tier-hint i{color:var(--primary);font-size:10px}
+.tier-hint.error{color:#E74845}.tier-hint.error i{color:#E74845}
+.tier-hint.success{color:#27ae60}.tier-hint.success i{color:#27ae60}
+.tier-summary{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;background:#d4edda;border-radius:10px;font-size:13px;font-weight:600;color:#155724;border:1px solid #c3e6cb}
+.tier-summary span{flex:1}
+.tier-clear-btn{width:22px;height:22px;background:rgba(0,0,0,.1);color:#155724;border:none;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.tier-clear-btn:hover{background:rgba(0,0,0,.2)}
+select:disabled{opacity:.55;cursor:not-allowed;background:#f5f5f5}
 .av-item{background:white;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative}
 .av-remove{position:absolute;top:8px;right:8px;width:22px;height:22px;background:rgba(231,72,69,.9);color:white;border:none;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
 .av-existing-file{font-size:11px;color:var(--primary);background:var(--bg-cream);padding:4px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;margin-top:4px}
@@ -33,18 +46,6 @@
 .ecam-remove{position:absolute;top:6px;right:6px;width:24px;height:24px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
 .ecam-info{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-light);margin-top:6px;padding:4px 10px;background:var(--bg-cream);border-radius:50px;width:fit-content}
 .ecam-info i{color:#2E86AB}
-.tier-cascade{display:flex;flex-direction:column;gap:12px}
-.tier-step{display:flex;align-items:flex-start;gap:10px}
-.tier-step-num{width:24px;height:24px;min-width:24px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:22px}
-.tier-hint{font-size:11px;color:var(--text-light);margin-top:4px;display:flex;align-items:center;gap:4px;padding:4px 0}
-.tier-hint i{color:var(--primary);font-size:10px}
-.tier-hint.error{color:#E74845}
-.tier-hint.error i{color:#E74845}
-.tier-summary{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;background:#d4edda;border-radius:10px;font-size:13px;font-weight:600;color:#155724;border:1px solid #c3e6cb}
-.tier-summary span{flex:1}
-.tier-clear-btn{width:22px;height:22px;background:rgba(0,0,0,.1);color:#155724;border:none;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background .2s}
-.tier-clear-btn:hover{background:rgba(0,0,0,.2)}
-select:disabled{opacity:.55;cursor:not-allowed;background:#f5f5f5}
 .no-schema-msg{color:var(--text-light);font-size:13px;font-style:italic;padding:16px;text-align:center}
 @media(max-width:900px){.entry-layout{grid-template-columns:1fr}.tier-step{flex-direction:column;gap:4px}.tier-step-num{margin-top:0}}
 </style>
@@ -54,18 +55,17 @@ select:disabled{opacity:.55;cursor:not-allowed;background:#f5f5f5}
 <div class="entry-layout">
 <!-- LEFT: Main Content -->
 <div>
-<!-- Module + Title -->
+
+<!-- Hidden module_id -->
+<input type="hidden" name="module_id" value="{{ selected_module.id }}">
+
+<!-- Title + Status -->
 <div class="form-row">
-<div class="form-group">
-<label>Module *</label>
-<select name="module_id" id="moduleSelect" class="form-control" required onchange="loadModuleFields(this.value)">
-<option value="">Select module...</option>
-{% for mod in modules %}
-<option value="{{ mod.id }}" data-slug="{{ mod.slug }}" {{ 'selected' if (editing and entry.module_id == mod.id) or (not editing and preselect_mod and preselect_mod == mod.id) }}>{{ mod.icon }} {{ mod.name }}</option>
-{% endfor %}
-</select>
+<div class="form-group" style="flex:2">
+<label>Title *</label>
+<input name="title" class="form-control" value="{{ entry.title if editing else '' }}" required placeholder="Enter {{ selected_module.name|lower }} title">
 </div>
-<div class="form-group">
+<div class="form-group" style="flex:0 0 160px">
 <label>Status</label>
 <select name="status" class="form-control">
 <option value="draft" {{ 'selected' if editing and entry.status=='draft' }}>📝 Draft</option>
@@ -74,54 +74,50 @@ select:disabled{opacity:.55;cursor:not-allowed;background:#f5f5f5}
 </div>
 </div>
 
-<div class="form-group">
-<label>Title *</label>
-<input name="title" class="form-control" value="{{ entry.title if editing else '' }}" required placeholder="Entry title">
-</div>
-
-<!-- Tier Linking (Cascading) -->
+<!-- Tier Linking (Cascading 3-step) -->
 <div class="entry-section">
 <div class="section-title">🔗 Link to Tier Hierarchy</div>
 <div class="tier-cascade">
-<!-- Step 1: Select Dham (T1) -->
+<!-- Step 1: Select Dham -->
 <div class="tier-step">
-<div class="tier-step-num">1</div>
+<div class="tier-step-num active" id="stepNum1">1</div>
 <div class="dyn-field" style="margin:0;flex:1">
-<label>Select Dham (Tier 1) *</label>
-<select id="tierDhamSelect" class="form-control" onchange="onDhamSelected(this.value)">
+<label>Select Dham (Tier 1)</label>
+<select id="tierDhamSelect" class="form-control" onchange="onDhamSelected()">
 <option value="">— Choose a Dham —</option>
 {% for p in places %}
-<option value="{{ p.id }}" {% if editing and entry.tier_link_type == 'dham' and entry.tier_link_id == p.id %}selected{% elif editing and entry.tier_link_type in ('key_place','key_spot','sub_spot') %}data-id="{{ p.id }}"{% endif %}>🛕 {{ p.title }}</option>
+<option value="{{ p.id }}">🛕 {{ p.title }}</option>
 {% endfor %}
 </select>
+<div class="tier-hint" id="tierStep1Hint"><i class="fas fa-info-circle"></i> Start by selecting a Dham to link this entry</div>
 </div>
 </div>
 
-<!-- Step 2: Select Tier Level -->
-<div class="tier-step">
-<div class="tier-step-num">2</div>
+<!-- Step 2: Select Tier Level (disabled until step 1 done) -->
+<div class="tier-step" id="tierStep2Wrap" style="opacity:0.45;pointer-events:none">
+<div class="tier-step-num" id="stepNum2">2</div>
 <div class="dyn-field" style="margin:0;flex:1">
 <label>Link to Tier Level</label>
-<select id="tierLevelSelect" class="form-control" onchange="onTierLevelSelected(this.value)" disabled>
-<option value="">— Select Dham first —</option>
+<select id="tierLevelSelect" class="form-control" onchange="onTierLevelSelected()">
+<option value="">— Choose tier level —</option>
 <option value="dham">🛕 This Dham itself (T1)</option>
 <option value="key_place">📍 Key Place (T2)</option>
 <option value="key_spot">⭐ Key Spot (T3)</option>
 <option value="sub_spot">📌 Sub Spot (T4)</option>
 </select>
-<div class="tier-hint" id="tierLevelHint"><i class="fas fa-arrow-up"></i> Please select a Dham first</div>
+<div class="tier-hint" id="tierStep2Hint" style="display:none"></div>
 </div>
 </div>
 
-<!-- Step 3: Select Target -->
-<div class="tier-step" id="tierTargetStep" style="display:none">
-<div class="tier-step-num">3</div>
+<!-- Step 3: Select Target (hidden until step 2 picks T2/T3/T4) -->
+<div class="tier-step" id="tierStep3Wrap" style="display:none">
+<div class="tier-step-num" id="stepNum3">3</div>
 <div class="dyn-field" style="margin:0;flex:1">
-<label>Select Target</label>
-<select id="tierTargetSelect" class="form-control" onchange="onTargetSelected(this.value)" disabled>
-<option value="0">— Select tier level first —</option>
+<label id="tierStep3Label">Select Target Location</label>
+<select id="tierTargetSelect" class="form-control" onchange="onTargetSelected()">
+<option value="">— Pick target —</option>
 </select>
-<div class="tier-hint" id="tierTargetHint" style="display:none"></div>
+<div class="tier-hint" id="tierStep3Hint" style="display:none"></div>
 </div>
 </div>
 </div>
@@ -132,99 +128,83 @@ select:disabled{opacity:.55;cursor:not-allowed;background:#f5f5f5}
 
 <!-- Summary badge -->
 <div id="tierSummary" class="tier-summary" style="display:none">
-<i class="fas fa-check-circle" style="color:#27ae60"></i> <span id="tierSummaryText"></span>
+<i class="fas fa-check-circle" style="color:#27ae60"></i>
+<span id="tierSummaryText"></span>
 <button type="button" class="tier-clear-btn" onclick="clearTierLink()" title="Clear linking">✕</button>
 </div>
 </div>
 
-<!-- Content (Rich Editor) -->
+<!-- Content Editor -->
 <div class="form-group">
 <label>Content (Rich Editor)</label>
-<input type="hidden" name="content" id="entry_content" value="{{ entry.content if editing else '' }}">
-<div class="rich-editor" data-target="entry_content" style="background:white;min-height:200px"></div>
+<input type="hidden" name="content" id="content_hidden" value="{{ entry.content if editing else '' }}">
+<div class="rich-editor" data-target="content_hidden" style="min-height:250px;background:white">{{ entry.content|safe if editing else '' }}</div>
 </div>
 
 <!-- Dynamic Module Fields -->
 <div class="entry-section" id="dynamicFieldsSection">
-<div class="section-title" id="dynFieldsTitle">📋 Module-Specific Fields</div>
-<div id="dynamicFields">
-<div class="no-schema-msg">Select a module above to see its specific fields</div>
-</div>
+<div class="section-title" id="dynFieldsTitle">📋 Module Fields</div>
+<div id="dynamicFields"><div class="no-schema-msg">Loading fields...</div></div>
 </div>
 
-<!-- Audio / Video Section -->
+<!-- Audio/Video -->
 <div class="entry-section">
-<div class="section-title">🎵 Audio & Video</div>
+<div class="section-title">🎵 Audio / Video</div>
 <div id="avContainer">
 {% for av in audio_video_items %}
-<div class="av-item" data-idx="{{ loop.index0 }}">
+<div class="av-item">
 <button type="button" class="av-remove" onclick="this.closest('.av-item').remove()" title="Remove">✕</button>
 <div style="display:grid;gap:8px">
 <div class="form-row" style="gap:8px">
-<div class="dyn-field" style="margin:0"><label>Type</label>
-<select name="av_type_{{ loop.index0 }}" class="form-control"><option value="audio" {{ 'selected' if av.media_type=='audio' }}>🎵 Audio</option><option value="video" {{ 'selected' if av.media_type=='video' }}>🎬 Video</option></select>
+<div class="dyn-field" style="margin:0"><label>Type</label><select name="av_type_{{ loop.index0 }}" class="form-control"><option value="audio" {{ 'selected' if av.media_type=='audio' }}>🎵 Audio</option><option value="video" {{ 'selected' if av.media_type=='video' }}>🎬 Video</option></select></div>
+<div class="dyn-field" style="margin:0"><label>Source</label><select name="av_source_{{ loop.index0 }}" class="form-control" onchange="toggleAvSource(this,{{ loop.index0 }})"><option value="upload" {{ 'selected' if av.source_type=='upload' }}>📤 Upload</option><option value="link" {{ 'selected' if av.source_type=='link' }}>🔗 Link</option></select></div>
 </div>
-<div class="dyn-field" style="margin:0"><label>Source</label>
-<select name="av_source_{{ loop.index0 }}" class="form-control" onchange="toggleAvSource(this,{{ loop.index0 }})"><option value="upload" {{ 'selected' if av.source_type=='upload' }}>📤 Upload</option><option value="link" {{ 'selected' if av.source_type=='link' }}>🔗 Link</option></select>
-</div>
-</div>
-<div class="dyn-field" style="margin:0" id="av_upload_{{ loop.index0 }}" {{ 'style=display:none' if av.source_type=='link' else '' }}>
+<div class="dyn-field" style="margin:0;{{ 'display:none' if av.source_type=='link' }}" id="av_upload_{{ loop.index0 }}">
 <label>File</label><input type="file" name="av_file_{{ loop.index0 }}" class="form-control" accept="audio/*,video/*" style="font-size:12px">
-{% if av.file_path %}<input type="hidden" name="av_existing_{{ loop.index0 }}" value="{{ av.file_path }}"><div class="av-existing-file"><i class="fas fa-file"></i> {{ av.file_path.split('/')[-1] }}</div>{% endif %}
+{% if av.source_type=='upload' and av.file_path %}<div class="av-existing-file"><i class="fas fa-file-audio"></i> {{ av.file_path.split('/')[-1] }}</div><input type="hidden" name="av_existing_{{ loop.index0 }}" value="{{ av.file_path }}">{% endif %}
 </div>
-<div class="dyn-field" style="margin:0" id="av_link_{{ loop.index0 }}" {{ '' if av.source_type=='link' else 'style=display:none' }}>
-<label>URL</label><input name="av_url_{{ loop.index0 }}" class="form-control" value="{{ av.external_url }}" placeholder="https://youtube.com/...">
-</div>
-<div class="dyn-field" style="margin:0"><label>Description *</label><textarea name="av_desc_{{ loop.index0 }}" class="form-control" rows="2" placeholder="Describe this audio/video content">{{ av.description }}</textarea></div>
+<div class="dyn-field" style="margin:0;{{ 'display:none' if av.source_type=='upload' }}" id="av_link_{{ loop.index0 }}"><label>URL</label><input name="av_url_{{ loop.index0 }}" class="form-control" value="{{ av.external_url or '' }}" placeholder="https://youtube.com/..."></div>
+<div class="dyn-field" style="margin:0"><label>Description *</label><textarea name="av_desc_{{ loop.index0 }}" class="form-control" rows="2" placeholder="Describe this content">{{ av.description or '' }}</textarea></div>
 </div>
 </div>
 {% endfor %}
 </div>
 <button type="button" class="btn btn-sm btn-secondary" onclick="addAvItem()"><i class="fas fa-plus"></i> Add Audio/Video</button>
-<div style="font-size:11px;color:var(--text-light);margin-top:6px"><i class="fas fa-info-circle"></i> Each audio MUST have a description explaining the content</div>
-</div>
-
-<div class="form-group">
-<label>Sort Order</label>
-<input name="sort_order" class="form-control" type="number" value="{{ entry.sort_order if editing else 0 }}" style="max-width:120px">
 </div>
 </div>
 
-<!-- RIGHT: Images & Media Sidebar -->
+<!-- RIGHT: Media Panel -->
 <div>
 <!-- Featured Image -->
 <div class="entry-section">
-<label>🖼️ Featured Image</label>
+<div class="section-title">🖼️ Featured Image</div>
 {% if editing and entry.featured_image %}
+<div style="margin-bottom:8px;position:relative">
+<img src="/static/uploads/{{ entry.featured_image }}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover" onerror="this.style.display='none'">
 <input type="hidden" name="featured_image_existing" value="{{ entry.featured_image }}">
-<div style="margin-bottom:8px;position:relative;display:inline-block;width:100%">
-<img src="/static/uploads/{{ entry.featured_image }}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openLightbox(this.src)" onerror="this.style.display='none'">
-<button type="button" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(231,72,69,.9);color:white;border:none;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center" onclick="this.parentElement.remove();document.querySelector('input[name=featured_image_existing]').value=''" title="Remove">✕</button>
 </div>
 {% endif %}
-<input type="file" name="featured_image_file" class="form-control" accept="image/*" style="font-size:12px">
-<div class="ecam-wrap">
-<div style="display:flex;gap:8px;align-items:center">
-<button type="button" class="ecam-btn" onclick="this.parentElement.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture</button>
-</div>
-<input type="file" name="featured_image_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.parentElement.querySelector('.ecam-preview');p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
-<div class="ecam-preview"><img><button type="button" class="ecam-remove" onclick="var w=this.closest('.ecam-wrap');w.querySelector('.ecam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
-<div class="ecam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
+<input type="file" name="featured_image_file" accept="image/*" class="form-control" style="font-size:12px">
+<div style="font-size:10px;color:var(--text-light);margin-top:4px"><i class="fas fa-compress-alt"></i> Images are auto-compressed on upload (max 1920px, optimized quality)</div>
+<div class="ecam-wrap" style="margin-top:6px">
+<button type="button" class="ecam-btn ecam-btn-green" onclick="document.getElementById('featCamInput').click()"><i class="fas fa-camera"></i> Capture</button>
+<input type="file" name="featured_image_cam" id="featCamInput" accept="image/*" capture="environment" style="display:none" onchange="var p=document.getElementById('featCamPreview');p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
+<div class="ecam-preview" id="featCamPreview"><img><button type="button" class="ecam-remove" onclick="this.closest('.ecam-preview').classList.remove('active');document.getElementById('featCamInput').value=''">✕</button></div>
+<div class="ecam-info"><i class="fas fa-compress-alt"></i> Auto-compressed</div>
 </div>
 </div>
 
 <!-- Gallery Images -->
 <div class="entry-section">
-<label>📸 Gallery Images
-{% if editing and entry.gallery_images %}<span style="font-size:11px;font-weight:400;color:var(--primary);margin-left:4px">{{ entry.gallery_images.split(',')|reject('equalto','')|list|length }} uploaded</span>{% endif %}
-</label>
-<input type="hidden" name="gallery_existing" value="{{ entry.gallery_images if editing and entry.gallery_images else '' }}">
+<div class="section-title">🖼️ Gallery Images</div>
 {% if editing and entry.gallery_images %}
-<div class="entry-gal-list" id="entry_gal_list">
-{% for gi in entry.gallery_images.split(',') %}{% if gi.strip() %}
+<input type="hidden" name="gallery_existing" value="{{ entry.gallery_images }}">
+<div class="entry-gal-list">
+{% for gi in entry.gallery_images.split(',') %}
+{% if gi.strip() %}
 <div class="entry-gal-item">
-<img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'">
-<div class="eg-info"><div style="font-size:10px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ gi.strip().split('/')[-1] }}</div></div>
+<img src="/static/uploads/{{ gi.strip() }}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 60%22><rect fill=%22%23eee%22 width=%2260%22 height=%2260%22/></svg>'" onclick="window.open('/static/uploads/{{ gi.strip() }}','_blank')">
+<div class="eg-info"><div style="font-size:11px;color:var(--text-light);word-break:break-all">{{ gi.strip().split('/')[-1] }}</div></div>
 <button type="button" style="background:none;border:none;color:#E74845;cursor:pointer;font-size:14px" onclick="entryGalDelete(this,'{{ gi.strip() }}')" title="Remove">✕</button>
 </div>
 {% endif %}{% endfor %}
@@ -250,15 +230,16 @@ select:disabled{opacity:.55;cursor:not-allowed;background:#f5f5f5}
 
 <script>
 var MODULE_SCHEMAS = {{ module_schemas|tojson }};
+var CURRENT_MODULE_SLUG = {{ (selected_module.slug if selected_module else '')|tojson }};
 var ENTRY_CF = {};
 {% if editing and entry.custom_fields %}
 try { ENTRY_CF = JSON.parse({{ entry.custom_fields|tojson }}); } catch(e) { ENTRY_CF = {}; }
 {% endif %}
 
-function loadModuleFields(modId) {
-    if (!modId) { document.getElementById('dynamicFields').innerHTML='<div class="no-schema-msg">Select a module to see its fields</div>'; return; }
-    var sel = document.getElementById('moduleSelect');
-    var slug = sel.options[sel.selectedIndex].getAttribute('data-slug');
+/* ═══ Module Fields (auto-loaded) ═══ */
+function loadModuleFields() {
+    var slug = CURRENT_MODULE_SLUG;
+    if (!slug) return;
     var schema = MODULE_SCHEMAS[slug] || [];
     renderSchema(schema, slug);
 }
@@ -269,7 +250,8 @@ function renderSchema(schema, slug) {
         container.innerHTML='<div class="no-schema-msg">No predefined fields for this module. Use the Content editor above.</div>';
         return;
     }
-    document.getElementById('dynFieldsTitle').innerHTML = '📋 ' + slug.replace(/-/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();}) + ' Fields';
+    var pretty = slug.replace(/-/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();});
+    document.getElementById('dynFieldsTitle').innerHTML = '📋 ' + pretty + ' Fields';
     var html = '';
     schema.forEach(function(f) {
         var val = ENTRY_CF[f.name] || '';
@@ -304,214 +286,176 @@ function escHtml(str) {
 }
 
 /* ═══ Cascading Tier Linking ═══ */
-var _selectedDhamId = 0;
-var _selectedDhamName = '';
+var _selDhamId = 0;
+var _selDhamName = '';
 
-function onDhamSelected(dhamId) {
-    _selectedDhamId = parseInt(dhamId) || 0;
-    var dhamSel = document.getElementById('tierDhamSelect');
-    _selectedDhamName = dhamSel.options[dhamSel.selectedIndex] ? dhamSel.options[dhamSel.selectedIndex].text.replace(/^🛕\s*/, '') : '';
+function setStep(num, state) {
+    var el = document.getElementById('stepNum' + num);
+    if (el) el.className = 'tier-step-num' + (state === 'done' ? ' done' : state === 'active' ? ' active' : '');
+}
 
+function onDhamSelected() {
+    var sel = document.getElementById('tierDhamSelect');
+    _selDhamId = parseInt(sel.value) || 0;
+    _selDhamName = _selDhamId ? sel.options[sel.selectedIndex].text.replace(/^🛕\s*/, '').trim() : '';
+
+    var step2 = document.getElementById('tierStep2Wrap');
+    var step3 = document.getElementById('tierStep3Wrap');
     var levelSel = document.getElementById('tierLevelSelect');
-    var targetStep = document.getElementById('tierTargetStep');
-    var targetSel = document.getElementById('tierTargetSelect');
-    var hint = document.getElementById('tierLevelHint');
+    var h1 = document.getElementById('tierStep1Hint');
+    var h2 = document.getElementById('tierStep2Hint');
 
-    if (!_selectedDhamId) {
-        levelSel.disabled = true;
-        levelSel.value = '';
-        levelSel.querySelector('option[value=""]').textContent = '— Select Dham first —';
-        hint.innerHTML = '<i class="fas fa-arrow-up"></i> Please select a Dham first';
-        hint.className = 'tier-hint';
-        hint.style.display = '';
-        targetStep.style.display = 'none';
-        targetSel.disabled = true;
-        updateTierHidden('', 0);
+    // Reset downstream
+    levelSel.value = '';
+    step3.style.display = 'none';
+    updateHidden('', 0);
+    hideSummary();
+
+    if (!_selDhamId) {
+        step2.style.opacity = '0.45';
+        step2.style.pointerEvents = 'none';
+        setStep(1, 'active'); setStep(2, ''); setStep(3, '');
+        h1.innerHTML = '<i class="fas fa-info-circle"></i> Start by selecting a Dham to link this entry';
+        h1.className = 'tier-hint'; h1.style.display = '';
+        h2.style.display = 'none';
         return;
     }
 
-    // Enable tier level selector
-    levelSel.disabled = false;
-    levelSel.value = '';
-    levelSel.querySelector('option[value=""]').textContent = '— Now choose tier level —';
-    hint.innerHTML = '<i class="fas fa-check"></i> <strong>' + escHtml(_selectedDhamName) + '</strong> selected. Now pick a tier level below.';
-    hint.className = 'tier-hint';
-    hint.style.display = '';
-    targetStep.style.display = 'none';
-    targetSel.disabled = true;
-    updateTierHidden('', 0);
+    // Dham selected → unlock step 2
+    setStep(1, 'done'); setStep(2, 'active'); setStep(3, '');
+    step2.style.opacity = '1';
+    step2.style.pointerEvents = 'auto';
+    h1.innerHTML = '<i class="fas fa-check"></i> <strong>' + escHtml(_selDhamName) + '</strong> selected';
+    h1.className = 'tier-hint success'; h1.style.display = '';
+    h2.innerHTML = '<i class="fas fa-hand-point-down"></i> Now choose which tier level to link to';
+    h2.className = 'tier-hint'; h2.style.display = '';
 }
 
-function onTierLevelSelected(level) {
-    var targetStep = document.getElementById('tierTargetStep');
+function onTierLevelSelected() {
+    var levelSel = document.getElementById('tierLevelSelect');
+    var level = levelSel.value;
+    var step3 = document.getElementById('tierStep3Wrap');
     var targetSel = document.getElementById('tierTargetSelect');
-    var targetHint = document.getElementById('tierTargetHint');
-    var levelHint = document.getElementById('tierLevelHint');
+    var h2 = document.getElementById('tierStep2Hint');
+    var h3 = document.getElementById('tierStep3Hint');
+    var label3 = document.getElementById('tierStep3Label');
 
-    if (!_selectedDhamId) {
-        // Shouldn't happen since it's disabled, but safety net
-        levelHint.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please select a Dham first!';
-        levelHint.className = 'tier-hint error';
-        levelHint.style.display = '';
+    if (!_selDhamId) {
+        h2.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please select a Dham first!';
+        h2.className = 'tier-hint error'; h2.style.display = '';
         return;
     }
 
     if (!level) {
-        targetStep.style.display = 'none';
-        updateTierHidden('', 0);
+        step3.style.display = 'none';
+        setStep(2, 'active'); setStep(3, '');
+        updateHidden('', 0); hideSummary();
         return;
     }
 
-    levelHint.style.display = 'none';
+    setStep(2, 'done');
+    h2.style.display = 'none';
 
     if (level === 'dham') {
-        // Link directly to the Dham — no Step 3 needed
-        targetStep.style.display = 'none';
-        updateTierHidden('dham', _selectedDhamId);
-        showSummary('🛕 Linked to Dham: ' + _selectedDhamName);
+        step3.style.display = 'none';
+        updateHidden('dham', _selDhamId);
+        showSummary('🛕 Linked to Dham: <strong>' + escHtml(_selDhamName) + '</strong>');
         return;
     }
 
-    // Show Step 3 and load filtered options
-    targetStep.style.display = '';
-    targetSel.disabled = true;
-    targetSel.innerHTML = '<option value="0">⏳ Loading...</option>';
-    targetHint.style.display = 'none';
-    updateTierHidden('', 0);
+    // Show step 3 and load options filtered by dham
+    var tierLabels = {key_place:'Key Places (T2)', key_spot:'Key Spots (T3)', sub_spot:'Sub Spots (T4)'};
+    label3.textContent = 'Select ' + (tierLabels[level] || 'Target');
+    step3.style.display = '';
+    setStep(3, 'active');
+    targetSel.innerHTML = '<option value="">⏳ Loading ' + (tierLabels[level]||'items') + '...</option>';
+    h3.style.display = 'none';
+    updateHidden('', 0);
     hideSummary();
 
-    var tierLabels = { key_place: 'Key Places (T2)', key_spot: 'Key Spots (T3)', sub_spot: 'Sub Spots (T4)' };
-
-    fetch('/api/v1/tier-options/' + level + '?dham_id=' + _selectedDhamId)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.length === 0) {
-            targetSel.innerHTML = '<option value="0">— No items found —</option>';
-            targetHint.innerHTML = '<i class="fas fa-info-circle"></i> No ' + (tierLabels[level]||'items') + ' found under <strong>' + escHtml(_selectedDhamName) + '</strong>. Add them in the Holy Dhams section first.';
-            targetHint.className = 'tier-hint';
-            targetHint.style.display = '';
-            targetSel.disabled = true;
-            return;
-        }
-        var html = '<option value="0">— Select ' + (tierLabels[level]||'target') + ' —</option>';
-        data.forEach(function(item) {
-            var label = item.parent ? item.title + ' (' + item.parent + ')' : item.title;
-            html += '<option value="' + item.id + '">' + label + '</option>';
+    fetch('/api/v1/tier-options/' + level + '?dham_id=' + _selDhamId)
+        .then(function(r) {
+            if (!r.ok) throw new Error('Server error ' + r.status);
+            return r.json();
+        })
+        .then(function(data) {
+            if (!data || data.length === 0) {
+                targetSel.innerHTML = '<option value="">— No items found —</option>';
+                h3.innerHTML = '<i class="fas fa-exclamation-circle"></i> No ' + (tierLabels[level]||'items') + ' found under <strong>' + escHtml(_selDhamName) + '</strong>. Add them first in Holy Dhams section.';
+                h3.className = 'tier-hint error'; h3.style.display = '';
+                return;
+            }
+            var html = '<option value="">— Select from ' + data.length + ' ' + (tierLabels[level]||'items') + ' —</option>';
+            data.forEach(function(item) {
+                var lbl = item.parent ? item.title + ' (' + item.parent + ')' : item.title;
+                html += '<option value="' + item.id + '">' + lbl + '</option>';
+            });
+            targetSel.innerHTML = html;
+            h3.innerHTML = '<i class="fas fa-list"></i> ' + data.length + ' ' + (tierLabels[level]||'items') + ' found under <strong>' + escHtml(_selDhamName) + '</strong>';
+            h3.className = 'tier-hint success'; h3.style.display = '';
+        })
+        .catch(function(err) {
+            targetSel.innerHTML = '<option value="">— Error loading —</option>';
+            h3.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load. ' + (err.message||'');
+            h3.className = 'tier-hint error'; h3.style.display = '';
         });
-        targetSel.innerHTML = html;
-        targetSel.disabled = false;
-        targetHint.innerHTML = '<i class="fas fa-list"></i> ' + data.length + ' ' + (tierLabels[level]||'items') + ' found under ' + escHtml(_selectedDhamName);
-        targetHint.className = 'tier-hint';
-        targetHint.style.display = '';
-    })
-    .catch(function() {
-        targetSel.innerHTML = '<option value="0">— Error loading —</option>';
-        targetHint.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Failed to load options. Please try again.';
-        targetHint.className = 'tier-hint error';
-        targetHint.style.display = '';
-    });
 }
 
-function onTargetSelected(targetId) {
+function onTargetSelected() {
     var level = document.getElementById('tierLevelSelect').value;
-    targetId = parseInt(targetId) || 0;
-    if (!targetId || !level) {
-        updateTierHidden('', 0);
-        hideSummary();
-        return;
-    }
-    updateTierHidden(level, targetId);
     var targetSel = document.getElementById('tierTargetSelect');
-    var targetName = targetSel.options[targetSel.selectedIndex].text;
-    var tierEmojis = { key_place: '📍', key_spot: '⭐', sub_spot: '📌' };
-    showSummary((tierEmojis[level]||'') + ' Linked to: ' + targetName + ' (under ' + _selectedDhamName + ')');
+    var tid = parseInt(targetSel.value) || 0;
+    if (!tid || !level) { setStep(3,'active'); updateHidden('',0); hideSummary(); return; }
+    setStep(3, 'done');
+    updateHidden(level, tid);
+    var name = targetSel.options[targetSel.selectedIndex].text;
+    var icons = {key_place:'📍', key_spot:'⭐', sub_spot:'📌'};
+    showSummary((icons[level]||'') + ' Linked to: <strong>' + escHtml(name) + '</strong> (under ' + escHtml(_selDhamName) + ')');
 }
 
-function updateTierHidden(type, id) {
-    document.getElementById('tierLinkTypeHidden').value = type;
-    document.getElementById('tierLinkIdHidden').value = id;
+function updateHidden(type, id) {
+    document.getElementById('tierLinkTypeHidden').value = type || '';
+    document.getElementById('tierLinkIdHidden').value = id || 0;
 }
+function showSummary(h) { document.getElementById('tierSummaryText').innerHTML = h; document.getElementById('tierSummary').style.display = ''; }
+function hideSummary() { document.getElementById('tierSummary').style.display = 'none'; }
+function clearTierLink() { document.getElementById('tierDhamSelect').value = ''; onDhamSelected(); }
 
-function showSummary(text) {
-    var s = document.getElementById('tierSummary');
-    document.getElementById('tierSummaryText').innerHTML = text;
-    s.style.display = '';
-}
-
-function hideSummary() {
-    document.getElementById('tierSummary').style.display = 'none';
-}
-
-function clearTierLink() {
-    document.getElementById('tierDhamSelect').value = '';
-    document.getElementById('tierLevelSelect').value = '';
-    document.getElementById('tierLevelSelect').disabled = true;
-    document.getElementById('tierLevelSelect').querySelector('option[value=""]').textContent = '— Select Dham first —';
-    document.getElementById('tierTargetStep').style.display = 'none';
-    document.getElementById('tierTargetSelect').disabled = true;
-    document.getElementById('tierLevelHint').innerHTML = '<i class="fas fa-arrow-up"></i> Please select a Dham first';
-    document.getElementById('tierLevelHint').className = 'tier-hint';
-    document.getElementById('tierLevelHint').style.display = '';
-    updateTierHidden('', 0);
-    hideSummary();
-    _selectedDhamId = 0;
-    _selectedDhamName = '';
-}
-
-/* Restore state on edit */
+/* Restore on edit */
 function restoreTierState() {
     var savedType = document.getElementById('tierLinkTypeHidden').value;
     var savedId = parseInt(document.getElementById('tierLinkIdHidden').value) || 0;
     if (!savedType || !savedId) return;
-
     if (savedType === 'dham') {
-        // Select the dham in dropdown 1
         document.getElementById('tierDhamSelect').value = savedId;
-        onDhamSelected(savedId);
-        document.getElementById('tierLevelSelect').value = 'dham';
-        onTierLevelSelected('dham');
+        onDhamSelected();
+        setTimeout(function() { document.getElementById('tierLevelSelect').value = 'dham'; onTierLevelSelected(); }, 100);
     } else {
-        // For T2/T3/T4, we need to find which dham this belongs to
         fetch('/api/v1/tier-options/' + savedType + '?dham_id=0')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            var found = data.find(function(item) { return item.id === savedId; });
-            if (found && found.dham) {
-                // Find dham by name in the dropdown
-                var dhamSel = document.getElementById('tierDhamSelect');
-                for (var i = 0; i < dhamSel.options.length; i++) {
-                    if (dhamSel.options[i].text.replace(/^🛕\s*/, '').trim() === found.dham) {
-                        dhamSel.selectedIndex = i;
-                        onDhamSelected(dhamSel.value);
-                        break;
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var found = data.find(function(item) { return item.id === savedId; });
+                if (found && found.dham) {
+                    var ds = document.getElementById('tierDhamSelect');
+                    for (var i = 0; i < ds.options.length; i++) {
+                        if (ds.options[i].text.replace(/^🛕\s*/, '').trim() === found.dham) { ds.selectedIndex = i; onDhamSelected(); break; }
                     }
                 }
-            } else if (found && found.parent) {
-                // fallback: just try to set the dham via the parent info
-                var dhamSel = document.getElementById('tierDhamSelect');
-                // We may need dham_id from API response — for now use broader approach
-                // Trigger level selection after short delay
-            }
-            // Set tier level
-            setTimeout(function() {
-                document.getElementById('tierLevelSelect').value = savedType;
-                onTierLevelSelected(savedType);
-                // After target loads, select the saved target
                 setTimeout(function() {
-                    document.getElementById('tierTargetSelect').value = savedId;
-                    onTargetSelected(savedId);
-                }, 600);
-            }, 300);
-        });
+                    document.getElementById('tierLevelSelect').value = savedType;
+                    onTierLevelSelected();
+                    setTimeout(function() { document.getElementById('tierTargetSelect').value = savedId; onTargetSelected(); }, 800);
+                }, 300);
+            });
     }
 }
 
+/* ═══ Audio/Video ═══ */
 var avIdx = {{ audio_video_items|length }};
 function addAvItem() {
-    var c = document.getElementById('avContainer');
-    var div = document.createElement('div');
-    div.className = 'av-item';
-    div.innerHTML = '<button type="button" class="av-remove" onclick="this.closest(\'.av-item\').remove()" title="Remove">✕</button>'
+    var c = document.getElementById('avContainer'), d = document.createElement('div');
+    d.className = 'av-item';
+    d.innerHTML = '<button type="button" class="av-remove" onclick="this.closest(\'.av-item\').remove()" title="Remove">✕</button>'
         + '<div style="display:grid;gap:8px">'
         + '<div class="form-row" style="gap:8px">'
         + '<div class="dyn-field" style="margin:0"><label>Type</label><select name="av_type_'+avIdx+'" class="form-control"><option value="audio">🎵 Audio</option><option value="video">🎬 Video</option></select></div>'
@@ -521,27 +465,26 @@ function addAvItem() {
         + '<div class="dyn-field" style="margin:0;display:none" id="av_link_'+avIdx+'"><label>URL</label><input name="av_url_'+avIdx+'" class="form-control" placeholder="https://youtube.com/..."></div>'
         + '<div class="dyn-field" style="margin:0"><label>Description *</label><textarea name="av_desc_'+avIdx+'" class="form-control" rows="2" placeholder="Describe this content"></textarea></div>'
         + '</div>';
-    c.appendChild(div); avIdx++;
+    c.appendChild(d); avIdx++;
 }
 function toggleAvSource(sel, idx) {
     document.getElementById('av_upload_'+idx).style.display = sel.value==='upload'?'':'none';
     document.getElementById('av_link_'+idx).style.display = sel.value==='link'?'':'none';
 }
 
+/* ═══ Gallery ═══ */
 var entryGalIdx = 0;
 function addEntryGalleryItem(){
-    var c = document.getElementById('entry_new_gals');
-    var div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:6px';
-    div.innerHTML = '<input type="file" name="entry_new_gallery_'+entryGalIdx+'" accept="image/*" class="form-control" style="font-size:12px;flex:1"><button type="button" class="btn btn-danger btn-sm btn-icon" style="flex-shrink:0" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>';
-    c.appendChild(div); entryGalIdx++;
+    var c = document.getElementById('entry_new_gals'), d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:6px';
+    d.innerHTML = '<input type="file" name="entry_new_gallery_'+entryGalIdx+'" accept="image/*" class="form-control" style="font-size:12px;flex:1"><button type="button" class="btn btn-danger btn-sm btn-icon" style="flex-shrink:0" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>';
+    c.appendChild(d); entryGalIdx++;
 }
 function addEntryCamGalleryItem(){
-    var c = document.getElementById('entry_new_gals');
-    var div = document.createElement('div');
-    div.style.cssText = 'margin-bottom:6px';
-    div.innerHTML = '<div class="ecam-wrap"><input type="file" name="entry_new_gallery_'+entryGalIdx+'" accept="image/*" capture="environment" style="font-size:12px" onchange="var p=this.parentElement.querySelector(\'.ecam-preview\');p.classList.add(\'active\');var r=new FileReader();r.onload=function(e){p.querySelector(\'img\').src=e.target.result};r.readAsDataURL(this.files[0])"><div class="ecam-preview"><img><button type="button" class="ecam-remove" onclick="this.closest(\'.ecam-wrap\').parentElement.remove()">✕</button></div></div>';
-    c.appendChild(div); entryGalIdx++;
+    var c = document.getElementById('entry_new_gals'), d = document.createElement('div');
+    d.style.cssText = 'margin-bottom:6px';
+    d.innerHTML = '<div class="ecam-wrap"><input type="file" name="entry_new_gallery_'+entryGalIdx+'" accept="image/*" capture="environment" style="font-size:12px" onchange="var p=this.parentElement.querySelector(\'.ecam-preview\');p.classList.add(\'active\');var r=new FileReader();r.onload=function(e){p.querySelector(\'img\').src=e.target.result};r.readAsDataURL(this.files[0])"><div class="ecam-preview"><img><button type="button" class="ecam-remove" onclick="this.closest(\'.ecam-wrap\').parentElement.remove()">✕</button></div></div>';
+    c.appendChild(d); entryGalIdx++;
 }
 function entryGalDelete(btn, img){
     if(!confirm('Remove this gallery image?')) return;
@@ -551,10 +494,9 @@ function entryGalDelete(btn, img){
     h.value = imgs.join(',');
 }
 
+/* ═══ Init ═══ */
 document.addEventListener('DOMContentLoaded', function() {
-    var sel = document.getElementById('moduleSelect');
-    if (sel.value) loadModuleFields(sel.value);
-    // Restore tier linking state if editing
+    loadModuleFields();
     {% if editing and entry.tier_link_type and entry.tier_link_id %}
     setTimeout(restoreTierState, 200);
     {% endif %}

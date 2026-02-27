@@ -1780,10 +1780,13 @@ def admin_entries(mod_id=None):
 @login_required
 def admin_entry_new():
     db=get_db()
+    preselect_mod=request.args.get('module_id',type=int)
+    if not preselect_mod and request.method=='GET':
+        flash('Please select a module first to create a new entry.','info')
+        return redirect(url_for('admin_entries'))
     if request.method=='POST':
         f=request.form; t=f['title']; s=slugify(t); mid=f['module_id']
         if db.execute("SELECT id FROM module_entries WHERE slug=? AND module_id=?",(s,mid)).fetchone(): s+='-'+uuid.uuid4().hex[:4]
-        # Build custom_fields JSON from module schema
         module=db.execute("SELECT * FROM modules WHERE id=?",(mid,)).fetchone()
         schema=json.loads(module['fields_schema'] or '[]') if module else []
         cf={}
@@ -1792,7 +1795,6 @@ def admin_entry_new():
             if ftype=='richtext':
                 cf[fname]=f.get(f'cf_{fname}','')
             elif ftype=='image':
-                # Handle image upload for schema fields
                 if f'cf_{fname}_file' in request.files:
                     uf=request.files[f'cf_{fname}_file']
                     if uf and uf.filename: u=save_upload(uf,'images'); cf[fname]=u if u else ''
@@ -1800,7 +1802,6 @@ def admin_entry_new():
                 else: cf[fname]=''
             else:
                 cf[fname]=f.get(f'cf_{fname}','')
-        # Handle featured image
         fi=''
         if 'featured_image_file' in request.files:
             uf=request.files['featured_image_file']
@@ -1808,7 +1809,6 @@ def admin_entry_new():
         if not fi and 'featured_image_cam' in request.files:
             uf=request.files['featured_image_cam']
             if uf and uf.filename: u=save_upload(uf,'images'); fi=u if u else fi
-        # Handle gallery images
         gi_paths=[]
         idx=0
         while True:
@@ -1821,24 +1821,21 @@ def admin_entry_new():
             for gf in request.files.getlist('gallery_files'):
                 if gf and gf.filename: rp=save_upload(gf,'images'); gi_paths.append(rp) if rp else None
         gi_str=','.join(gi_paths)
-        # Tier linking
         tier_link_type=f.get('tier_link_type','')
         tier_link_id=f.get('tier_link_id',0,type=int)
         db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,custom_fields,featured_image,gallery_images,status,sort_order,tier_link_type,tier_link_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (mid,f.get('place_id',type=int) or None,t,s,f.get('content',''),json.dumps(cf),fi,gi_str,f.get('status','draft'),f.get('sort_order',0,type=int),tier_link_type,tier_link_id,session['user_id']))
         db.commit()
         entry_id=db.execute("SELECT last_insert_rowid()").fetchone()[0]
-        # Handle audio/video items
         _save_entry_audio_video(db, entry_id, request)
         db.commit()
         flash('Created!','success'); return redirect(url_for('admin_entries'))
-    modules=db.execute("SELECT * FROM modules WHERE is_active=1 AND slug != 'holy-dhams' ORDER BY sort_order").fetchall()
+    selected_module=db.execute("SELECT * FROM modules WHERE id=? AND slug != 'holy-dhams'",(preselect_mod,)).fetchone()
+    if not selected_module:
+        flash('Invalid module selected.','error')
+        return redirect(url_for('admin_entries'))
     places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
-    key_places=db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()
-    key_spots=db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()
-    sub_spots=db.execute("SELECT ss.id,ss.title,ks.title as ks_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id ORDER BY ks.title,ss.title").fetchall()
-    preselect_mod=request.args.get('module_id',type=int)
-    return render_template('admin/entry_form.html',entry=None,modules=modules,places=places,key_places=key_places,key_spots=key_spots,sub_spots=sub_spots,editing=False,module_schemas=MODULE_SCHEMAS,audio_video_items=[],preselect_mod=preselect_mod)
+    return render_template('admin/entry_form.html',entry=None,places=places,editing=False,module_schemas=MODULE_SCHEMAS,audio_video_items=[],selected_module=selected_module)
 
 @app.route('/admin/entries/<int:entry_id>/edit', methods=['GET','POST'])
 @login_required
@@ -1899,12 +1896,10 @@ def admin_entry_edit(entry_id):
         _save_entry_audio_video(db, entry_id, request)
         db.commit(); flash('Updated!','success'); return redirect(url_for('admin_entries'))
     modules=db.execute("SELECT * FROM modules WHERE is_active=1 AND slug != 'holy-dhams' ORDER BY sort_order").fetchall()
+    selected_module=db.execute("SELECT * FROM modules WHERE id=?",(entry['module_id'],)).fetchone()
     places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
-    key_places=db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()
-    key_spots=db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()
-    sub_spots=db.execute("SELECT ss.id,ss.title,ks.title as ks_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id ORDER BY ks.title,ss.title").fetchall()
     audio_video_items=db.execute("SELECT * FROM entry_audio_video WHERE entry_id=? ORDER BY sort_order",(entry_id,)).fetchall()
-    return render_template('admin/entry_form.html',entry=entry,modules=modules,places=places,key_places=key_places,key_spots=key_spots,sub_spots=sub_spots,editing=True,module_schemas=MODULE_SCHEMAS,audio_video_items=audio_video_items,preselect_mod=None)
+    return render_template('admin/entry_form.html',entry=entry,places=places,editing=True,module_schemas=MODULE_SCHEMAS,audio_video_items=audio_video_items,selected_module=selected_module)
 
 def _save_entry_audio_video(db, entry_id, req):
     """Save audio/video items from entry form."""

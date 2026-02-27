@@ -52,7 +52,11 @@
 <div class="admin-card">
 <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
 <div style="font-size:13px;color:var(--text-light)">{{ entries|length }} entries</div>
-<a href="{{ url_for('admin_entry_new') }}{{ '?module_id=' ~ current_mod if current_mod else '' }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Entry</a>
+{% if current_mod %}
+<a href="{{ url_for('admin_entry_new') }}?module_id={{ current_mod }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Entry</a>
+{% else %}
+<span style="font-size:12px;color:var(--text-light)"><i class="fas fa-info-circle"></i> Select a module tab to add entries</span>
+{% endif %}
 </div>
 
 {% if entries %}
@@ -76,8 +80,7 @@
 <div style="padding:40px;text-align:center;color:var(--text-light)">
 <div style="font-size:40px;margin-bottom:12px">📝</div>
 <h3 style="margin-bottom:8px">No entries found</h3>
-<p>Create your first entry to get started.</p>
-<a href="{{ url_for('admin_entry_new') }}" class="btn btn-primary" style="margin-top:12px"><i class="fas fa-plus"></i> New Entry</a>
+<p>Select a module from the tabs above to create your first entry.</p>
 </div>
 {% endif %}
 </div>
