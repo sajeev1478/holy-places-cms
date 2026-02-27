@@ -94,7 +94,7 @@
 .back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--text-light);font-size:12px;font-weight:600;text-decoration:none;transition:all .2s}
 .back-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
 
-@media(max-width:1024px){.place-two-col{grid-template-columns:1fr}.tier-tabs-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1024px){.place-two-col{grid-template-columns:1fr}.tier-tabs-grid{grid-template-columns:repeat(2,1fr)}.t1-top-bar{grid-template-columns:1fr!important}}
 @media(max-width:600px){.tier-tabs-grid{grid-template-columns:1fr}
 /* Custom field boxes responsive */
 .field-row .form-group textarea.form-control{min-height:80px;width:100%!important}
@@ -104,6 +104,13 @@
 .field-main{width:100%!important}
 .field-toggle{padding-top:4px!important}
 .ql-container{font-size:14px!important}
+/* Mobile: collapse all inline grids in facc and kp bodies */
+.facc-bi [style*="grid-template-columns:1fr 1fr 1fr"]{grid-template-columns:1fr!important}
+.facc-bi [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+.kp-accordion-body-inner [style*="grid-template-columns"]{grid-template-columns:1fr!important}
+.overview-card{flex-direction:column;align-items:flex-start;gap:10px}
+.overview-card .ov-actions{align-self:flex-end}
+.hier-bc{flex-wrap:wrap}
 }
 </style>
 {% endblock %}
@@ -184,26 +191,58 @@
 </div>
 </div>
 
-<div class="place-two-col" style="margin-bottom:28px">
-
-<!-- LEFT: Core Fields -->
-<div class="admin-card" style="border-top:3px solid #C76B8F">
-<div class="admin-card-header"><h3>🛕 Core Details</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px">TIER 1</span></div>
-<div class="admin-card-body">
-<div class="form-group"><label>Dham Title <span class="red-star">*</span></label>
-<input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Vrindavan Dham, Mayapur Dham"></div>
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-<div class="form-group"><label>City <span class="red-star">*</span></label><input name="city" class="form-control" value="{{ place.city if editing else '' }}" placeholder="e.g. Mathura"><input type="hidden" name="vis_city" value="on"></div>
-<div class="form-group"><label>State <span class="red-star">*</span></label>
-<select name="state" class="form-control"><option value="">Select State</option>{% for st in indian_states %}<option value="{{ st }}" {{ 'selected' if editing and place.state == st }}>{{ st }}</option>{% endfor %}</select><input type="hidden" name="vis_state" value="on"></div>
-<div class="form-group"><label>Country</label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"><input type="hidden" name="vis_country" value="on"></div>
+<!-- T1 TOP BAR: Title + Status + Featured -->
+<div style="display:grid;grid-template-columns:1fr 160px auto;gap:12px;background:white;border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.02)" class="t1-top-bar">
+<div class="form-group" style="margin:0"><label>🛕 Dham Title <span class="red-star">*</span></label>
+<input name="title" class="form-control" value="{{ place.title if editing else '' }}" required placeholder="e.g. Vrindavan Dham, Mayapur Dham"><input type="hidden" name="vis_title" value="on"></div>
+<div class="form-group" style="margin:0"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if not editing or place.status=='draft' }}>📝 Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>✅ Published</option><option value="archived" {{ 'selected' if editing and place.status=='archived' }}>📦 Archived</option></select></div>
+<div class="form-group" style="margin:0"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding-top:4px"><input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }} style="accent-color:var(--warning)">⭐ Featured</label></div>
 </div>
-<div class="form-group"><label>Short Description <span class="red-star">*</span></label>
-<textarea name="short_description" class="form-control" rows="3" placeholder="Brief overview...">{{ place.short_description if editing else '' }}</textarea><input type="hidden" name="vis_short_description" value="on"><input type="hidden" name="vis_title" value="on"></div>
-<div class="form-group"><label>Long Description <span class="red-star">*</span></label>
+
+<!-- ACC 1: 📋 Core Information -->
+<div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">📋</span> Core Information<span class="fab">3 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="form-group"><label>📝 Short Description <span class="red-star">*</span></label>
+<textarea name="short_description" class="form-control" rows="3" placeholder="Brief overview...">{{ place.short_description if editing else '' }}</textarea><input type="hidden" name="vis_short_description" value="on"></div>
+<div class="form-group"><label>📖 Full Description <span class="red-star">*</span></label>
 <input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
 <div class="rich-editor" data-target="full_content" style="background:white;min-height:200px"></div><input type="hidden" name="vis_full_content" value="on"></div>
-<div class="field-row"><div class="field-main"><div class="form-group"><label>Featured Image</label>
+<div class="form-group"><label>🏷️ Tags</label>
+<div style="display:flex;flex-wrap:wrap;gap:8px">{% for tag in tags %}
+<label style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;border:2px solid {{ tag.color }}30;background:{{ tag.color }}08;font-size:13px;cursor:pointer">
+<input type="checkbox" name="tags" value="{{ tag.id }}" {{ 'checked' if tag.id in place_tags }} style="accent-color:{{ tag.color }}">
+<span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span>{{ tag.name }}</label>{% endfor %}</div><input type="hidden" name="vis_tags" value="on"></div>
+</div></div></div>
+
+<!-- ACC 2: 📍 Location & Geography -->
+<div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">📍</span> Location & Geography<span class="fab">5 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div class="form-group"><label>🏙️ City <span class="red-star">*</span></label><input name="city" class="form-control" value="{{ place.city if editing else '' }}" placeholder="e.g. Mathura"><input type="hidden" name="vis_city" value="on"></div>
+<div class="form-group"><label>🗺️ State <span class="red-star">*</span></label>
+<select name="state" class="form-control"><option value="">Select State</option>{% for st in indian_states %}<option value="{{ st }}" {{ 'selected' if editing and place.state == st }}>{{ st }}</option>{% endfor %}</select><input type="hidden" name="vis_state" value="on"></div>
+<div class="form-group"><label>🌍 Country</label><input name="country" class="form-control" value="{{ place.country if editing else 'India' }}"><input type="hidden" name="vis_country" value="on"></div>
+</div>
+<div id="loc_t1" class="loc-picker">
+<div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Location Picker <span class="loc-badge">T1 Dham</span><button class="loc-info-btn" type="button" onclick="document.getElementById('locInfoPopup').classList.add('active')" title="How to use"><i class="fas fa-info"></i></button></div>
+<div class="loc-saved" style="margin-bottom:10px"><span style="font-size:12px;color:var(--text-light);margin-right:4px">📍 Current:</span><span class="loc-saved-info">{% if editing and place.latitude and place.longitude %}<span class="loc-coords-display">{{ place.latitude }}, {{ place.longitude }}</span>{% else %}<span class="loc-no-data">No location set</span>{% endif %}</span></div>
+{% if editing and place.location_updated_at %}<div style="font-size:11px;color:var(--text-light);margin-bottom:10px;padding:6px 10px;background:var(--bg);border-radius:8px;border:1px dashed var(--border);display:inline-flex;align-items:center;gap:6px"><i class="fas fa-clock" style="color:var(--primary);font-size:10px"></i> Location last updated by <strong style="color:var(--text-dark)">{{ place.location_updated_by }}</strong> on <strong style="color:var(--text-dark)">{{ place.location_updated_at }}</strong></div>{% endif %}
+<div class="loc-status"></div>
+<div class="loc-map-container"><div class="loc-map-wrap" style="height:100%"></div></div>
+<div style="position:relative"><div class="loc-search-bar"><input class="loc-search-input" placeholder="🔍 Search for a place (e.g. Vrindavan Dham)"><button class="loc-search-btn" type="button"><i class="fas fa-search"></i> Search</button></div><div class="loc-search-results"></div></div>
+<div class="loc-actions-row"><button type="button" class="loc-btn loc-btn-gps">📡 Use My Current Location</button><button type="button" class="loc-btn loc-btn-clear">🗑️ Clear</button></div>
+<div class="loc-coords-row">
+<div class="form-group"><label>📍 Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}"><input type="hidden" name="vis_latitude" value="on"></div>
+<div class="form-group"><label>📍 Longitude</label><input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}"><input type="hidden" name="vis_longitude" value="on"></div>
+</div>
+<div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map to place pin · Drag pin to adjust · Or use GPS/Search</div>
+</div>
+</div></div></div>
+
+<!-- ACC 3: 🖼️ Images & Media -->
+<div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">🖼️</span> Images & Media<span class="fab">3 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="form-group"><label>🖼️ Featured Image</label>
 {% if editing and place.featured_image %}<input type="hidden" name="featured_image_existing" value="{{ place.featured_image }}">
 <div class="gal-section" style="margin-bottom:10px">
 <span class="gal-count">📷 1 image uploaded</span>
@@ -226,9 +265,9 @@
 <div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
 </div>
 <input type="text" name="featured_image_desc" class="form-control" value="{{ place.featured_image_desc if editing else '' }}" placeholder="📝 Featured image description (shows as overlay on frontend)" style="font-size:12px;margin-top:6px">
-</div></div></div>
+</div>
 <!-- T1 Gallery Images -->
-<div class="field-row"><div class="field-main"><div class="form-group gal-section"><label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
+<div class="form-group gal-section"><label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
 {% if editing and gallery_media is defined and gallery_media %}<span class="gal-count">{{ gallery_media|length }} image{{ 's' if gallery_media|length != 1 }}</span>{% endif %}</label>
 {% if editing and gallery_media is defined and gallery_media %}
 <div class="gal-individual-list" id="t1_gal_list">
@@ -250,56 +289,58 @@
 <button type="button" class="cam-btn cam-btn-gallery" onclick="addCamGalleryItem('t1')"><i class="fas fa-camera"></i> Capture Gallery Photo</button>
 <div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
 </div>
+</div>
 </div></div></div>
-<div id="loc_t1" class="loc-picker">
-<div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:var(--primary)"></i> Location Picker <span class="loc-badge">T1 Dham</span><button class="loc-info-btn" type="button" onclick="document.getElementById('locInfoPopup').classList.add('active')" title="How to use"><i class="fas fa-info"></i></button></div>
-<div class="loc-saved" style="margin-bottom:10px"><span style="font-size:12px;color:var(--text-light);margin-right:4px">📍 Current:</span><span class="loc-saved-info">{% if editing and place.latitude and place.longitude %}<span class="loc-coords-display">{{ place.latitude }}, {{ place.longitude }}</span>{% else %}<span class="loc-no-data">No location set</span>{% endif %}</span></div>
-{% if editing and place.location_updated_at %}<div style="font-size:11px;color:var(--text-light);margin-bottom:10px;padding:6px 10px;background:var(--bg);border-radius:8px;border:1px dashed var(--border);display:inline-flex;align-items:center;gap:6px"><i class="fas fa-clock" style="color:var(--primary);font-size:10px"></i> Location last updated by <strong style="color:var(--text-dark)">{{ place.location_updated_by }}</strong> on <strong style="color:var(--text-dark)">{{ place.location_updated_at }}</strong></div>{% endif %}
-<div class="loc-status"></div>
-<div class="loc-map-container"><div class="loc-map-wrap" style="height:100%"></div></div>
-<div style="position:relative"><div class="loc-search-bar"><input class="loc-search-input" placeholder="🔍 Search for a place (e.g. Vrindavan Dham)"><button class="loc-search-btn" type="button"><i class="fas fa-search"></i> Search</button></div><div class="loc-search-results"></div></div>
-<div class="loc-actions-row"><button type="button" class="loc-btn loc-btn-gps">📡 Use My Current Location</button><button type="button" class="loc-btn loc-btn-clear">🗑️ Clear</button></div>
-<div class="loc-coords-row">
-<div class="form-group"><label>📍 Latitude</label><input name="latitude" class="form-control" type="number" step="any" value="{{ place.latitude if editing and place.latitude else '' }}"><input type="hidden" name="vis_latitude" value="on"></div>
-<div class="form-group"><label>📍 Longitude</label><input name="longitude" class="form-control" type="number" step="any" value="{{ place.longitude if editing and place.longitude else '' }}"><input type="hidden" name="vis_longitude" value="on"></div>
-</div>
-<div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map to place pin · Drag pin to adjust · Or use GPS/Search</div>
-</div>
-<div class="form-group"><label>Tags</label>
-<div style="display:flex;flex-wrap:wrap;gap:8px">{% for tag in tags %}
-<label style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;border:2px solid {{ tag.color }}30;background:{{ tag.color }}08;font-size:13px;cursor:pointer">
-<input type="checkbox" name="tags" value="{{ tag.id }}" {{ 'checked' if tag.id in place_tags }} style="accent-color:{{ tag.color }}">
-<span style="width:8px;height:8px;border-radius:50%;background:{{ tag.color }}"></span>{{ tag.name }}</label>{% endfor %}</div><input type="hidden" name="vis_tags" value="on"></div>
-</div></div>
 
-<!-- RIGHT: Custom Fields & Publishing -->
-<div class="admin-card" style="border-top:3px solid #C76B8F">
-<div class="admin-card-header"><h3>⚙️ Settings & Publishing</h3><span style="font-size:11px;font-weight:700;padding:3px 10px;background:#C76B8F15;color:#C76B8F;border-radius:50px">TIER 1</span></div>
-<div class="admin-card-body">
+<!-- ACC 4: 🧳 Visitor Information (Custom Fields) -->
 {% if custom_fields %}
-<div style="margin-bottom:20px"><h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Custom Fields</h4>
-{% for cf in custom_fields %}{% if cf.name != 'entry_fee' %}{% set cv = custom_values.get(cf.id, {}) %}
+<div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">🧳</span> Visitor Information<span class="fab">custom fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="cf-sep">Custom Fields — Visitor Info</div>
+{% for cf in custom_fields %}{% if cf.name in ('opening_hours','best_time_to_visit','dress_code','how_to_reach','accommodation') %}{% set cv = custom_values.get(cf.id, {}) %}
+<div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
+{% if cf.field_type in ('text','number') %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
+{% elif cf.field_type == 'textarea' %}<textarea name="cf_{{ cf.id }}" class="form-control" rows="3">{{ cv.get('value','') }}</textarea>
+{% else %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}">{% endif %}
+</div></div>
+<div class="field-toggle" style="padding-top:28px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if cv.get('is_visible',1) else 'Off' }}</span></label></div></div>
+{% endif %}{% endfor %}
+</div></div></div>
+
+<!-- ACC 5: 📜 History & Spiritual Significance -->
+<div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">📜</span> History & Spiritual Significance<span class="fab">1 field</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="cf-sep">Custom Fields — Spiritual</div>
+{% for cf in custom_fields %}{% if cf.name == 'history' %}{% set cv = custom_values.get(cf.id, {}) %}
+<div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }}</label>
+{% if cf.field_type == 'richtext' %}<input type="hidden" name="cf_{{ cf.id }}" id="cf_rt_{{ cf.id }}" value="{{ cv.get('value','') }}"><div class="rich-editor" data-target="cf_rt_{{ cf.id }}" style="background:white;min-height:160px"></div>
+{% else %}<textarea name="cf_{{ cf.id }}" class="form-control" rows="4">{{ cv.get('value','') }}</textarea>{% endif %}
+</div></div>
+<div class="field-toggle" style="padding-top:28px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if cv.get('is_visible',1) else 'Off' }}</span></label></div></div>
+{% endif %}{% endfor %}
+</div></div></div>
+
+<!-- ACC 6: 🎬 Audio, Video & External Links -->
+<div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & External Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="cf-sep">Custom Fields — Media</div>
+{% for cf in custom_fields %}{% if cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url','gallery_images') and cf.name != 'entry_fee' %}{% set cv = custom_values.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
 {% if cf.field_type in ('text','number') %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
 {% elif cf.field_type == 'url' %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder or 'URL' }}">
 <input name="cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description (shown to visitors)" style="margin-top:6px;font-size:12px">
-{% elif cf.field_type == 'textarea' %}<textarea name="cf_{{ cf.id }}" class="form-control" rows="3">{{ cv.get('value','') }}</textarea>
-{% elif cf.field_type == 'richtext' %}<input type="hidden" name="cf_{{ cf.id }}" id="cf_rt_{{ cf.id }}" value="{{ cv.get('value','') }}"><div class="rich-editor" data-target="cf_rt_{{ cf.id }}" style="background:white;min-height:160px"></div>
 {% elif cf.field_type in ('audio','video') %}{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
 <div style="font-size:11px;color:green;margin-bottom:4px;display:flex;align-items:center;gap:4px">✅ {{ cv.get('value','') }}</div>{% endif %}
 <input type="file" name="cf_file_{{ cf.id }}" class="form-control" accept="{{ 'audio/*' if cf.field_type=='audio' else 'video/*' }}">
-<input name="cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description for this {{ cf.field_type }} (shown to visitors)" style="margin-top:6px;font-size:12px">
-<div style="margin-top:6px;font-size:10px;color:var(--text-light)"><i class="fas fa-info-circle"></i> Upload replaces existing file. Description is shown to visitors.</div>
-{% elif cf.field_type in ('image','audio','video') %}{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
-{% if cf.field_type=='image' %}<div class="gal-section" style="margin-bottom:6px"><div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ cv.get('value','') }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'cf_{{ cf.id }}','{{ cv.get('value','') }}')" title="Delete">✕</span></div></div></div>
-{% else %}<div style="font-size:11px;color:var(--text-light);margin-bottom:4px">{{ cv.get('value','') }}</div>{% endif %}{% endif %}<input type="file" name="cf_file_{{ cf.id }}" class="form-control" accept="{{ 'image/*' if cf.field_type=='image' else 'audio/*' if cf.field_type=='audio' else 'video/*' }}">
+<input name="cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description for this {{ cf.field_type }}" style="margin-top:6px;font-size:12px">
 {% elif cf.field_type == 'images' %}{% if cv.get('value') %}<input type="hidden" name="cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
-<div class="gal-section" style="margin-bottom:6px"><span class="gal-count">{{ cv.get('value','').split(',')|reject('equalto','')|list|length }} image{{ 's' if cv.get('value','').split(',')|reject('equalto','')|list|length != 1 else '' }} already uploaded</span>
-<div class="gal-thumbs">{% for gi in cv.get('value','').split(',') %}{% if gi.strip() %}<div class="gal-thumb"><img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'cf_{{ cf.id }}','{{ gi.strip() }}')" title="Delete image">✕</span></div>{% endif %}{% endfor %}</div></div>{% endif %}<input type="file" name="cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple>
+<div class="gal-section" style="margin-bottom:6px"><span class="gal-count">{{ cv.get('value','').split(',')|reject('equalto','')|list|length }} image{{ 's' if cv.get('value','').split(',')|reject('equalto','')|list|length != 1 else '' }}</span>
+<div class="gal-thumbs">{% for gi in cv.get('value','').split(',') %}{% if gi.strip() %}<div class="gal-thumb"><img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'cf_{{ cf.id }}','{{ gi.strip() }}')" title="Delete">✕</span></div>{% endif %}{% endfor %}</div></div>{% endif %}<input type="file" name="cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple>
 {% else %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}">{% endif %}
 </div></div>
 <div class="field-toggle" style="padding-top:28px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if cv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if cv.get('is_visible',1) else 'Off' }}</span></label></div></div>
-{% endif %}{% endfor %}</div>{% endif %}
+{% endif %}{% endfor %}
+{% endif %}
 {% if editing %}
 <div style="border-top:2px solid var(--border);padding-top:14px;margin-top:12px">
 <h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">🎵 Audio / Video Library</h4>
@@ -337,13 +378,11 @@
 </details>
 </div>
 {% endif %}
-<div style="border-top:2px solid var(--border);padding-top:16px;margin-top:auto">
-<h4 style="font-size:13px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Publishing</h4>
-<div class="form-group"><label>Status</label><select name="status" class="form-control"><option value="draft" {{ 'selected' if not editing or place.status=='draft' }}>📝 Draft</option><option value="published" {{ 'selected' if editing and place.status=='published' }}>✅ Published</option><option value="archived" {{ 'selected' if editing and place.status=='archived' }}>📦 Archived</option></select></div>
-<div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" name="is_featured" {{ 'checked' if editing and place.is_featured }} style="accent-color:var(--warning)">⭐ Featured on Homepage</label></div>
-<button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px"><i class="fas fa-save"></i> {{ 'Update Holy Dham' if editing else 'Create Holy Dham' }}</button>
-</div>
-</div></div>
+</div></div></div>
+
+<!-- Submit Button -->
+<div style="display:flex;justify-content:flex-end;padding:16px 0;margin-top:4px">
+<button type="submit" class="btn btn-primary" style="min-width:220px"><i class="fas fa-save"></i> {{ 'Update Holy Dham' if editing else 'Create Holy Dham' }}</button>
 </div>
 
 </div><!-- end tier-1-content -->
@@ -384,26 +423,20 @@
 </div>
 <div class="kp-accordion-body"><div class="kp-accordion-body-inner">
 <input type="hidden" name="kp_{{ ki }}_id" value="{{ kp.id }}">
-<div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_{{ ki }}_title" class="form-control" value="{{ kp.title }}" required onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value"></div>
-<div class="form-group"><label>Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
-<div class="form-group"><label>Long Description</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-<div class="form-group"><label>🖼️ Featured Image</label>{% if kp.featured_image %}<input type="hidden" name="kp_{{ ki }}_featured_image_existing" value="{{ kp.featured_image }}">
-<div class="gal-section" style="margin-bottom:6px">
-<div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ kp.featured_image }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t2',{{ kp.id }},'{{ kp.featured_image }}',this)" title="Delete">✕</span></div></div>
-</div>{% endif %}<input type="file" name="kp_{{ ki }}_featured_image_file" class="form-control" accept="image/*">
-<div class="cam-capture-wrap">
-<div style="display:flex;gap:8px;align-items:center">
-<button type="button" class="cam-btn" onclick="this.parentElement.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture Featured</button>
-<button class="loc-info-btn" type="button" onclick="document.getElementById('camInfoPopup').classList.add('active')" title="How to use" style="flex-shrink:0"><i class="fas fa-info"></i></button>
-</div>
-<input type="file" name="kp_{{ ki }}_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.parentElement.querySelector('.cam-preview');p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
-<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.cam-capture-wrap');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
-<div class="cam-desc"><input type="text" name="kp_{{ ki }}_featured_cam_desc" placeholder="📝 Photo description (optional)"></div>
-<div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
-</div>
-<input type="text" name="kp_{{ ki }}_featured_image_desc" class="form-control" value="{{ kp.featured_image_desc or '' }}" placeholder="📝 Featured image description (shows as overlay on frontend)" style="font-size:12px;margin-top:6px">
-</div>
+
+<!-- T2 Title (always visible) -->
+<div class="form-group"><label>📝 Title <span class="red-star">*</span></label><input name="kp_{{ ki }}_title" class="form-control" value="{{ kp.title }}" required onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value"></div>
+
+<!-- T2 ACC 1: Core -->
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📋</span> Core Information<span class="fab">2 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="form-group"><label>📝 Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
+<div class="form-group"><label>📖 Full Description</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
+</div></div></div>
+
+<!-- T2 ACC 2: Location -->
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📍</span> Location<span class="fab">2 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
 <div id="loc_kp_{{ ki }}" class="loc-picker">
 <div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:#2E86AB"></i> Location Picker <span class="loc-badge" style="background:#2E86AB">T2</span><button class="loc-info-btn" type="button" onclick="document.getElementById('locInfoPopup').classList.add('active')" title="How to use"><i class="fas fa-info"></i></button></div>
 <div class="loc-saved" style="margin-bottom:10px"><span style="font-size:12px;color:var(--text-light);margin-right:4px">📍 Current:</span><span class="loc-saved-info">{% if kp.latitude and kp.longitude %}<span class="loc-coords-display">{{ kp.latitude }}, {{ kp.longitude }}</span>{% else %}<span class="loc-no-data">No location set</span>{% endif %}</span></div>
@@ -418,10 +451,29 @@
 </div>
 <div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map · Drag pin · GPS/Search</div>
 </div>
+</div></div></div>
+
+<!-- T2 ACC 3: Images & Media -->
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">🖼️</span> Images & Media<span class="fab">3 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="form-group"><label>🖼️ Featured Image</label>{% if kp.featured_image %}<input type="hidden" name="kp_{{ ki }}_featured_image_existing" value="{{ kp.featured_image }}">
+<div class="gal-section" style="margin-bottom:6px">
+<div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ kp.featured_image }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="deleteGalleryImage('t2',{{ kp.id }},'{{ kp.featured_image }}',this)" title="Delete">✕</span></div></div>
+</div>{% endif %}<input type="file" name="kp_{{ ki }}_featured_image_file" class="form-control" accept="image/*">
+<div class="cam-capture-wrap">
+<div style="display:flex;gap:8px;align-items:center">
+<button type="button" class="cam-btn" onclick="this.parentElement.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture Featured</button>
+<button class="loc-info-btn" type="button" onclick="document.getElementById('camInfoPopup').classList.add('active')" title="How to use" style="flex-shrink:0"><i class="fas fa-info"></i></button>
 </div>
-<!-- T2 Gallery Images -->
-<div class="gal-section" style="background:#f4f7fa;border-radius:12px;padding:14px;margin:10px 0;border:1px solid #2E86AB15">
-<label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider on frontend)</span>
+<input type="file" name="kp_{{ ki }}_featured_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.parentElement.querySelector('.cam-preview');p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
+<div class="cam-preview"><img><button type="button" class="cam-remove" onclick="var w=this.closest('.cam-capture-wrap');w.querySelector('.cam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
+<div class="cam-desc"><input type="text" name="kp_{{ ki }}_featured_cam_desc" placeholder="📝 Photo description (optional)"></div>
+<div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
+</div>
+<input type="text" name="kp_{{ ki }}_featured_image_desc" class="form-control" value="{{ kp.featured_image_desc or '' }}" placeholder="📝 Featured image description" style="font-size:12px;margin-top:6px">
+</div>
+<div class="gal-section" style="background:#f4f7fa;border-radius:12px;padding:14px;margin-top:10px;border:1px solid #2E86AB15">
+<label style="display:flex;align-items:center;gap:6px;font-weight:700;margin-bottom:6px;font-size:13px"><span style="font-size:16px">📸</span> Gallery Images <span style="font-size:10px;font-weight:500;color:var(--text-light)">(shown as slider)</span>
 {% if kp.gallery_images %}<span class="gal-count">{{ kp.gallery_images.split(',')|length }} image{{ 's' if kp.gallery_images.split(',')|length != 1 }}</span>{% endif %}</label>
 <input type="hidden" name="kp_{{ ki }}_gallery_existing" value="{{ kp.gallery_images or '' }}" class="gal-existing-input">
 <input type="hidden" class="gal-captions-data" data-prefix="kp_{{ ki }}" value="{{ kp.gallery_captions|default('{}') }}">
@@ -443,13 +495,43 @@
 <button type="button" class="btn btn-sm btn-secondary" style="margin-top:6px;font-size:11px" onclick="addGalleryItem('kp_{{ ki }}')"><i class="fas fa-plus"></i> Add More Images</button>
 <div class="cam-capture-wrap" style="margin-top:8px">
 <button type="button" class="cam-btn cam-btn-gallery" onclick="addCamGalleryItem('kp_{{ ki }}')"><i class="fas fa-camera"></i> Capture Gallery Photo</button>
-<div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
+<div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
 </div>
 </div>
+</div></div></div>
 
-{% if custom_fields %}
-<details style="margin-top:8px"><summary style="font-size:13px;font-weight:600;cursor:pointer;color:var(--primary)">⚙️ Custom Fields for {{ kp.title }}</summary>
-<div style="padding:12px 0">{% set kpc = key_place_customs.get(kp.id, {}) %}{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name != 'entry_fee' and cf.name != 'gallery_images' %}<div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>{% set kcv = kpc.get(cf.id, {}) %}{% if cf.field_type in ('text','number') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% elif cf.field_type == 'url' %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px"><input name="kp_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ kcv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">{% elif cf.field_type == 'textarea' %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="2" style="font-size:13px">{{ kcv.get('value','') }}</textarea>{% elif cf.field_type == 'richtext' %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" id="kp_{{ ki }}_cf_rt_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div class="rich-editor" data-target="kp_{{ ki }}_cf_rt_{{ cf.id }}" style="background:white;min-height:120px"></div>{% elif cf.field_type in ('audio','video') %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div style="font-size:10px;color:green;margin-bottom:3px">✅ {{ kcv.get('value','') }}</div>{% endif %}<input type="file" name="kp_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" style="font-size:13px" accept="{{ 'audio/*' if cf.field_type=='audio' else 'video/*' }}"><input name="kp_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ kcv.get('description','') }}" placeholder="📝 Description for this {{ cf.field_type }}" style="font-size:11px;margin-top:4px">{% elif cf.field_type == 'image' %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div class="gal-section" style="margin-bottom:4px"><div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ kcv.get('value','') }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'kp_{{ ki }}_cf_{{ cf.id }}','{{ kcv.get('value','') }}')" title="Delete">✕</span></div></div></div>{% endif %}<input type="file" name="kp_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" style="font-size:13px">{% elif cf.field_type == 'images' %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div class="gal-section" style="margin-bottom:4px"><span class="gal-count">{{ kcv.get('value','').split(',')|reject('equalto','')|list|length }} image{{ 's' if kcv.get('value','').split(',')|reject('equalto','')|list|length != 1 else '' }} already uploaded</span><div class="gal-thumbs">{% for gi in kcv.get('value','').split(',') %}{% if gi.strip() %}<div class="gal-thumb"><img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'kp_{{ ki }}_cf_{{ cf.id }}','{{ gi.strip() }}')" title="Delete">✕</span></div>{% endif %}{% endfor %}</div></div>{% endif %}<input type="file" name="kp_{{ ki }}_cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple style="font-size:13px">{% else %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% endif %}</div></div><div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div></div>{% endif %}{% endfor %}</div></details>
+<!-- T2 ACC 4-6: Custom Fields (Visitor · History · Media) -->
+{% if custom_fields %}{% set kpc = key_place_customs.get(kp.id, {}) %}
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">🧳</span> Visitor Information<span class="fab">custom</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Visitor Info</div>
+{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name in ('opening_hours','best_time_to_visit','dress_code') %}{% set kcv = kpc.get(cf.id, {}) %}
+<div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
+{% if cf.field_type in ('text','number') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% elif cf.field_type == 'textarea' %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="2" style="font-size:13px">{{ kcv.get('value','') }}</textarea>{% else %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% endif %}
+</div></div><div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div></div>
+{% endif %}{% endfor %}
+</div></div></div>
+
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📜</span> History & Spiritual<span class="fab">1 field</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Spiritual</div>
+{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name == 'history' %}{% set kcv = kpc.get(cf.id, {}) %}
+<div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px"><span style="font-size:14px">{{ cf.icon or '📜' }}</span> {{ cf.label }}</label>
+{% if cf.field_type == 'richtext' %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" id="kp_{{ ki }}_cf_rt_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div class="rich-editor" data-target="kp_{{ ki }}_cf_rt_{{ cf.id }}" style="background:white;min-height:120px"></div>{% else %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="3">{{ kcv.get('value','') }}</textarea>{% endif %}
+</div></div><div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div></div>
+{% endif %}{% endfor %}
+</div></div></div>
+
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Media</div>
+{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url','gallery_images') and cf.name != 'entry_fee' %}{% set kcv = kpc.get(cf.id, {}) %}
+<div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
+{% if cf.field_type in ('text','number') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">
+{% elif cf.field_type == 'url' %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px"><input name="kp_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ kcv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
+{% elif cf.field_type in ('audio','video') %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div style="font-size:10px;color:green;margin-bottom:3px">✅ {{ kcv.get('value','') }}</div>{% endif %}<input type="file" name="kp_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" style="font-size:13px" accept="{{ 'audio/*' if cf.field_type=='audio' else 'video/*' }}"><input name="kp_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ kcv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
+{% elif cf.field_type == 'images' %}{% if kcv.get('value') %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div class="gal-section" style="margin-bottom:4px"><span class="gal-count">{{ kcv.get('value','').split(',')|reject('equalto','')|list|length }} images</span><div class="gal-thumbs">{% for gi in kcv.get('value','').split(',') %}{% if gi.strip() %}<div class="gal-thumb"><img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'kp_{{ ki }}_cf_{{ cf.id }}','{{ gi.strip() }}')" title="Delete">✕</span></div>{% endif %}{% endfor %}</div></div>{% endif %}<input type="file" name="kp_{{ ki }}_cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple style="font-size:13px">
+{% else %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% endif %}
+</div></div><div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div></div>
+{% endif %}{% endfor %}
+</div></div></div>
 {% endif %}
 
 {% if kp.id %}
@@ -496,18 +578,38 @@
 </div>
 </div>
 
+{% if editing and key_places|length > 0 %}
+<!-- T3 Cascade Filter -->
+<div class="tier-filter">
+<div class="tf-title"><i class="fas fa-filter" style="color:#E74845"></i> Filter Key Spots by Key Place</div>
+<div class="tf-row">
+<div class="tf-grp">
+<label>Key Place (T2)</label>
+<select id="t3FilterKP" onchange="filterT3Spots(this.value)">
+<option value="">— All Key Places ({{ all_spots|length }} spots) —</option>
+{% for kp in key_places %}
+<option value="{{ kp.id }}">📍 {{ kp.title }}</option>
+{% endfor %}
+</select>
+</div>
+</div>
+<div class="tf-hint" id="t3FilterHint"><i class="fas fa-info-circle" style="color:var(--primary)"></i> Select a Key Place to filter, or view all {{ all_spots|length }} spots below</div>
+</div>
+{% endif %}
+
 {% if editing and all_spots %}
+<div id="t3SpotsContainer">
 {% set current_kp = namespace(id=0) %}
 {% for spot in all_spots %}
 {% if spot.kp_id != current_kp.id %}
 {% set current_kp.id = spot.kp_id %}
-<div style="display:flex;align-items:center;gap:10px;margin:{{ '20px' if not loop.first else '0' }} 0 12px;padding:10px 16px;background:#2E86AB08;border-radius:10px;border:1px solid #2E86AB15">
+<div class="t3-kp-group" data-kpid="{{ spot.kp_id }}" style="display:flex;align-items:center;gap:10px;margin:{{ '20px' if not loop.first else '0' }} 0 12px;padding:10px 16px;background:#2E86AB08;border-radius:10px;border:1px solid #2E86AB15">
 <span style="width:22px;height:22px;background:#2E86AB;color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">T2</span>
 <span style="font-size:14px;font-weight:700;color:#2E86AB">{{ spot.kp_title }}</span>
 <a href="{{ url_for('admin_key_place_spots', kp_id=spot.kp_id) }}" class="btn btn-sm" style="margin-left:auto;font-size:11px;background:#E7484510;color:#E74845;border:1px solid #E7484525"><i class="fas fa-edit"></i> Manage Spots</a>
 </div>
 {% endif %}
-<div class="overview-card" style="border-color:{{ spot.cat_color or '#E74845' }}">
+<div class="overview-card t3-spot-card" data-kpid="{{ spot.kp_id }}" style="border-color:{{ spot.cat_color or '#E74845' }}">
 <div class="ov-icon" style="background:{{ spot.cat_color or '#E74845' }}12">{{ spot.cat_icon or '📍' }}</div>
 <div class="ov-body">
 <div class="hier-bc">
@@ -524,6 +626,7 @@
 </div>
 </div>
 {% endfor %}
+</div>
 {% elif editing %}
 <div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">🔸</div><p>No Key Spots yet. Go to Tier 2, open a Key Place, and click "Manage Key Spots" to add Tier 3 entries.</p></div>
 {% else %}
@@ -560,19 +663,45 @@
 </div>
 </div>
 
+{% if editing and key_places|length > 0 %}
+<!-- T4 Cascade Filter -->
+<div class="tier-filter">
+<div class="tf-title"><i class="fas fa-filter" style="color:#9C27B0"></i> Filter Key Points by Tier Hierarchy</div>
+<div class="tf-row">
+<div class="tf-grp">
+<label>Step 1 — Key Place (T2)</label>
+<select id="t4FilterKP" onchange="filterT4ByKP(this.value)">
+<option value="">— All Key Places —</option>
+{% for kp in key_places %}
+<option value="{{ kp.id }}">📍 {{ kp.title }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="tf-grp">
+<label>Step 2 — Key Spot (T3)</label>
+<select id="t4FilterKS" disabled onchange="filterT4ByKS(this.value)">
+<option value="">— Select Key Place first —</option>
+</select>
+</div>
+</div>
+<div class="tf-hint" id="t4FilterHint"><i class="fas fa-info-circle" style="color:var(--primary)"></i> Filter by Key Place → Key Spot, or view all {{ all_points|length }} points below</div>
+</div>
+{% endif %}
+
 {% if editing and all_points %}
+<div id="t4PointsContainer">
 {% set current_ks = namespace(id=0) %}
 {% for pt in all_points %}
 {% if pt.ks_id != current_ks.id %}
 {% set current_ks.id = pt.ks_id %}
-<div style="display:flex;align-items:center;gap:10px;margin:{{ '20px' if not loop.first else '0' }} 0 12px;padding:10px 16px;background:#E7484508;border-radius:10px;border:1px solid #E7484515">
+<div class="t4-ks-group" data-kpid="{{ pt.kp_id }}" data-ksid="{{ pt.ks_id }}" style="display:flex;align-items:center;gap:10px;margin:{{ '20px' if not loop.first else '0' }} 0 12px;padding:10px 16px;background:#E7484508;border-radius:10px;border:1px solid #E7484515">
 <span style="width:22px;height:22px;background:#E74845;color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">T3</span>
 <span style="font-size:14px;font-weight:700;color:#E74845">{{ pt.ks_title }}</span>
 <span style="font-size:11px;color:var(--text-light)">in {{ pt.kp_title }}</span>
 <a href="{{ url_for('admin_key_spot_subs', ks_id=pt.ks_id) }}" class="btn btn-sm" style="margin-left:auto;font-size:11px;background:#9C27B010;color:#9C27B0;border:1px solid #9C27B025"><i class="fas fa-edit"></i> Manage Points</a>
 </div>
 {% endif %}
-<div class="overview-card" style="border-color:{{ pt.cat_color or '#9C27B0' }}">
+<div class="overview-card t4-point-card" data-kpid="{{ pt.kp_id }}" data-ksid="{{ pt.ks_id }}" style="border-color:{{ pt.cat_color or '#9C27B0' }}">
 <div class="ov-icon" style="background:{{ pt.cat_color or '#9C27B0' }}12">{{ pt.cat_icon or '✦' }}</div>
 <div class="ov-body">
 <div class="hier-bc">
@@ -587,6 +716,7 @@
 </div>
 </div>
 {% endfor %}
+</div>
 {% elif editing %}
 <div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">✦</div><p>No Key Points yet. Go to a Key Spot's page and add Tier 4 entries there.</p></div>
 {% else %}
@@ -653,6 +783,16 @@ document.addEventListener('DOMContentLoaded', function(){
   {% if editing %}{% for kp in key_places %}
   initLocationPicker('loc_kp_{{ loop.index0 }}','kp_{{ loop.index0 }}_latitude','kp_{{ loop.index0 }}_longitude');
   {% endfor %}{% endif %}
+
+  // ─── T4 KP→KS mapping (for cascade filter) ───
+  {% if editing and all_spots %}
+  window._t4KsMap = {};
+  {% for spot in all_spots %}
+  if (!window._t4KsMap['{{ spot.kp_id }}']) window._t4KsMap['{{ spot.kp_id }}'] = [];
+  window._t4KsMap['{{ spot.kp_id }}'].push({id:'{{ spot.id }}', title:'{{ spot.title|replace("'","\\'") }}'});
+  {% endfor %}
+  {% endif %}
+
   // ─── Audio/Video Library (JS-based to avoid nested forms) ───
   window.deleteAudioVideo = function(avId, mediaType) {
     if (!confirm('Delete this ' + mediaType + '?')) return;
@@ -675,5 +815,98 @@ document.addEventListener('DOMContentLoaded', function(){
       .catch(function(e){ alert('Error adding: ' + e); });
   };
 });
+
+/* ═══ T3 Filter ═══ */
+function filterT3Spots(kpId) {
+    var container = document.getElementById('t3SpotsContainer');
+    if (!container) return;
+    var groups = container.querySelectorAll('.t3-kp-group');
+    var cards = container.querySelectorAll('.t3-spot-card');
+    var hint = document.getElementById('t3FilterHint');
+    var count = 0;
+    groups.forEach(function(g) {
+        if (!kpId || g.dataset.kpid === kpId) { g.style.display = ''; } else { g.style.display = 'none'; }
+    });
+    cards.forEach(function(c) {
+        if (!kpId || c.dataset.kpid === kpId) { c.style.display = ''; count++; } else { c.style.display = 'none'; }
+    });
+    if (!kpId) {
+        hint.className = 'tf-hint';
+        hint.innerHTML = '<i class="fas fa-info-circle" style="color:var(--primary)"></i> Showing all ' + cards.length + ' spots';
+    } else {
+        hint.className = 'tf-hint ok';
+        var sel = document.getElementById('t3FilterKP');
+        var name = sel.options[sel.selectedIndex].text.replace(/^📍\s*/, '');
+        hint.innerHTML = '<i class="fas fa-check" style="color:#27ae60"></i> Showing <strong>' + count + '</strong> spot(s) under <strong>' + name + '</strong>';
+    }
+    container.classList.add('tier-filtered-list');
+    setTimeout(function(){ container.classList.remove('tier-filtered-list'); }, 350);
+}
+
+/* ═══ T4 Filter — Step 1: by Key Place ═══ */
+function filterT4ByKP(kpId) {
+    var container = document.getElementById('t4PointsContainer');
+    if (!container) return;
+    var ksSel = document.getElementById('t4FilterKS');
+    var hint = document.getElementById('t4FilterHint');
+    // Reset KS dropdown
+    ksSel.innerHTML = '';
+    ksSel.disabled = true;
+    if (!kpId) {
+        ksSel.innerHTML = '<option value="">— Select Key Place first —</option>';
+        // Show all
+        container.querySelectorAll('.t4-ks-group, .t4-point-card').forEach(function(el){ el.style.display = ''; });
+        hint.className = 'tf-hint';
+        hint.innerHTML = '<i class="fas fa-info-circle" style="color:var(--primary)"></i> Showing all points';
+        return;
+    }
+    // Filter T4 items by KP
+    container.querySelectorAll('.t4-ks-group').forEach(function(g) {
+        g.style.display = (g.dataset.kpid === kpId) ? '' : 'none';
+    });
+    var count = 0;
+    container.querySelectorAll('.t4-point-card').forEach(function(c) {
+        if (c.dataset.kpid === kpId) { c.style.display = ''; count++; } else { c.style.display = 'none'; }
+    });
+    // Populate KS dropdown
+    var spots = (window._t4KsMap && window._t4KsMap[kpId]) || [];
+    var opt0 = document.createElement('option'); opt0.value = ''; opt0.text = '— All ' + spots.length + ' Key Spots —'; ksSel.appendChild(opt0);
+    spots.forEach(function(s) {
+        var o = document.createElement('option'); o.value = s.id; o.text = '⭐ ' + s.title; ksSel.appendChild(o);
+    });
+    ksSel.disabled = false;
+    var sel = document.getElementById('t4FilterKP');
+    var name = sel.options[sel.selectedIndex].text.replace(/^📍\s*/, '');
+    hint.className = 'tf-hint ok';
+    hint.innerHTML = '<i class="fas fa-check" style="color:#27ae60"></i> <strong>' + count + '</strong> point(s) under <strong>' + name + '</strong> — optionally filter by Key Spot';
+    container.classList.add('tier-filtered-list');
+    setTimeout(function(){ container.classList.remove('tier-filtered-list'); }, 350);
+}
+
+/* ═══ T4 Filter — Step 2: by Key Spot ═══ */
+function filterT4ByKS(ksId) {
+    var container = document.getElementById('t4PointsContainer');
+    if (!container) return;
+    var kpId = document.getElementById('t4FilterKP').value;
+    var hint = document.getElementById('t4FilterHint');
+    var count = 0;
+    container.querySelectorAll('.t4-ks-group').forEach(function(g) {
+        if (g.dataset.kpid !== kpId) { g.style.display = 'none'; return; }
+        if (!ksId || g.dataset.ksid === ksId) { g.style.display = ''; } else { g.style.display = 'none'; }
+    });
+    container.querySelectorAll('.t4-point-card').forEach(function(c) {
+        if (c.dataset.kpid !== kpId) { c.style.display = 'none'; return; }
+        if (!ksId || c.dataset.ksid === ksId) { c.style.display = ''; count++; } else { c.style.display = 'none'; }
+    });
+    if (!ksId) {
+        filterT4ByKP(kpId); return;
+    }
+    var ksSel = document.getElementById('t4FilterKS');
+    var ksName = ksSel.options[ksSel.selectedIndex].text.replace(/^⭐\s*/, '');
+    hint.className = 'tf-hint ok';
+    hint.innerHTML = '<i class="fas fa-check" style="color:#27ae60"></i> <strong>' + count + '</strong> point(s) under <strong>' + ksName + '</strong>';
+    container.classList.add('tier-filtered-list');
+    setTimeout(function(){ container.classList.remove('tier-filtered-list'); }, 350);
+}
 </script>
 {% endblock %}

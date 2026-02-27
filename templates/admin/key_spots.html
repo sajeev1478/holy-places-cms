@@ -63,20 +63,22 @@
 </div>
 <div class="ks-body" style="padding:20px">
 
-<!-- Core -->
-<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#E74845;margin-bottom:10px">📌 Core Identity</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-<div class="form-group"><label>📝 Title *</label><input type="text" class="form-control" name="ks_{{ ki }}_title" value="{{ spot.title }}" required></div>
-<div class="form-group"><label>🏷️ Category</label><select class="form-control" name="ks_{{ ki }}_category"><option value="">— Select —</option>{% for cat in spot_categories %}<option value="{{ cat.id }}" {{ 'selected' if spot.category_id == cat.id }}>{{ cat.icon }} {{ cat.name }}</option>{% endfor %}</select></div>
-</div>
-<div class="form-group"><label>📋 Short Description</label><textarea class="form-control" name="ks_{{ ki }}_short_description" rows="2">{{ spot.short_description or '' }}</textarea></div>
-<div class="form-group"><label>📖 Full Content</label><textarea class="form-control" name="ks_{{ ki }}_full_content" rows="4">{{ spot.full_content or '' }}</textarea></div>
+<!-- T3 Title + Category (always visible) -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+<div class="form-group" style="margin:0"><label>📝 Title *</label><input type="text" class="form-control" name="ks_{{ ki }}_title" value="{{ spot.title }}" required></div>
+<div class="form-group" style="margin:0"><label>🏷️ Category</label><select class="form-control" name="ks_{{ ki }}_category"><option value="">— Select —</option>{% for cat in spot_categories %}<option value="{{ cat.id }}" {{ 'selected' if spot.category_id == cat.id }}>{{ cat.icon }} {{ cat.name }}</option>{% endfor %}</select></div>
 </div>
 
-<!-- Location -->
-<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#E74845;margin-bottom:10px">📍 Location</div>
+<!-- T3 ACC 1: Core -->
+<div class="facc"><button type="button" class="facc-h ct3" onclick="togFacc(this)"><span class="fai">📋</span> Core Information<span class="fab">2 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
+<div class="form-group"><label>📋 Short Description</label><textarea class="form-control" name="ks_{{ ki }}_short_description" rows="2">{{ spot.short_description or '' }}</textarea></div>
+<div class="form-group"><label>📖 Full Content</label><textarea class="form-control" name="ks_{{ ki }}_full_content" rows="4">{{ spot.full_content or '' }}</textarea></div>
+</div></div></div>
+
+<!-- T3 ACC 2: Location -->
+<div class="facc"><button type="button" class="facc-h ct3" onclick="togFacc(this)"><span class="fai">📍</span> Location & Geography<span class="fab">5 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
 <div class="form-group"><label>🏙️ City</label><input type="text" class="form-control" name="ks_{{ ki }}_city" value="{{ spot.city or '' }}" placeholder="e.g. Vrindavan"></div>
 <div class="form-group"><label>🗺️ State</label><input type="text" class="form-control" name="ks_{{ ki }}_state" value="{{ spot.state or '' }}" placeholder="e.g. UP"></div>
@@ -96,11 +98,11 @@
 </div>
 <div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map · Drag pin · GPS/Search</div>
 </div>
-</div>
+</div></div></div>
 
-<!-- Images -->
-<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#E74845;margin-bottom:10px">🖼️ Images & Gallery</div>
+<!-- T3 ACC 3: Images -->
+<div class="facc"><button type="button" class="facc-h ct3" onclick="togFacc(this)"><span class="fai">🖼️</span> Images & Media<span class="fab">3 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
 <div class="form-group"><label>🖼️ Featured Image</label>
 {% if spot.featured_image %}<input type="hidden" name="ks_{{ ki }}_featured_image_existing" value="{{ spot.featured_image }}">
@@ -116,7 +118,7 @@
 <div class="cam-desc"><input type="text" name="ks_{{ ki }}_featured_cam_desc" placeholder="📝 Photo description"></div>
 <div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
 </div>
-<input type="text" name="ks_{{ ki }}_featured_image_desc" class="form-control" value="{{ spot.featured_image_desc or '' }}" placeholder="📝 Featured image description (overlay on frontend)" style="font-size:12px;margin-top:6px">
+<input type="text" name="ks_{{ ki }}_featured_image_desc" class="form-control" value="{{ spot.featured_image_desc or '' }}" placeholder="📝 Featured image description" style="font-size:12px;margin-top:6px">
 </div>
 <div class="form-group gal-section"><label>📸 Gallery Images
 {% if spot.gallery_images %}<span class="gal-count">{{ spot.gallery_images.split(',')|length }} image{{ 's' if spot.gallery_images.split(',')|length != 1 }}</span>{% endif %}</label>
@@ -140,48 +142,50 @@
 <button type="button" class="btn btn-sm btn-secondary" style="margin-top:6px;font-size:11px" onclick="addGalleryItem('ks_{{ ki }}')"><i class="fas fa-plus"></i> Add More Images</button>
 <div class="cam-capture-wrap" style="margin-top:8px">
 <button type="button" class="cam-btn cam-btn-gallery" onclick="addCamGalleryItem('ks_{{ ki }}')"><i class="fas fa-camera"></i> Capture Gallery Photo</button>
-<div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
+<div class="cam-info-badge"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
 </div>
 </div>
-<div style="font-size:10px;color:var(--text-light);margin-top:3px">Click thumbnail to preview. Click ✕ to delete.</div></div>
 </div>
-</div>
+</div></div></div>
 
-<!-- Custom Fields -->
+<!-- T3 ACC 4: Visitor Info CFs -->
 {% if custom_fields %}
-<div style="margin-bottom:10px">
-<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#E74845;margin-bottom:10px">⚙️ Custom Fields</div>
-<div style="display:grid;gap:8px">
-{% for cf in custom_fields %}{% if cf.name != 'entry_fee' and cf.name != 'gallery_images' %}
-{% set cv = scv.get(cf.id, {}) %}
-<div style="display:flex;gap:8px;align-items:start;background:var(--cream-dark);border-radius:10px;padding:10px 12px;border:1px solid var(--border)">
-<div style="flex:1">
-<label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:5px"><span style="font-size:15px">{{ cf.icon or '📋' }}</span> {{ cf.label }} <span style="font-size:9px;padding:1px 5px;background:var(--border);border-radius:50px;color:var(--text-light)">{{ cf.field_type }}</span></label>
-{% if cf.field_type in ('text','number') %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px">
-{% elif cf.field_type == 'url' %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px">
-<input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
-{% elif cf.field_type == 'textarea' %}<textarea name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="2" style="font-size:13px">{{ cv.get('value','') }}</textarea>
-{% elif cf.field_type == 'richtext' %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" id="ks_{{ ki }}_cf_rt_{{ cf.id }}" value="{{ cv.get('value','') }}"><div class="rich-editor" data-target="ks_{{ ki }}_cf_rt_{{ cf.id }}" style="background:white;min-height:120px"></div>
-{% elif cf.field_type == 'image' %}{% if cv.get('value') %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
-<div class="gal-section" style="margin-bottom:4px"><div class="gal-thumbs"><div class="gal-thumb"><img src="/static/uploads/{{ cv.get('value','') }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'ks_{{ ki }}_cf_{{ cf.id }}','{{ cv.get('value','') }}')" title="Delete">✕</span></div></div></div>
-{% endif %}<input type="file" name="ks_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" accept="image/*" style="font-size:13px">
-<input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description for this image" style="font-size:11px;margin-top:4px">
-{% elif cf.field_type == 'audio' %}{% if cv.get('value') %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
-<div style="font-size:10px;color:green;margin-bottom:3px">✅ {{ cv.get('value','') }}</div>{% endif %}<input type="file" name="ks_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" accept="audio/*" style="font-size:13px">
-<div style="margin-top:4px"><label style="font-size:11px;color:var(--text-light);margin-bottom:2px;display:block">📝 Description</label><input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="e.g. Audio narration about this place" style="font-size:12px"></div>
-{% elif cf.field_type == 'video' %}{% if cv.get('value') %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
-<div style="font-size:10px;color:green;margin-bottom:3px">✅ {{ cv.get('value','') }}</div>{% endif %}<input type="file" name="ks_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" accept="video/*" style="font-size:13px">
-<div style="margin-top:4px"><label style="font-size:11px;color:var(--text-light);margin-bottom:2px;display:block">📝 Description</label><input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="e.g. Video tour description" style="font-size:12px"></div>
-{% elif cf.field_type == 'images' %}{% if cv.get('value') %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" value="{{ cv.get('value','') }}">
-<div class="gal-section" style="margin-bottom:4px"><span class="gal-count">{{ cv.get('value','').split(',')|reject('equalto','')|list|length }} image{{ 's' if cv.get('value','').split(',')|reject('equalto','')|list|length != 1 else '' }} already uploaded</span>
-<div class="gal-thumbs">{% for gi in cv.get('value','').split(',') %}{% if gi.strip() %}<div class="gal-thumb"><img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'ks_{{ ki }}_cf_{{ cf.id }}','{{ gi.strip() }}')" title="Delete image">✕</span></div>{% endif %}{% endfor %}</div></div>{% endif %}<input type="file" name="ks_{{ ki }}_cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple style="font-size:13px">
-<input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description for these images" style="font-size:11px;margin-top:4px">
-{% else %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" style="font-size:13px">{% endif %}
-</div>
-<div style="padding-top:26px"><label style="display:flex;align-items:center;gap:3px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" name="ks_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} style="accent-color:#27AE60"> Show</label></div>
-</div>
+<div class="facc"><button type="button" class="facc-h ct3" onclick="togFacc(this)"><span class="fai">🧳</span> Visitor Information<span class="fab">custom</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Visitor Info</div>
+{% for cf in custom_fields %}{% if cf.name in ('opening_hours','best_time_to_visit','dress_code') and cf.name != 'entry_fee' %}{% set cv = scv.get(cf.id, {}) %}
+<div style="display:flex;gap:8px;align-items:start;margin-bottom:8px">
+<div style="flex:1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:5px"><span style="font-size:15px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
+{% if cf.field_type in ('text','number') %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px">{% else %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" style="font-size:13px">{% endif %}
+</div><div style="padding-top:26px"><label style="font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" name="ks_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} style="accent-color:#27AE60"> Show</label></div></div>
 {% endif %}{% endfor %}
-</div></div>
+</div></div></div>
+
+<!-- T3 ACC 5: History CF -->
+<div class="facc"><button type="button" class="facc-h ct3" onclick="togFacc(this)"><span class="fai">📜</span> History & Spiritual<span class="fab">1 field</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Spiritual</div>
+{% for cf in custom_fields %}{% if cf.name == 'history' %}{% set cv = scv.get(cf.id, {}) %}
+<div style="display:flex;gap:8px;align-items:start">
+<div style="flex:1"><label style="font-size:13px;font-weight:600;margin-bottom:5px"><span style="font-size:15px">{{ cf.icon or '📜' }}</span> {{ cf.label }}</label>
+{% if cf.field_type == 'richtext' %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" id="ks_{{ ki }}_cf_rt_{{ cf.id }}" value="{{ cv.get('value','') }}"><div class="rich-editor" data-target="ks_{{ ki }}_cf_rt_{{ cf.id }}" style="background:white;min-height:120px"></div>{% else %}<textarea name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="3">{{ cv.get('value','') }}</textarea>{% endif %}
+</div><div style="padding-top:26px"><label style="font-size:11px;cursor:pointer"><input type="checkbox" name="ks_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} style="accent-color:#27AE60"> Show</label></div></div>
+{% endif %}{% endfor %}
+</div></div></div>
+
+<!-- T3 ACC 6: Audio/Video CFs -->
+<div class="facc"><button type="button" class="facc-h ct3" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Media</div>
+{% for cf in custom_fields %}{% if cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url','gallery_images') and cf.name != 'entry_fee' %}{% set cv = scv.get(cf.id, {}) %}
+<div style="display:flex;gap:8px;align-items:start;margin-bottom:8px">
+<div style="flex:1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:5px"><span style="font-size:15px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
+{% if cf.field_type in ('text','number') %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px">
+{% elif cf.field_type == 'url' %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px"><input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
+{% elif cf.field_type == 'audio' %}{% if cv.get('value') %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:10px;color:green;margin-bottom:3px">✅ {{ cv.get('value','') }}</div>{% endif %}<input type="file" name="ks_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" accept="audio/*" style="font-size:13px"><input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
+{% elif cf.field_type == 'video' %}{% if cv.get('value') %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div style="font-size:10px;color:green;margin-bottom:3px">✅ {{ cv.get('value','') }}</div>{% endif %}<input type="file" name="ks_{{ ki }}_cf_file_{{ cf.id }}" class="form-control" accept="video/*" style="font-size:13px"><input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
+{% elif cf.field_type == 'images' %}{% if cv.get('value') %}<input type="hidden" name="ks_{{ ki }}_cf_{{ cf.id }}" value="{{ cv.get('value','') }}"><div class="gal-section" style="margin-bottom:4px"><span class="gal-count">{{ cv.get('value','').split(',')|reject('equalto','')|list|length }} images</span><div class="gal-thumbs">{% for gi in cv.get('value','').split(',') %}{% if gi.strip() %}<div class="gal-thumb"><img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'"><span class="gal-del" onclick="cfDeleteImage(this,'ks_{{ ki }}_cf_{{ cf.id }}','{{ gi.strip() }}')" title="Delete">✕</span></div>{% endif %}{% endfor %}</div></div>{% endif %}<input type="file" name="ks_{{ ki }}_cf_files_{{ cf.id }}" class="form-control" accept="image/*" multiple style="font-size:13px"><input name="ks_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ cv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
+{% else %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" style="font-size:13px">{% endif %}
+</div><div style="padding-top:26px"><label style="font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" name="ks_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if cv.get('is_visible',1) }} style="accent-color:#27AE60"> Show</label></div></div>
+{% endif %}{% endfor %}
+</div></div></div>
 {% endif %}
 
 <!-- Controls -->
@@ -202,7 +206,15 @@
 </div>
 </form>
 
-<style>.ks-item.ks-collapsed .ks-body{display:none}.ks-item.ks-collapsed .ks-chevron{transform:rotate(-90deg)}.ks-body{overflow-x:hidden;max-width:100%;box-sizing:border-box}#spots-container{max-width:100%;overflow-x:hidden}</style>
+<style>.ks-item.ks-collapsed .ks-body{display:none}.ks-item.ks-collapsed .ks-chevron{transform:rotate(-90deg)}.ks-body{overflow-x:hidden;max-width:100%;box-sizing:border-box}#spots-container{max-width:100%;overflow-x:hidden}
+@media(max-width:768px){
+.ks-body [style*="grid-template-columns"]{grid-template-columns:1fr!important}
+.ks-body .facc-bi [style*="grid-template-columns"]{grid-template-columns:1fr!important}
+.ks-body .loc-coords-row{grid-template-columns:1fr!important}
+.admin-card-header{flex-wrap:wrap;gap:8px}
+.admin-card-header h3{font-size:13px!important}
+}
+</style>
 <script>
 let spotIdx={{ spots|length }};
 document.getElementById('addSpotBtn').addEventListener('click',function(){

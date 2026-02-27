@@ -97,28 +97,47 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .form-control{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans';font-size:14px;background:white;outline:none;transition:border-color .2s}
 .form-control:focus{border-color:var(--primary)}
 textarea.form-control{min-height:120px;resize:vertical}
-select.form-control{appearance:auto;-webkit-appearance:auto;-moz-appearance:auto;background:white;cursor:pointer;padding:12px 16px;transition:all .3s ease;color:var(--text-dark)}
+select.form-control{cursor:pointer;padding:12px 16px;transition:border-color .2s ease,box-shadow .2s ease;color:var(--text-dark);-webkit-tap-highlight-color:transparent}
+
+/* ═══ FIELD ACCORDIONS (facc) ═══ */
+.facc{background:white;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.02)}
+.facc-h{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;user-select:none;border:none;background:none;width:100%;text-align:left;font-family:inherit;font-size:13px;font-weight:700;color:var(--text-dark);transition:background .12s;border-left:3px solid var(--primary)}
+.facc-h:hover{background:var(--bg-cream)}
+.facc-h .fai{font-size:15px}
+.facc-h .fab{margin-left:auto;font-size:9px;font-weight:600;padding:2px 8px;border-radius:50px;background:var(--primary-light);color:var(--primary);white-space:nowrap}
+.facc-h .fac{font-size:10px;color:var(--text-light);transition:transform .3s cubic-bezier(.4,0,.2,1);margin-left:4px;flex-shrink:0}
+.facc.open .facc-h .fac{transform:rotate(180deg)}
+.facc-b{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1)}
+.facc.open .facc-b{max-height:5000px}
+.facc-bi{padding:12px 14px 14px;border-top:1px solid var(--border)}
+.facc-h.ct1{border-left-color:#C76B8F}.facc-h.ct1 .fab{background:#fae8ef;color:#C76B8F}
+.facc-h.ct2{border-left-color:#2E86AB}.facc-h.ct2 .fab{background:#e3f2fd;color:#2E86AB}
+.facc-h.ct3{border-left-color:#E67E22}.facc-h.ct3 .fab{background:#fff3e0;color:#E67E22}
+.facc-h.ct4{border-left-color:#9C27B0}.facc-h.ct4 .fab{background:#f3e5f5;color:#9C27B0}
+.facc .cf-sep{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.facc .cf-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+@media(max-width:768px){.facc-h{padding:10px 12px;font-size:12px}.facc-bi{padding:10px 12px 12px}.facc-bi [style*="grid-template-columns"]{grid-template-columns:1fr!important}.facc-bi .form-row{grid-template-columns:1fr!important}.facc-bi .loc-coords-row{grid-template-columns:1fr!important}}
+
+/* ═══ TIER FILTER CASCADE (T3/T4 overview tabs) ═══ */
+.tier-filter{background:white;border-radius:14px;border:1px solid var(--border);padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 6px rgba(0,0,0,.03)}
+.tier-filter .tf-title{font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.tier-filter .tf-row{display:flex;gap:12px;flex-wrap:wrap}
+.tier-filter .tf-grp{flex:1;min-width:200px}
+.tier-filter .tf-grp label{font-size:10px;font-weight:700;color:var(--text-light);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.5px}
+.tier-filter .tf-grp select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:white;cursor:pointer;transition:border-color .2s,box-shadow .2s;color:var(--text)}
+.tier-filter .tf-grp select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(199,107,143,.12);outline:none}
+.tier-filter .tf-grp select:disabled{opacity:.45;cursor:not-allowed;background:#f8f5f2}
+.tier-filter .tf-hint{font-size:11px;color:var(--text-light);margin-top:8px;display:flex;align-items:center;gap:4px;padding:6px 10px;background:var(--bg-cream);border-radius:8px}
+.tier-filter .tf-hint.ok{color:#27ae60;background:#e8f5e9}
+.tier-filter .tf-hint i{font-size:10px}
+@media(max-width:768px){.tier-filter{padding:14px}.tier-filter .tf-row{flex-direction:column;gap:10px}.tier-filter .tf-grp{min-width:100%}}
+.tier-filtered-list{animation:tfFadeUp .3s ease}
+@keyframes tfFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 select.form-control option{padding:8px 12px;font-size:14px;background:white;color:var(--text-dark)}
 select.form-control:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(199,107,143,.1)}
 select.form-control:focus{border-color:var(--primary);box-shadow:0 4px 16px rgba(199,107,143,.15);outline:none}
 
-/* Beautiful Custom Select Dropdown */
-.custom-select-wrap{position:relative}
-.custom-select-trigger{width:100%;padding:12px 40px 12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'DM Sans';font-size:14px;background:white;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;gap:8px;user-select:none;position:relative}
-.custom-select-trigger:hover{border-color:var(--primary);box-shadow:0 2px 12px rgba(199,107,143,.08)}
-.custom-select-trigger.open{border-color:var(--primary);box-shadow:0 4px 16px rgba(199,107,143,.12);border-radius:10px 10px 0 0}
-.custom-select-trigger::after{content:'';position:absolute;right:16px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid var(--text-light);transition:transform .3s ease}
-.custom-select-trigger.open::after{transform:translateY(-50%) rotate(180deg)}
-.custom-select-options{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--primary);border-top:none;border-radius:0 0 10px 10px;max-height:0;overflow:hidden;opacity:0;transition:max-height .35s cubic-bezier(0.23,1,0.32,1),opacity .25s ease;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.08)}
-.custom-select-options.open{max-height:280px;overflow-y:auto;opacity:1}
-.custom-select-option{padding:10px 16px;cursor:pointer;font-size:14px;transition:all .15s;display:flex;align-items:center;gap:8px}
-.custom-select-option:hover{background:var(--primary-light);color:var(--primary)}
-.custom-select-option.selected{background:var(--primary-light);color:var(--primary);font-weight:600}
-.custom-select-option:last-child{border-radius:0 0 10px 10px}
-.custom-select-options::-webkit-scrollbar{width:6px}
-.custom-select-options::-webkit-scrollbar-track{background:transparent}
-.custom-select-options::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.custom-select-options::-webkit-scrollbar-thumb:hover{background:var(--primary)}
+/* Native Select - enhanced styling (custom overlay removed for smooth single-click) */
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
 .form-check input[type="checkbox"]{width:18px;height:18px;accent-color:var(--primary)}
@@ -607,6 +626,9 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 .hsearch-empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.3}
 @media(hover:none) and (pointer:coarse){
   .cam-capture-wrap{display:block;margin-top:8px}
+  /* Ensure native select picker on mobile touch devices */
+  select.form-control{font-size:16px!important;min-height:44px}
+  .tier-filter .tf-grp select{font-size:16px!important;min-height:44px}
 }
 .cam-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#1565C0,#0D47A1);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;width:100%}
 .cam-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(21,101,192,.3)}
@@ -867,57 +889,8 @@ initRichEditors();
 // Re-init after short delay to catch any late-rendered editors
 setTimeout(initRichEditors, 500);
 
-// Beautiful custom select dropdowns
-function initCustomSelects() {
-    document.querySelectorAll('select.form-control').forEach(sel => {
-        if (sel.dataset.enhanced) return;
-        sel.dataset.enhanced = 'true';
-        const wrap = document.createElement('div');
-        wrap.className = 'custom-select-wrap';
-        sel.parentNode.insertBefore(wrap, sel);
-        
-        const trigger = document.createElement('div');
-        trigger.className = 'custom-select-trigger';
-        const selectedOpt = sel.options[sel.selectedIndex];
-        trigger.textContent = selectedOpt ? selectedOpt.textContent : 'Select...';
-        
-        const optionsDiv = document.createElement('div');
-        optionsDiv.className = 'custom-select-options';
-        
-        Array.from(sel.options).forEach((opt, i) => {
-            const optEl = document.createElement('div');
-            optEl.className = 'custom-select-option' + (i === sel.selectedIndex ? ' selected' : '');
-            optEl.textContent = opt.textContent;
-            optEl.dataset.value = opt.value;
-            optEl.addEventListener('click', () => {
-                sel.value = opt.value;
-                sel.dispatchEvent(new Event('change'));
-                trigger.textContent = opt.textContent;
-                optionsDiv.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
-                optEl.classList.add('selected');
-                trigger.classList.remove('open');
-                optionsDiv.classList.remove('open');
-            });
-            optionsDiv.appendChild(optEl);
-        });
-        
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.querySelectorAll('.custom-select-trigger.open').forEach(t => { if(t!==trigger){t.classList.remove('open');t.nextElementSibling.classList.remove('open')} });
-            trigger.classList.toggle('open');
-            optionsDiv.classList.toggle('open');
-        });
-        
-        wrap.appendChild(trigger);
-        wrap.appendChild(optionsDiv);
-        sel.style.display = 'none';
-        wrap.appendChild(sel);
-    });
-}
-initCustomSelects();
-document.addEventListener('click', () => {
-    document.querySelectorAll('.custom-select-trigger.open').forEach(t => { t.classList.remove('open'); t.nextElementSibling.classList.remove('open'); });
-});
+// Custom select replaced with native — smoother single-click opens
+// initCustomSelects removed to fix multi-click dropdown bug
 </script>
 
 <!-- Lightbox for image preview -->
@@ -1330,6 +1303,8 @@ function locationPickerHTML(id, latName, lngName, latVal, lngVal){
     '<div style="font-size:10px;color:var(--text-light);margin-top:6px;display:flex;align-items:center;gap:6px"><i class="fas fa-info-circle"></i> Click map to place pin · Drag pin to adjust · Or use GPS/Search</div>'+
   '</div>';
 }
+// ═══ Field Accordion Toggle ═══
+function togFacc(btn){btn.closest('.facc').classList.toggle('open')}
 // ═══ Hierarchy ID Copy ═══
 function copyHid(el){
   var id=el.dataset.hid||el.textContent.trim().replace('📋','').trim();
