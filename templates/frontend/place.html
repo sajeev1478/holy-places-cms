@@ -55,7 +55,7 @@
 {% endif %}
 
 {% if vis.get('full_content',1) and place.full_content %}
-<div class="rich-content" style="margin-bottom:40px;line-height:1.9;font-size:16.5px;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ place.full_content|safe }}</div>{% endif %}
+<div class="rich-content" style="margin-bottom:40px;line-height:1.9;font-size:18.5px;color:var(--text-mid);font-family:'Nunito Sans',sans-serif">{{ place.full_content|safe }}</div>{% endif %}
 
 <!-- Custom Fields -->
 {% if custom_values %}
@@ -162,7 +162,7 @@
 <div>
 <div class="sidebar-card" style="background:white;border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
 <h3 style="font-family:'Josefin Sans',sans-serif;font-size:20px;font-weight:700;margin-bottom:16px">Quick Info</h3>
-<div style="display:flex;flex-direction:column;gap:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px">
+<div style="display:flex;flex-direction:column;gap:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:18px">
 {% if vis.get('city',1) and place.city %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">City</span><strong>{{ place.city }}</strong></div>{% endif %}
 {% if vis.get('state',1) and place.state %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">State</span><strong>{{ place.state }}</strong></div>{% endif %}
 {% if vis.get('country',1) and place.country %}<div class="quick-info-row" style="display:flex;justify-content:space-between"><span style="color:var(--text-light)">Country</span><strong>{{ place.country }}</strong></div>{% endif %}
