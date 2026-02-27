@@ -4,9 +4,21 @@
 
 {% block admin_content %}
 <style>
-.entry-two-col{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
-.entry-img-section{background:var(--bg-cream);border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid var(--border)}
-.entry-img-section>label{font-weight:700;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.entry-layout{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+.entry-section{background:var(--bg-cream);border-radius:12px;padding:16px;margin-bottom:14px;border:1px solid var(--border)}
+.entry-section>label,.section-title{font-weight:700;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.section-title{font-size:14px;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:14px}
+.dyn-fields{transition:all .3s ease}
+.dyn-field{margin-bottom:12px}
+.dyn-field label{font-weight:600;font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:5px;color:var(--text)}
+.dyn-field label .fi{font-size:14px}
+.dyn-field input,.dyn-field textarea,.dyn-field select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:white;transition:border .2s}
+.dyn-field input:focus,.dyn-field textarea:focus,.dyn-field select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(199,107,143,.1)}
+.dyn-field textarea{min-height:60px;resize:vertical}
+.tier-link-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.av-item{background:white;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative}
+.av-remove{position:absolute;top:8px;right:8px;width:22px;height:22px;background:rgba(231,72,69,.9);color:white;border:none;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.av-existing-file{font-size:11px;color:var(--primary);background:var(--bg-cream);padding:4px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;margin-top:4px}
 .entry-gal-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
 .entry-gal-item{display:flex;align-items:center;gap:10px;padding:8px;background:white;border:1px solid var(--border);border-radius:8px}
 .entry-gal-item img{width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer}
@@ -21,66 +33,130 @@
 .ecam-remove{position:absolute;top:6px;right:6px;width:24px;height:24px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
 .ecam-info{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-light);margin-top:6px;padding:4px 10px;background:var(--bg-cream);border-radius:50px;width:fit-content}
 .ecam-info i{color:#2E86AB}
-@media(max-width:900px){.entry-two-col{grid-template-columns:1fr}}
+.no-schema-msg{color:var(--text-light);font-size:13px;font-style:italic;padding:16px;text-align:center}
+@media(max-width:900px){.entry-layout{grid-template-columns:1fr}.tier-link-row{grid-template-columns:1fr}}
 </style>
 
-<form method="POST" enctype="multipart/form-data" class="admin-card">
+<form method="POST" enctype="multipart/form-data" class="admin-card" id="entryForm">
 <div class="admin-card-body">
-<div class="entry-two-col">
+<div class="entry-layout">
 <!-- LEFT: Main Content -->
 <div>
+<!-- Module + Title -->
 <div class="form-row">
 <div class="form-group">
 <label>Module *</label>
-<select name="module_id" class="form-control" required>
+<select name="module_id" id="moduleSelect" class="form-control" required onchange="loadModuleFields(this.value)">
 <option value="">Select module...</option>
 {% for mod in modules %}
-<option value="{{ mod.id }}" {{ 'selected' if editing and entry.module_id == mod.id }}>{{ mod.icon }} {{ mod.name }}</option>
+<option value="{{ mod.id }}" data-slug="{{ mod.slug }}" {{ 'selected' if (editing and entry.module_id == mod.id) or (not editing and preselect_mod and preselect_mod == mod.id) }}>{{ mod.icon }} {{ mod.name }}</option>
 {% endfor %}
 </select>
 </div>
-<div class="form-group">
-<label>Linked Place (optional)</label>
-<select name="place_id" class="form-control">
-<option value="">None</option>
-{% for p in places %}
-<option value="{{ p.id }}" {{ 'selected' if editing and entry.place_id == p.id }}>{{ p.title }}</option>
-{% endfor %}
-</select>
-</div>
-</div>
-<div class="form-group">
-<label>Title *</label>
-<input name="title" class="form-control" value="{{ entry.title if editing else '' }}" required>
-</div>
-<div class="form-group">
-<label>Content (Rich Editor)</label>
-<input type="hidden" name="content" id="entry_content" value="{{ entry.content if editing else '' }}">
-<div class="rich-editor" data-target="entry_content" style="background:white;min-height:250px"></div>
-</div>
-<div class="form-group">
-<label>Custom Fields (JSON)</label>
-<textarea name="custom_fields" class="form-control" rows="3">{{ entry.custom_fields if editing else '{}' }}</textarea>
-</div>
-<div class="form-row">
 <div class="form-group">
 <label>Status</label>
 <select name="status" class="form-control">
-<option value="draft" {{ 'selected' if editing and entry.status=='draft' }}>Draft</option>
-<option value="published" {{ 'selected' if editing and entry.status=='published' }}>Published</option>
+<option value="draft" {{ 'selected' if editing and entry.status=='draft' }}>📝 Draft</option>
+<option value="published" {{ 'selected' if editing and entry.status=='published' }}>✅ Published</option>
 </select>
-</div>
-<div class="form-group">
-<label>Sort Order</label>
-<input name="sort_order" class="form-control" type="number" value="{{ entry.sort_order if editing else 0 }}">
-</div>
 </div>
 </div>
 
-<!-- RIGHT: Images & Media -->
+<div class="form-group">
+<label>Title *</label>
+<input name="title" class="form-control" value="{{ entry.title if editing else '' }}" required placeholder="Entry title">
+</div>
+
+<!-- Tier Linking -->
+<div class="entry-section">
+<div class="section-title">🔗 Link to Tier Hierarchy</div>
+<div class="tier-link-row">
+<div class="dyn-field">
+<label>Link Type</label>
+<select name="tier_link_type" id="tierLinkType" class="form-control" onchange="loadTierOptions(this.value)">
+<option value="">None (no linking)</option>
+<option value="dham" {{ 'selected' if editing and entry.tier_link_type=='dham' }}>🛕 Dham (T1)</option>
+<option value="key_place" {{ 'selected' if editing and entry.tier_link_type=='key_place' }}>📍 Key Place (T2)</option>
+<option value="key_spot" {{ 'selected' if editing and entry.tier_link_type=='key_spot' }}>⭐ Key Spot (T3)</option>
+<option value="sub_spot" {{ 'selected' if editing and entry.tier_link_type=='sub_spot' }}>📌 Sub Spot (T4)</option>
+</select>
+</div>
+<div class="dyn-field">
+<label>Link Target</label>
+<select name="tier_link_id" id="tierLinkId" class="form-control">
+<option value="0">Select...</option>
+{% if editing and entry.tier_link_type == 'dham' %}
+{% for p in places %}<option value="{{ p.id }}" {{ 'selected' if p.id == entry.tier_link_id }}>{{ p.title }}</option>{% endfor %}
+{% elif editing and entry.tier_link_type == 'key_place' %}
+{% for kp in key_places %}<option value="{{ kp.id }}" {{ 'selected' if kp.id == entry.tier_link_id }}>[{{ kp.dham_title }}] {{ kp.title }}</option>{% endfor %}
+{% elif editing and entry.tier_link_type == 'key_spot' %}
+{% for ks in key_spots %}<option value="{{ ks.id }}" {{ 'selected' if ks.id == entry.tier_link_id }}>[{{ ks.kp_title }}] {{ ks.title }}</option>{% endfor %}
+{% elif editing and entry.tier_link_type == 'sub_spot' %}
+{% for ss in sub_spots %}<option value="{{ ss.id }}" {{ 'selected' if ss.id == entry.tier_link_id }}>[{{ ss.ks_title }}] {{ ss.title }}</option>{% endfor %}
+{% endif %}
+</select>
+</div>
+</div>
+<div style="font-size:11px;color:var(--text-light);margin-top:4px"><i class="fas fa-info-circle"></i> Optionally link this entry to a specific tier in the hierarchy</div>
+</div>
+
+<!-- Content (Rich Editor) -->
+<div class="form-group">
+<label>Content (Rich Editor)</label>
+<input type="hidden" name="content" id="entry_content" value="{{ entry.content if editing else '' }}">
+<div class="rich-editor" data-target="entry_content" style="background:white;min-height:200px"></div>
+</div>
+
+<!-- Dynamic Module Fields -->
+<div class="entry-section" id="dynamicFieldsSection">
+<div class="section-title" id="dynFieldsTitle">📋 Module-Specific Fields</div>
+<div id="dynamicFields">
+<div class="no-schema-msg">Select a module above to see its specific fields</div>
+</div>
+</div>
+
+<!-- Audio / Video Section -->
+<div class="entry-section">
+<div class="section-title">🎵 Audio & Video</div>
+<div id="avContainer">
+{% for av in audio_video_items %}
+<div class="av-item" data-idx="{{ loop.index0 }}">
+<button type="button" class="av-remove" onclick="this.closest('.av-item').remove()" title="Remove">✕</button>
+<div style="display:grid;gap:8px">
+<div class="form-row" style="gap:8px">
+<div class="dyn-field" style="margin:0"><label>Type</label>
+<select name="av_type_{{ loop.index0 }}" class="form-control"><option value="audio" {{ 'selected' if av.media_type=='audio' }}>🎵 Audio</option><option value="video" {{ 'selected' if av.media_type=='video' }}>🎬 Video</option></select>
+</div>
+<div class="dyn-field" style="margin:0"><label>Source</label>
+<select name="av_source_{{ loop.index0 }}" class="form-control" onchange="toggleAvSource(this,{{ loop.index0 }})"><option value="upload" {{ 'selected' if av.source_type=='upload' }}>📤 Upload</option><option value="link" {{ 'selected' if av.source_type=='link' }}>🔗 Link</option></select>
+</div>
+</div>
+<div class="dyn-field" style="margin:0" id="av_upload_{{ loop.index0 }}" {{ 'style=display:none' if av.source_type=='link' else '' }}>
+<label>File</label><input type="file" name="av_file_{{ loop.index0 }}" class="form-control" accept="audio/*,video/*" style="font-size:12px">
+{% if av.file_path %}<input type="hidden" name="av_existing_{{ loop.index0 }}" value="{{ av.file_path }}"><div class="av-existing-file"><i class="fas fa-file"></i> {{ av.file_path.split('/')[-1] }}</div>{% endif %}
+</div>
+<div class="dyn-field" style="margin:0" id="av_link_{{ loop.index0 }}" {{ '' if av.source_type=='link' else 'style=display:none' }}>
+<label>URL</label><input name="av_url_{{ loop.index0 }}" class="form-control" value="{{ av.external_url }}" placeholder="https://youtube.com/...">
+</div>
+<div class="dyn-field" style="margin:0"><label>Description *</label><textarea name="av_desc_{{ loop.index0 }}" class="form-control" rows="2" placeholder="Describe this audio/video content">{{ av.description }}</textarea></div>
+</div>
+</div>
+{% endfor %}
+</div>
+<button type="button" class="btn btn-sm btn-secondary" onclick="addAvItem()"><i class="fas fa-plus"></i> Add Audio/Video</button>
+<div style="font-size:11px;color:var(--text-light);margin-top:6px"><i class="fas fa-info-circle"></i> Each audio MUST have a description explaining the content</div>
+</div>
+
+<div class="form-group">
+<label>Sort Order</label>
+<input name="sort_order" class="form-control" type="number" value="{{ entry.sort_order if editing else 0 }}" style="max-width:120px">
+</div>
+</div>
+
+<!-- RIGHT: Images & Media Sidebar -->
 <div>
 <!-- Featured Image -->
-<div class="entry-img-section">
+<div class="entry-section">
 <label>🖼️ Featured Image</label>
 {% if editing and entry.featured_image %}
 <input type="hidden" name="featured_image_existing" value="{{ entry.featured_image }}">
@@ -92,17 +168,17 @@
 <input type="file" name="featured_image_file" class="form-control" accept="image/*" style="font-size:12px">
 <div class="ecam-wrap">
 <div style="display:flex;gap:8px;align-items:center">
-<button type="button" class="ecam-btn" onclick="this.parentElement.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture Featured Image</button>
+<button type="button" class="ecam-btn" onclick="this.parentElement.nextElementSibling.click()"><i class="fas fa-camera"></i> Capture</button>
 </div>
 <input type="file" name="featured_image_cam" accept="image/*" capture="environment" style="display:none" onchange="var p=this.parentElement.querySelector('.ecam-preview');p.classList.add('active');var r=new FileReader();r.onload=function(e){p.querySelector('img').src=e.target.result};r.readAsDataURL(this.files[0])">
 <div class="ecam-preview"><img><button type="button" class="ecam-remove" onclick="var w=this.closest('.ecam-wrap');w.querySelector('.ecam-preview').classList.remove('active');w.querySelector('input[capture]').value=''">✕</button></div>
-<div class="ecam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
+<div class="ecam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed</div>
 </div>
 </div>
 
 <!-- Gallery Images -->
-<div class="entry-img-section">
-<label>📸 Gallery Images <span style="font-size:10px;font-weight:400;color:var(--text-light)">(shown as slider on frontend)</span>
+<div class="entry-section">
+<label>📸 Gallery Images
 {% if editing and entry.gallery_images %}<span style="font-size:11px;font-weight:400;color:var(--primary);margin-left:4px">{{ entry.gallery_images.split(',')|reject('equalto','')|list|length }} uploaded</span>{% endif %}
 </label>
 <input type="hidden" name="gallery_existing" value="{{ entry.gallery_images if editing and entry.gallery_images else '' }}">
@@ -111,21 +187,21 @@
 {% for gi in entry.gallery_images.split(',') %}{% if gi.strip() %}
 <div class="entry-gal-item">
 <img src="/static/uploads/{{ gi.strip() }}" onclick="openLightbox(this.src)" onerror="this.parentElement.style.display='none'">
-<div class="eg-info">
-<div style="font-size:10px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ gi.strip().split('/')[-1] }}</div>
-</div>
+<div class="eg-info"><div style="font-size:10px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ gi.strip().split('/')[-1] }}</div></div>
 <button type="button" style="background:none;border:none;color:#E74845;cursor:pointer;font-size:14px" onclick="entryGalDelete(this,'{{ gi.strip() }}')" title="Remove">✕</button>
 </div>
 {% endif %}{% endfor %}
 </div>
 {% endif %}
 <div id="entry_new_gals"></div>
-<button type="button" class="btn btn-sm btn-secondary" style="font-size:11px;margin-top:4px" onclick="addEntryGalleryItem()"><i class="fas fa-plus"></i> Add More Images</button>
+<button type="button" class="btn btn-sm btn-secondary" style="font-size:11px;margin-top:4px" onclick="addEntryGalleryItem()"><i class="fas fa-plus"></i> Add Images</button>
 <div class="ecam-wrap" style="margin-top:8px">
-<button type="button" class="ecam-btn ecam-btn-green" onclick="addEntryCamGalleryItem()"><i class="fas fa-camera"></i> Capture Gallery Photo</button>
-<div class="ecam-info"><i class="fas fa-compress-arrows-alt"></i> Auto-compressed on upload</div>
+<button type="button" class="ecam-btn ecam-btn-green" onclick="addEntryCamGalleryItem()"><i class="fas fa-camera"></i> Capture</button>
 </div>
 </div>
+
+<!-- Legacy place link (hidden) -->
+<input type="hidden" name="place_id" value="{{ entry.place_id if editing and entry.place_id else '' }}">
 </div>
 </div>
 </div>
@@ -136,22 +212,110 @@
 </form>
 
 <script>
+var MODULE_SCHEMAS = {{ module_schemas|tojson }};
+var ENTRY_CF = {};
+{% if editing and entry.custom_fields %}
+try { ENTRY_CF = JSON.parse({{ entry.custom_fields|tojson }}); } catch(e) { ENTRY_CF = {}; }
+{% endif %}
+
+function loadModuleFields(modId) {
+    if (!modId) { document.getElementById('dynamicFields').innerHTML='<div class="no-schema-msg">Select a module to see its fields</div>'; return; }
+    var sel = document.getElementById('moduleSelect');
+    var slug = sel.options[sel.selectedIndex].getAttribute('data-slug');
+    var schema = MODULE_SCHEMAS[slug] || [];
+    renderSchema(schema, slug);
+}
+
+function renderSchema(schema, slug) {
+    var container = document.getElementById('dynamicFields');
+    if (!schema || schema.length === 0) {
+        container.innerHTML='<div class="no-schema-msg">No predefined fields for this module. Use the Content editor above.</div>';
+        return;
+    }
+    document.getElementById('dynFieldsTitle').innerHTML = '📋 ' + slug.replace(/-/g,' ').replace(/\b\w/g,function(l){return l.toUpperCase();}) + ' Fields';
+    var html = '';
+    schema.forEach(function(f) {
+        var val = ENTRY_CF[f.name] || '';
+        var icon = f.icon || '📋';
+        html += '<div class="dyn-field">';
+        html += '<label><span class="fi">' + icon + '</span> ' + f.label + (f.required ? ' *' : '') + '</label>';
+        if (f.type === 'text' || f.type === 'number' || f.type === 'url' || f.type === 'datetime') {
+            var itype = f.type === 'datetime' ? 'datetime-local' : f.type;
+            html += '<input type="' + itype + '" name="cf_' + f.name + '" class="form-control" value="' + escHtml(val) + '" placeholder="' + escHtml(f.placeholder||'') + '"' + (f.required?' required':'') + '>';
+        } else if (f.type === 'textarea') {
+            html += '<textarea name="cf_' + f.name + '" class="form-control" rows="3" placeholder="' + escHtml(f.placeholder||'') + '">' + escHtml(val) + '</textarea>';
+        } else if (f.type === 'richtext') {
+            html += '<input type="hidden" name="cf_' + f.name + '" id="cf_rt_' + f.name + '" value="' + escHtml(val) + '">';
+            html += '<div class="rich-editor" data-target="cf_rt_' + f.name + '" style="background:white;min-height:150px"></div>';
+        } else if (f.type === 'select') {
+            html += '<select name="cf_' + f.name + '" class="form-control"><option value="">Select...</option>';
+            (f.options||[]).forEach(function(opt) { html += '<option value="' + escHtml(opt) + '"' + (val===opt?' selected':'') + '>' + escHtml(opt) + '</option>'; });
+            html += '</select>';
+        } else if (f.type === 'image') {
+            if (val) { html += '<input type="hidden" name="cf_' + f.name + '_existing" value="' + escHtml(val) + '"><div style="margin-bottom:6px"><img src="/static/uploads/' + escHtml(val) + '" style="max-height:80px;border-radius:6px" onerror="this.style.display=\'none\'"></div>'; }
+            html += '<input type="file" name="cf_' + f.name + '_file" class="form-control" accept="image/*" style="font-size:12px">';
+        }
+        html += '</div>';
+    });
+    container.innerHTML = html;
+    setTimeout(function() { if(typeof initRichEditors==='function') initRichEditors(); }, 100);
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function loadTierOptions(type) {
+    var sel = document.getElementById('tierLinkId');
+    sel.innerHTML = '<option value="0">Loading...</option>';
+    if (!type) { sel.innerHTML = '<option value="0">Select link type first</option>'; return; }
+    fetch('/api/v1/tier-options/' + type).then(function(r){return r.json()}).then(function(data) {
+        var html = '<option value="0">Select...</option>';
+        data.forEach(function(item) {
+            var label = item.parent ? '[' + item.parent + '] ' + item.title : item.title;
+            html += '<option value="' + item.id + '">' + label + '</option>';
+        });
+        sel.innerHTML = html;
+    });
+}
+
+var avIdx = {{ audio_video_items|length }};
+function addAvItem() {
+    var c = document.getElementById('avContainer');
+    var div = document.createElement('div');
+    div.className = 'av-item';
+    div.innerHTML = '<button type="button" class="av-remove" onclick="this.closest(\'.av-item\').remove()" title="Remove">✕</button>'
+        + '<div style="display:grid;gap:8px">'
+        + '<div class="form-row" style="gap:8px">'
+        + '<div class="dyn-field" style="margin:0"><label>Type</label><select name="av_type_'+avIdx+'" class="form-control"><option value="audio">🎵 Audio</option><option value="video">🎬 Video</option></select></div>'
+        + '<div class="dyn-field" style="margin:0"><label>Source</label><select name="av_source_'+avIdx+'" class="form-control" onchange="toggleAvSource(this,'+avIdx+')"><option value="upload">📤 Upload</option><option value="link">🔗 Link</option></select></div>'
+        + '</div>'
+        + '<div class="dyn-field" style="margin:0" id="av_upload_'+avIdx+'"><label>File</label><input type="file" name="av_file_'+avIdx+'" class="form-control" accept="audio/*,video/*" style="font-size:12px"></div>'
+        + '<div class="dyn-field" style="margin:0;display:none" id="av_link_'+avIdx+'"><label>URL</label><input name="av_url_'+avIdx+'" class="form-control" placeholder="https://youtube.com/..."></div>'
+        + '<div class="dyn-field" style="margin:0"><label>Description *</label><textarea name="av_desc_'+avIdx+'" class="form-control" rows="2" placeholder="Describe this content"></textarea></div>'
+        + '</div>';
+    c.appendChild(div); avIdx++;
+}
+function toggleAvSource(sel, idx) {
+    document.getElementById('av_upload_'+idx).style.display = sel.value==='upload'?'':'none';
+    document.getElementById('av_link_'+idx).style.display = sel.value==='link'?'':'none';
+}
+
 var entryGalIdx = 0;
 function addEntryGalleryItem(){
     var c = document.getElementById('entry_new_gals');
     var div = document.createElement('div');
     div.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:6px';
     div.innerHTML = '<input type="file" name="entry_new_gallery_'+entryGalIdx+'" accept="image/*" class="form-control" style="font-size:12px;flex:1"><button type="button" class="btn btn-danger btn-sm btn-icon" style="flex-shrink:0" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>';
-    c.appendChild(div);
-    entryGalIdx++;
+    c.appendChild(div); entryGalIdx++;
 }
 function addEntryCamGalleryItem(){
     var c = document.getElementById('entry_new_gals');
     var div = document.createElement('div');
     div.style.cssText = 'margin-bottom:6px';
     div.innerHTML = '<div class="ecam-wrap"><input type="file" name="entry_new_gallery_'+entryGalIdx+'" accept="image/*" capture="environment" style="font-size:12px" onchange="var p=this.parentElement.querySelector(\'.ecam-preview\');p.classList.add(\'active\');var r=new FileReader();r.onload=function(e){p.querySelector(\'img\').src=e.target.result};r.readAsDataURL(this.files[0])"><div class="ecam-preview"><img><button type="button" class="ecam-remove" onclick="this.closest(\'.ecam-wrap\').parentElement.remove()">✕</button></div></div>';
-    c.appendChild(div);
-    entryGalIdx++;
+    c.appendChild(div); entryGalIdx++;
 }
 function entryGalDelete(btn, img){
     if(!confirm('Remove this gallery image?')) return;
@@ -160,5 +324,10 @@ function entryGalDelete(btn, img){
     var imgs = h.value.split(',').filter(function(x){ return x.trim() !== img.trim(); });
     h.value = imgs.join(',');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    var sel = document.getElementById('moduleSelect');
+    if (sel.value) loadModuleFields(sel.value);
+});
 </script>
 {% endblock %}

@@ -666,9 +666,14 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 <a class="sidebar-link {{ 'active' if request.endpoint in ('admin_modules','admin_module_new','admin_module_edit') }}" href="{{ url_for('admin_modules') }}">
 <i class="fas fa-cubes"></i> Module Builder
 </a>
-<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_entries','admin_entry_new','admin_entry_edit') }}" href="{{ url_for('admin_entries') }}">
-<i class="fas fa-file-alt"></i> Module Entries
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_entries','admin_entry_new','admin_entry_edit') and not request.view_args.get('mod_id') }}" href="{{ url_for('admin_entries') }}">
+<i class="fas fa-file-alt"></i> All Entries
 </a>
+{% for mod in active_modules %}
+<a class="sidebar-link {{ 'active' if request.endpoint == 'admin_entries' and request.view_args.get('mod_id') == mod.id }}" href="{{ url_for('admin_entries', mod_id=mod.id) }}" style="padding-left:28px;font-size:13px">
+<span style="font-size:14px">{{ mod.icon }}</span> {{ mod.name }}
+</a>
+{% endfor %}
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_tags' }}" href="{{ url_for('admin_tags') }}">
 <i class="fas fa-tags"></i> Tags & Categories
 </a>

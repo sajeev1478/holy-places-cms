@@ -1,39 +1,137 @@
 {% extends "frontend/base.html" %}
-{% block title %}{{ entry.title }}{% endblock %}
+{% block title %}{{ entry.title }} - {{ module.name }}{% endblock %}
 {% block content %}
-<section style="padding:120px 0 40px;background:linear-gradient(135deg,var(--cream),var(--cream-dark))">
+<style>
+.entry-hero{padding:120px 0 40px;background:linear-gradient(135deg,var(--cream),var(--cream-dark))}
+.entry-hero.has-img{position:relative;min-height:360px;display:flex;align-items:flex-end;background-size:cover;background-position:center}
+.entry-hero.has-img::before{content:'';position:absolute;inset:0;background:linear-gradient(transparent 30%,rgba(0,0,0,.65))}
+.entry-hero.has-img .container{position:relative;z-index:1;color:white;padding-bottom:32px}
+.entry-hero.has-img .breadcrumb a,.entry-hero.has-img .breadcrumb span{color:rgba(255,255,255,.7)}
+.entry-hero.has-img h1{color:white}
+.entry-body{max-width:900px;margin:0 auto;padding:40px 20px}
+.entry-fields{margin-top:32px}
+.entry-field{margin-bottom:20px;padding:16px;background:var(--bg-cream);border-radius:12px;border-left:3px solid var(--primary)}
+.entry-field-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.entry-field-value{font-size:14px;line-height:1.7;color:var(--text)}
+.entry-field-value a{color:var(--primary)}
+.entry-gallery{margin-top:32px}
+.entry-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.entry-gallery-grid img{width:100%;height:160px;object-fit:cover;border-radius:10px;cursor:pointer;transition:transform .2s}
+.entry-gallery-grid img:hover{transform:scale(1.03)}
+.entry-av{margin-top:32px}
+.entry-av-item{background:var(--bg-cream);border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+.entry-av-item .av-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.entry-av-item .av-desc{font-size:13px;color:var(--text-light);margin-bottom:8px;line-height:1.5}
+.entry-av-item audio,.entry-av-item video{width:100%;border-radius:8px}
+.tier-link-card{display:inline-flex;align-items:center;gap:8px;background:var(--bg-cream);padding:8px 16px;border-radius:50px;font-size:13px;font-weight:600;color:var(--primary);text-decoration:none;border:1px solid var(--border);transition:all .2s;margin-top:8px}
+.tier-link-card:hover{background:var(--primary);color:white;border-color:var(--primary)}
+.section-heading{font-family:'Josefin Sans',sans-serif;font-size:20px;margin:32px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px}
+</style>
+
+{% if entry.featured_image %}
+<section class="entry-hero has-img" style="background-image:url('/static/uploads/{{ entry.featured_image }}')">
+{% else %}
+<section class="entry-hero">
+{% endif %}
 <div class="container">
 <div class="breadcrumb">
 <a href="{{ url_for('home') }}">Home</a> <span>›</span>
 <a href="{{ url_for('module_page', slug=module.slug) }}">{{ module.name }}</a> <span>›</span>
 <span>{{ entry.title }}</span>
 </div>
-<div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:var(--rose-deep);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">{{ module.icon }} {{ module.name }}</div>
+<div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;{% if entry.featured_image %}color:rgba(255,255,255,.8){% else %}color:var(--rose-deep){% endif %};font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">{{ module.icon }} {{ module.name }}</div>
 <h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,4vw,44px);margin-bottom:12px">{{ entry.title }}</h1>
-{% if entry.place_title %}
-<a href="{{ url_for('place_detail', slug=entry.place_slug) }}" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text-mid);display:inline-flex;align-items:center;gap:6px">
+{% if tier_link_info %}
+<a href="{% if tier_link_info.tier == 'dham' %}{{ url_for('place_detail', slug=tier_link_info.slug) }}{% elif tier_link_info.tier == 'key_place' %}{{ url_for('key_place_detail', dham_slug=tier_link_info.dham_slug, slug=tier_link_info.slug) }}{% elif tier_link_info.tier == 'key_spot' %}{{ url_for('key_spot_detail', dham_slug=tier_link_info.dham_slug, kp_slug=tier_link_info.kp_slug, slug=tier_link_info.slug) }}{% elif tier_link_info.tier == 'sub_spot' %}{{ url_for('sub_spot_detail', dham_slug=tier_link_info.dham_slug, kp_slug=tier_link_info.kp_slug, ks_slug=tier_link_info.ks_slug, slug=tier_link_info.slug) }}{% endif %}" class="tier-link-card" style="{% if entry.featured_image %}background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.3){% endif %}">
+<i class="fas fa-map-marker-alt"></i> {{ tier_link_info.title }}
+</a>
+{% elif entry.place_title %}
+<a href="{{ url_for('place_detail', slug=entry.place_slug) }}" style="font-size:14px;{% if entry.featured_image %}color:rgba(255,255,255,.8){% else %}color:var(--text-mid){% endif %};display:inline-flex;align-items:center;gap:6px">
 <i class="fas fa-map-marker-alt" style="color:var(--rose-deep)"></i> {{ entry.place_title }}
 </a>
 {% endif %}
 </div>
 </section>
-<div class="container" style="max-width:800px;padding:40px">
+
+<div class="entry-body">
+<!-- Main Content -->
+{% if entry.content %}
 <div class="rich-content">{{ entry.content|safe }}</div>
-{% if media %}
-<div style="margin-top:40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
-{% for m in media %}
-{% if m.file_type == 'image' %}
-<img src="/static/uploads/{{ m.filename }}" alt="{{ m.alt_text }}" style="border-radius:12px;width:100%">
-{% elif m.file_type == 'audio' %}
-<div class="audio-player" style="padding:16px"><h3 style="font-size:14px">{{ m.original_name }}</h3><audio controls style="width:100%;margin-top:8px"><source src="/static/uploads/{{ m.filename }}"></audio></div>
+{% endif %}
+
+<!-- Custom Fields -->
+{% if custom_fields and schema %}
+<div class="entry-fields">
+{% for field in schema %}
+{% set val = custom_fields.get(field.name, '') %}
+{% if val %}
+<div class="entry-field">
+<div class="entry-field-label">{{ field.icon|default('📋') }} {{ field.label }}</div>
+<div class="entry-field-value">
+{% if field.type == 'richtext' %}
+{{ val|safe }}
+{% elif field.type == 'url' %}
+<a href="{{ val }}" target="_blank" rel="noopener">{{ val }}</a>
+{% elif field.type == 'image' %}
+<img src="/static/uploads/{{ val }}" style="max-width:300px;border-radius:8px" onerror="this.style.display='none'">
+{% else %}
+{{ val }}
+{% endif %}
+</div>
+</div>
 {% endif %}
 {% endfor %}
 </div>
 {% endif %}
+
+<!-- Gallery -->
+{% if gallery %}
+<div class="entry-gallery">
+<h2 class="section-heading">📸 Gallery</h2>
+<div class="entry-gallery-grid">
+{% for img in gallery %}
+<img src="/static/uploads/{{ img }}" alt="{{ entry.title }} gallery" onclick="openLightbox(this.src)" onerror="this.style.display='none'">
+{% endfor %}
+</div>
+</div>
+{% endif %}
+
+<!-- Audio & Video -->
+{% if audio_video %}
+<div class="entry-av">
+<h2 class="section-heading">🎵 Audio & Video</h2>
+{% for av in audio_video %}
+<div class="entry-av-item">
+<div class="av-title">{{ '🎵' if av.media_type == 'audio' else '🎬' }} {{ 'Audio' if av.media_type == 'audio' else 'Video' }}</div>
+{% if av.description %}
+<div class="av-desc">{{ av.description }}</div>
+{% endif %}
+{% if av.source_type == 'upload' and av.file_path %}
+{% if av.media_type == 'audio' %}
+<audio controls><source src="/static/uploads/{{ av.file_path }}">Your browser does not support audio.</audio>
+{% else %}
+<video controls style="max-width:100%"><source src="/static/uploads/{{ av.file_path }}">Your browser does not support video.</video>
+{% endif %}
+{% elif av.external_url %}
+{% if 'youtube.com' in av.external_url or 'youtu.be' in av.external_url %}
+{% set yt_id = av.external_url.split('v=')[-1].split('&')[0] if 'v=' in av.external_url else av.external_url.split('/')[-1].split('?')[0] %}
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px">
+<iframe src="https://www.youtube.com/embed/{{ yt_id }}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allowfullscreen></iframe>
+</div>
+{% else %}
+<a href="{{ av.external_url }}" target="_blank" rel="noopener" style="color:var(--primary);display:inline-flex;align-items:center;gap:6px"><i class="fas fa-external-link-alt"></i> {{ av.external_url|truncate(60) }}</a>
+{% endif %}
+{% endif %}
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+<!-- Share -->
 <div class="share-btns">
 <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text-light);margin-right:8px;align-self:center">Share:</span>
 <button class="share-btn" onclick="window.open('https://wa.me/?text='+encodeURIComponent(document.title+' '+window.location.href))"><i class="fab fa-whatsapp"></i></button>
-<button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href)"><i class="fas fa-link"></i></button>
+<button class="share-btn" onclick="navigator.clipboard.writeText(window.location.href);this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fas fa-link\'></i>',1500)"><i class="fas fa-link"></i></button>
 </div>
 </div>
 {% endblock %}

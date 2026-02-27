@@ -1,63 +1,84 @@
 {% extends "admin/base.html" %}
 {% block title %}Module Entries{% endblock %}
 {% block page_title %}Module Entries{% endblock %}
-{% block topbar_actions %}<a href="{{ url_for('admin_entry_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Entry</a>{% endblock %}
 
 {% block admin_content %}
-<!-- Help Accordion: Module Entries -->
-<div class="help-accordion">
-<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
-<span style="font-size:18px">📝</span>
-<h4>ℹ️ How Module Entries Work</h4>
-<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
-</div>
-<div class="help-accordion-body"><div class="help-accordion-inner">
-<h5>What are Module Entries?</h5>
-<p><strong>Entries</strong> are individual pieces of content within a module. For example, a "Sacred Stories" module might have entries like "Krishna lifting Govardhan Hill" or "Ratha Yatra Festival".</p>
-<h5>Linking Entries to Dhams</h5>
-<p>Each entry can be <strong>linked to a T1 Holy Dham</strong>. When linked, the entry appears in the "Related Content" section on that Dham's frontend page — connecting stories, guides, and resources directly to the places they're about.</p>
-<h5>Entry Statuses</h5>
-<ul>
-<li><strong>Draft:</strong> Saved but not visible to visitors — use this to prepare content</li>
-<li><strong>Published:</strong> Live and visible on the frontend</li>
-</ul>
-<div class="ha-tip">💡 <strong>Tip:</strong> Use the module filter buttons above the table to quickly see entries for a specific module. Custom Fields you create will also appear in entry forms based on their "Applies To" setting.</div>
-</div></div>
-</div>
+<style>
+.entry-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px;padding:12px 16px;background:var(--bg-cream);border-radius:12px;border:1px solid var(--border)}
+.entry-filters select,.entry-filters input{padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:white}
+.entry-filters .filter-label{font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px}
+.entry-row{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .15s}
+.entry-row:hover{background:var(--bg-cream)}
+.entry-icon{font-size:20px}
+.entry-info h4{font-size:14px;margin:0 0 2px;font-weight:600}
+.entry-info p{font-size:12px;color:var(--text-light);margin:0}
+.entry-meta{font-size:11px;color:var(--text-light);white-space:nowrap}
+.entry-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px;display:inline-block}
+.entry-status.published{background:#d4edda;color:#155724}
+.entry-status.draft{background:#fff3cd;color:#856404}
+.entry-actions{display:flex;gap:6px}
+.mod-tab{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:50px;font-size:12px;font-weight:600;text-decoration:none;color:var(--text);background:white;border:1px solid var(--border);transition:all .2s}
+.mod-tab:hover,.mod-tab.active{background:var(--primary);color:white;border-color:var(--primary)}
+.mod-tab .cnt{font-size:10px;background:rgba(0,0,0,.1);padding:1px 6px;border-radius:50px;margin-left:2px}
+@media(max-width:768px){.entry-row{grid-template-columns:auto 1fr;gap:8px}.entry-meta,.entry-actions{grid-column:2}}
+</style>
 
-<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-<a class="btn btn-sm {{ 'btn-primary' if not current_mod else 'btn-secondary' }}" href="{{ url_for('admin_entries') }}">All</a>
+<!-- Module Tabs -->
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+<a class="mod-tab {{ 'active' if not current_mod }}" href="{{ url_for('admin_entries') }}">All</a>
 {% for mod in modules %}
-<a class="btn btn-sm {{ 'btn-primary' if current_mod == mod.id else 'btn-secondary' }}" href="{{ url_for('admin_entries', mod_id=mod.id) }}">{{ mod.icon }} {{ mod.name }}</a>
+<a class="mod-tab {{ 'active' if current_mod == mod.id }}" href="{{ url_for('admin_entries', mod_id=mod.id) }}">{{ mod.icon }} {{ mod.name }}</a>
 {% endfor %}
 </div>
+
+<!-- Filters -->
+<form class="entry-filters" method="GET" action="{{ url_for('admin_entries', mod_id=current_mod) if current_mod else url_for('admin_entries') }}">
+<div><div class="filter-label">Search</div><input name="q" value="{{ search_q }}" placeholder="Search titles..." style="min-width:180px"></div>
+<div><div class="filter-label">Status</div>
+<select name="status" onchange="this.form.submit()">
+<option value="">All</option>
+<option value="draft" {{ 'selected' if status_filter=='draft' }}>Draft</option>
+<option value="published" {{ 'selected' if status_filter=='published' }}>Published</option>
+</select></div>
+<div><div class="filter-label">Dham</div>
+<select name="dham" onchange="this.form.submit()">
+<option value="">All Dhams</option>
+{% for d in dhams %}<option value="{{ d.id }}" {{ 'selected' if dham_filter == d.id }}>{{ d.title }}</option>{% endfor %}
+</select></div>
+<button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-search"></i></button>
+{% if search_q or status_filter or dham_filter %}<a href="{{ url_for('admin_entries', mod_id=current_mod) if current_mod else url_for('admin_entries') }}" class="btn btn-sm" style="font-size:11px">Clear</a>{% endif %}
+</form>
 
 <div class="admin-card">
-{% if entries %}
-<div style="overflow-x:auto">
-<table class="admin-table">
-<thead><tr><th>Title</th><th>Module</th><th>Linked Place</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
-<tbody>
-{% for entry in entries %}
-<tr>
-<td><a href="{{ url_for('admin_entry_edit', entry_id=entry.id) }}" style="font-weight:600;color:var(--text)">{{ entry.title }}</a></td>
-<td><span style="font-size:14px">{{ entry.module_icon }} {{ entry.module_name }}</span></td>
-<td style="font-size:13px;color:var(--text-light)">{{ entry.place_title or '—' }}</td>
-<td><span class="badge badge-{{ entry.status }}">{{ entry.status }}</span></td>
-<td style="font-size:12px;color:var(--text-light)">{{ entry.updated_at[:10] if entry.updated_at else '' }}</td>
-<td class="actions">
-<a href="{{ url_for('admin_entry_edit', entry_id=entry.id) }}" class="btn btn-secondary btn-icon btn-sm"><i class="fas fa-edit"></i></a>
-<form method="POST" action="{{ url_for('admin_entry_delete', entry_id=entry.id) }}" style="display:inline" onsubmit="return confirm('Delete?')">
-<button class="btn btn-danger btn-icon btn-sm"><i class="fas fa-trash"></i></button>
-</form>
-</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+<div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+<div style="font-size:13px;color:var(--text-light)">{{ entries|length }} entries</div>
+<a href="{{ url_for('admin_entry_new') }}{{ '?module_id=' ~ current_mod if current_mod else '' }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Entry</a>
 </div>
+
+{% if entries %}
+{% for entry in entries %}
+<div class="entry-row">
+<div class="entry-icon">{{ entry.module_icon }}</div>
+<div class="entry-info">
+<h4><a href="{{ url_for('admin_entry_edit', entry_id=entry.id) }}" style="color:inherit;text-decoration:none">{{ entry.title }}</a></h4>
+<p>{{ entry.module_name }}{% if entry.place_title %} · <i class="fas fa-link" style="font-size:9px"></i> {{ entry.place_title }}{% endif %}</p>
+</div>
+<div class="entry-meta">{{ entry.updated_at[:10] if entry.updated_at else '' }}</div>
+<span class="entry-status {{ entry.status }}">{{ entry.status }}</span>
+<div class="entry-actions">
+<a href="{{ url_for('admin_entry_edit', entry_id=entry.id) }}" class="btn btn-sm btn-secondary btn-icon" title="Edit"><i class="fas fa-edit"></i></a>
+{% if entry.status == 'published' %}<a href="{{ url_for('entry_detail', mod_slug=entry.module_slug, entry_slug=entry.slug) }}" class="btn btn-sm btn-icon" title="View" target="_blank" style="background:#d4edda;color:#155724"><i class="fas fa-eye"></i></a>{% endif %}
+<form method="POST" action="{{ url_for('admin_entry_delete', entry_id=entry.id) }}" style="margin:0" onsubmit="return confirm('Delete this entry?')"><button type="submit" class="btn btn-sm btn-danger btn-icon" title="Delete"><i class="fas fa-trash"></i></button></form>
+</div>
+</div>
+{% endfor %}
 {% else %}
-<div class="empty"><span class="icon">📝</span><h3>No entries yet</h3><p>Create entries to populate your modules.</p></div>
+<div style="padding:40px;text-align:center;color:var(--text-light)">
+<div style="font-size:40px;margin-bottom:12px">📝</div>
+<h3 style="margin-bottom:8px">No entries found</h3>
+<p>Create your first entry to get started.</p>
+<a href="{{ url_for('admin_entry_new') }}" class="btn btn-primary" style="margin-top:12px"><i class="fas fa-plus"></i> New Entry</a>
+</div>
 {% endif %}
 </div>
 {% endblock %}

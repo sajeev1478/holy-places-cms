@@ -1,65 +1,57 @@
 {% extends "admin/base.html" %}
 {% block title %}Modules{% endblock %}
-{% block page_title %}Module Builder{% endblock %}
-{% block topbar_actions %}<a href="{{ url_for('admin_module_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Module</a>{% endblock %}
+{% block page_title %}Content Modules{% endblock %}
 
 {% block admin_content %}
-<!-- Help Accordion: Modules -->
-<div class="help-accordion">
-<div class="help-accordion-toggle" onclick="toggleHelpAccordion(this)">
-<span style="font-size:18px">📦</span>
-<h4>ℹ️ What are Modules & How to Use Them</h4>
-<svg class="ha-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
-</div>
-<div class="help-accordion-body"><div class="help-accordion-inner">
-<h5>What is a Module?</h5>
-<p>A <strong>module</strong> is a content category or section of the website — like different "departments" dedicated to a particular kind of information. Each module gets its own page on the frontend.</p>
-<h5>How Modules Work</h5>
-<p>Every module has a <strong>Name</strong> (display name), <strong>Slug</strong> (URL-friendly name, auto-generated), <strong>Icon</strong> (emoji), and <strong>Entries</strong> (individual pieces of content).</p>
-<h5>Example Modules</h5>
-<table>
-<tr><th>Module</th><th>Purpose</th><th>Example Entries</th></tr>
-<tr><td>🛕 Holy Dhams</td><td>Information about sacred destinations</td><td>Vrindavan overview, Puri history</td></tr>
-<tr><td>📖 Sacred Stories</td><td>Devotional stories and pastimes</td><td>Krishna Leela, Ramayana episodes</td></tr>
-<tr><td>🎉 Festivals</td><td>Festival guides and calendars</td><td>Holi in Barsana, Ratha Yatra</td></tr>
-<tr><td>🎵 Bhajans & Kirtans</td><td>Devotional music collection</td><td>Hare Krishna Maha Mantra</td></tr>
-</table>
-<div class="ha-tip">💡 <strong>Tip:</strong> Each module appears as a navigation link on the frontend. Set the <code>sort_order</code> to control which modules appear first.</div>
-</div></div>
+<style>
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px}
+.mod-card{background:white;border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .2s;position:relative}
+.mod-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-1px)}
+.mod-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mod-icon{font-size:32px}
+.mod-name{font-size:16px;font-weight:700;margin:0}
+.mod-desc{font-size:13px;color:var(--text-light);margin-bottom:12px;line-height:1.5}
+.mod-stats{display:flex;gap:16px;font-size:12px;color:var(--text-light);margin-bottom:12px;padding:8px 0;border-top:1px solid var(--border)}
+.mod-stats span{display:flex;align-items:center;gap:4px}
+.mod-stats i{color:var(--primary)}
+.mod-fields{font-size:11px;color:var(--text-light);margin-bottom:12px}
+.mod-fields .field-tag{display:inline-block;background:var(--bg-cream);padding:2px 8px;border-radius:50px;margin:2px;font-size:10px}
+.mod-actions{display:flex;gap:6px;flex-wrap:wrap}
+.mod-badge-active{position:absolute;top:12px;right:12px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:50px}
+.mod-badge-active.active{background:#d4edda;color:#155724}
+.mod-badge-active.inactive{background:#f8d7da;color:#721c24}
+</style>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+<p style="color:var(--text-light);font-size:13px;margin:0">Manage content modules and their field schemas. Each module defines a type of content with structured fields.</p>
+<a href="{{ url_for('admin_module_new') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Module</a>
 </div>
 
-<p style="color:var(--text-light);margin-bottom:24px;font-size:14px">Create and manage content modules. Each module represents a content type like Temples, Stories, Festivals, etc.</p>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+<div class="mod-grid">
 {% for mod in modules %}
-<div class="admin-card" style="transition:all .3s;{% if not mod.is_active %}opacity:.5{% endif %}">
-<div class="admin-card-body">
-<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-<span style="font-size:36px">{{ mod.icon }}</span>
-<div style="flex:1">
-<h3 style="font-size:18px;margin-bottom:2px">{{ mod.name }}</h3>
-<div style="font-size:12px;color:var(--text-light)">{{ mod.entry_count }} entries · Order: {{ mod.sort_order }}</div>
+{% set schema = [] %}
+{% if mod.fields_schema %}{% set schema = mod.fields_schema|string %}{% endif %}
+<div class="mod-card">
+<span class="mod-badge-active {{ 'active' if mod.is_active else 'inactive' }}">{{ 'Active' if mod.is_active else 'Inactive' }}</span>
+<div class="mod-header">
+<div class="mod-icon">{{ mod.icon }}</div>
+<div>
+<h3 class="mod-name">{{ mod.name }}</h3>
+{% if mod.creator_name %}<div style="font-size:11px;color:var(--text-light)">by {{ mod.creator_name }}</div>{% endif %}
 </div>
-{% if not mod.is_active %}<span class="badge badge-draft">Inactive</span>{% endif %}
 </div>
-<p style="font-size:13px;color:var(--text-mid);margin-bottom:16px;min-height:36px">{{ mod.description or 'No description' }}</p>
-<div style="display:flex;gap:8px">
-<a href="{{ url_for('admin_entries', mod_id=mod.id) }}" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center"><i class="fas fa-list"></i> Entries</a>
-<a href="{{ url_for('admin_module_edit', mod_id=mod.id) }}" class="btn btn-secondary btn-sm"><i class="fas fa-edit"></i></a>
-<form method="POST" action="{{ url_for('admin_module_delete', mod_id=mod.id) }}" onsubmit="return confirm('Delete this module and all its entries?')">
-<button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
-</form>
+<div class="mod-desc">{{ mod.description or 'No description' }}</div>
+<div class="mod-stats">
+<span><i class="fas fa-file-alt"></i> {{ mod.entry_count }} entries</span>
+<span><i class="fas fa-layer-group"></i> {{ (mod.fields_schema|default('[]',true)|safe|length > 4) | int }} schema fields</span>
+<span><i class="fas fa-sort"></i> Order: {{ mod.sort_order }}</span>
 </div>
+<div class="mod-actions">
+<a href="{{ url_for('admin_entries', mod_id=mod.id) }}" class="btn btn-sm btn-secondary"><i class="fas fa-list"></i> Entries</a>
+<a href="{{ url_for('admin_entry_new') }}?module_id={{ mod.id }}" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add Entry</a>
+<a href="{{ url_for('admin_module_edit', mod_id=mod.id) }}" class="btn btn-sm btn-secondary btn-icon"><i class="fas fa-cog"></i></a>
 </div>
 </div>
 {% endfor %}
-
-<!-- Add New Module Card -->
-<a href="{{ url_for('admin_module_new') }}" class="admin-card" style="display:flex;align-items:center;justify-content:center;min-height:200px;border:2px dashed var(--border);text-decoration:none;color:var(--text-light);transition:all .3s">
-<div style="text-align:center">
-<i class="fas fa-plus-circle" style="font-size:32px;margin-bottom:8px;display:block"></i>
-<div style="font-weight:600">Create New Module</div>
-</div>
-</a>
 </div>
 {% endblock %}

@@ -109,6 +109,99 @@ SUB_SPOT_CATEGORIES = [
     ('meditation_spot','Meditation Spot','Place for remembrance','🧘','#673AB7'),
 ]
 
+# ─── Module Field Schemas ───
+MODULE_SCHEMAS = {
+    'holy-dhams': [
+        {'name':'alternate_names','type':'text','label':'Alternate Names','placeholder':'Other known names','icon':'📝'},
+        {'name':'short_description','type':'textarea','label':'Short Description','placeholder':'Brief intro','icon':'📋'},
+        {'name':'detailed_description','type':'richtext','label':'Detailed Description','placeholder':'','icon':'📖'},
+        {'name':'spiritual_significance','type':'richtext','label':'Spiritual Significance','placeholder':'','icon':'🙏'},
+        {'name':'associated_pastimes','type':'richtext','label':'Associated Pastimes','placeholder':'','icon':'✨'},
+        {'name':'country','type':'text','label':'Country','placeholder':'India','icon':'🌍'},
+        {'name':'state','type':'text','label':'State','placeholder':'','icon':'🗺️'},
+        {'name':'city','type':'text','label':'City','placeholder':'','icon':'🏙️'},
+        {'name':'map_embed','type':'textarea','label':'Map Embed Code','placeholder':'Google Maps iframe','icon':'🗺️'},
+        {'name':'coordinates','type':'text','label':'Coordinates','placeholder':'lat, lng','icon':'📍'},
+        {'name':'best_time_to_visit','type':'text','label':'Best Time to Visit','placeholder':'Oct-Mar','icon':'🌤️'},
+        {'name':'major_festivals','type':'textarea','label':'Major Festivals','placeholder':'List key festivals','icon':'🎪'},
+        {'name':'parikrama_details','type':'richtext','label':'Parikrama Details','placeholder':'','icon':'🔄'},
+        {'name':'related_temples','type':'textarea','label':'Related Temples','placeholder':'Comma-separated','icon':'🛕'},
+        {'name':'related_stories','type':'textarea','label':'Related Stories','placeholder':'Comma-separated','icon':'📖'},
+        {'name':'related_festivals','type':'textarea','label':'Related Festivals','placeholder':'Comma-separated','icon':'🎪'},
+    ],
+    'temples': [
+        {'name':'presiding_deities','type':'text','label':'Presiding Deities','placeholder':'Main deities worshipped','icon':'🙏'},
+        {'name':'history','type':'richtext','label':'History','placeholder':'Temple history','icon':'📜'},
+        {'name':'darshan_timings','type':'text','label':'Darshan Timings','placeholder':'e.g. 6 AM - 12 PM, 4 PM - 9 PM','icon':'🕐'},
+        {'name':'aarti_timings','type':'textarea','label':'Aarti Timings','placeholder':'Morning, afternoon, evening aarti schedule','icon':'🪔'},
+        {'name':'entry_rules','type':'textarea','label':'Entry Rules','placeholder':'Dress code, prohibited items, etc.','icon':'📋'},
+        {'name':'address','type':'textarea','label':'Address','placeholder':'Full address','icon':'📍'},
+        {'name':'contact_details','type':'textarea','label':'Contact Details','placeholder':'Phone, email','icon':'☎️'},
+        {'name':'description','type':'richtext','label':'Description','placeholder':'Detailed info','icon':'📖'},
+        {'name':'pastimes','type':'richtext','label':'Pastimes','placeholder':'Associated divine pastimes','icon':'✨'},
+    ],
+    'sacred-stories': [
+        {'name':'story_type','type':'select','label':'Story Type','options':['Mythology','Historical','Miracle','Pastime','Teaching','Other'],'icon':'📚'},
+        {'name':'summary','type':'textarea','label':'Summary','placeholder':'Brief summary','icon':'📋'},
+        {'name':'full_content','type':'richtext','label':'Full Content','placeholder':'','icon':'📖'},
+        {'name':'spiritual_lesson','type':'richtext','label':'Spiritual Lesson / Insight','placeholder':'','icon':'🙏'},
+        {'name':'scriptural_references','type':'textarea','label':'Scriptural References','placeholder':'Bhagavad Gita 4.7, Ramayana etc.','icon':'📜'},
+    ],
+    'festivals': [
+        {'name':'festival_date','type':'text','label':'Date','placeholder':'e.g. March/April (varies)','icon':'📅'},
+        {'name':'tithi','type':'text','label':'Tithi','placeholder':'e.g. Chaitra Shukla Navami','icon':'🌙'},
+        {'name':'duration','type':'text','label':'Duration','placeholder':'e.g. 9 days','icon':'⏰'},
+        {'name':'significance','type':'richtext','label':'Significance','placeholder':'','icon':'🙏'},
+        {'name':'celebration_method','type':'richtext','label':'Celebration Method','placeholder':'How it is celebrated','icon':'🎪'},
+        {'name':'key_temples','type':'textarea','label':'Key Temples','placeholder':'Where this festival is grand','icon':'🛕'},
+        {'name':'visitor_tips','type':'textarea','label':'Visitor Tips','placeholder':'What to know before visiting','icon':'💡'},
+    ],
+    'pilgrimage-guides': [
+        {'name':'photo','type':'image','label':'Photo','icon':'📷'},
+        {'name':'mobile_number','type':'text','label':'Mobile Number','placeholder':'+91-XXXXX','icon':'📞'},
+        {'name':'whatsapp_number','type':'text','label':'WhatsApp Number','placeholder':'+91-XXXXX','icon':'📱'},
+        {'name':'email','type':'text','label':'Email','placeholder':'guide@email.com','icon':'✉️'},
+        {'name':'website','type':'url','label':'Website','placeholder':'https://...','icon':'🌐'},
+        {'name':'years_of_experience','type':'number','label':'Years of Experience','placeholder':'','icon':'📅'},
+        {'name':'languages_spoken','type':'text','label':'Languages Spoken','placeholder':'Hindi, English, Sanskrit','icon':'🗣️'},
+        {'name':'specialization','type':'text','label':'Specialization','placeholder':'Vrindavan, Ayodhya etc.','icon':'⭐'},
+        {'name':'type_of_guide','type':'select','label':'Type of Guide','options':['Government Certified','Temple Guide','Freelance','Travel Agency','Volunteer'],'icon':'🏷️'},
+        {'name':'packages_offered','type':'textarea','label':'Packages Offered','placeholder':'Describe tour packages','icon':'📦'},
+        {'name':'charges','type':'text','label':'Charges','placeholder':'e.g. ₹500/day','icon':'💰'},
+        {'name':'availability','type':'text','label':'Availability','placeholder':'Year-round / Seasonal','icon':'📅'},
+        {'name':'verification_status','type':'select','label':'Verification Status','options':['Pending','Verified','Rejected'],'icon':'✅'},
+        {'name':'ratings_reviews','type':'textarea','label':'Ratings & Reviews','placeholder':'Summary of reviews','icon':'⭐'},
+    ],
+    'events': [
+        {'name':'event_type','type':'select','label':'Event Type','options':['Satsang','Yatra','Workshop','Retreat','Lecture','Kirtanmela','Festival','Other'],'icon':'🏷️'},
+        {'name':'start_date_time','type':'datetime','label':'Start Date & Time','placeholder':'','icon':'📅'},
+        {'name':'end_date_time','type':'datetime','label':'End Date & Time','placeholder':'','icon':'📅'},
+        {'name':'location','type':'text','label':'Location','placeholder':'Venue & address','icon':'📍'},
+        {'name':'organizer_details','type':'textarea','label':'Organizer Details','placeholder':'Name, contact','icon':'👤'},
+        {'name':'description','type':'richtext','label':'Description','placeholder':'Event details','icon':'📖'},
+        {'name':'speaker','type':'text','label':'Speaker / Guest','placeholder':'','icon':'🎤'},
+        {'name':'registration_link','type':'url','label':'Registration Link','placeholder':'https://...','icon':'🔗'},
+        {'name':'fees','type':'text','label':'Fees','placeholder':'Free / ₹XXX','icon':'💰'},
+    ],
+    'bhajans-kirtans': [
+        {'name':'singer_artist','type':'text','label':'Singer / Artist','placeholder':'','icon':'🎤'},
+        {'name':'category','type':'select','label':'Category','options':['Bhajan','Kirtan','Abhang','Pad','Dhun','Stuti','Aarti','Other'],'icon':'🏷️'},
+        {'name':'audio_description','type':'textarea','label':'Audio Description','placeholder':'Describe the audio content (mandatory if audio exists)','icon':'📋','required':True},
+        {'name':'video_link','type':'url','label':'Video Link','placeholder':'YouTube/Vimeo URL','icon':'🎬'},
+        {'name':'lyrics','type':'richtext','label':'Lyrics','placeholder':'','icon':'📝'},
+        {'name':'meaning_explanation','type':'richtext','label':'Meaning / Explanation','placeholder':'','icon':'📖'},
+        {'name':'tags_deity_mood','type':'text','label':'Tags (Deity, Mood)','placeholder':'Krishna, Devotional, Separation','icon':'🏷️'},
+    ],
+    'spiritual-articles': [
+        {'name':'author','type':'text','label':'Author','placeholder':'','icon':'✍️'},
+        {'name':'summary','type':'textarea','label':'Summary','placeholder':'Brief summary','icon':'📋'},
+        {'name':'full_content','type':'richtext','label':'Full Content','placeholder':'','icon':'📖'},
+        {'name':'category','type':'select','label':'Category','options':['Philosophy','Devotion','History','Practice','Commentary','Interview','Other'],'icon':'🏷️'},
+        {'name':'tags','type':'text','label':'Tags','placeholder':'Comma-separated','icon':'🏷️'},
+        {'name':'related_dham_festival','type':'text','label':'Related Dham / Festival','placeholder':'','icon':'🔗'},
+    ],
+}
+
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(app.config['DATABASE'])
@@ -144,7 +237,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS sub_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, key_spot_id INTEGER NOT NULL, category_id INTEGER, title TEXT NOT NULL, slug TEXT, short_description TEXT, full_content TEXT, featured_image TEXT, gallery_images TEXT DEFAULT '', state TEXT, city TEXT, country TEXT DEFAULT '', latitude REAL, longitude REAL, sort_order INTEGER DEFAULT 0, is_visible INTEGER DEFAULT 1, field_visibility TEXT DEFAULT '{}', hierarchy_id TEXT UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (key_spot_id) REFERENCES key_spots(id) ON DELETE CASCADE, FOREIGN KEY (category_id) REFERENCES sub_spot_categories(id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS sub_spot_custom_values (id INTEGER PRIMARY KEY AUTOINCREMENT, sub_spot_id INTEGER NOT NULL, field_def_id INTEGER NOT NULL, value TEXT DEFAULT '', is_visible INTEGER DEFAULT 1, FOREIGN KEY (sub_spot_id) REFERENCES sub_spots(id) ON DELETE CASCADE, FOREIGN KEY (field_def_id) REFERENCES custom_field_defs(id) ON DELETE CASCADE, UNIQUE(sub_spot_id, field_def_id));
 
-    CREATE TABLE IF NOT EXISTS module_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, module_id INTEGER NOT NULL, place_id INTEGER, title TEXT NOT NULL, slug TEXT NOT NULL, content TEXT, custom_fields TEXT DEFAULT '{}', featured_image TEXT, status TEXT DEFAULT 'draft', sort_order INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS module_entries (id INTEGER PRIMARY KEY AUTOINCREMENT, module_id INTEGER NOT NULL, place_id INTEGER, title TEXT NOT NULL, slug TEXT NOT NULL, content TEXT, custom_fields TEXT DEFAULT '{}', featured_image TEXT, gallery_images TEXT DEFAULT '', status TEXT DEFAULT 'draft', sort_order INTEGER DEFAULT 0, tier_link_type TEXT DEFAULT '', tier_link_id INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE SET NULL);
+    CREATE TABLE IF NOT EXISTS entry_audio_video (id INTEGER PRIMARY KEY AUTOINCREMENT, entry_id INTEGER NOT NULL, media_type TEXT NOT NULL DEFAULT 'audio', source_type TEXT NOT NULL DEFAULT 'upload', file_path TEXT DEFAULT '', external_url TEXT DEFAULT '', description TEXT DEFAULT '', sort_order INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (entry_id) REFERENCES module_entries(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS media (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, original_name TEXT NOT NULL, file_type TEXT NOT NULL, mime_type TEXT, file_size INTEGER, folder TEXT DEFAULT 'general', alt_text TEXT, caption TEXT, uploaded_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS place_media (id INTEGER PRIMARY KEY AUTOINCREMENT, place_id INTEGER NOT NULL, media_id INTEGER NOT NULL, media_role TEXT DEFAULT 'gallery', sort_order INTEGER DEFAULT 0, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS entry_media (id INTEGER PRIMARY KEY AUTOINCREMENT, entry_id INTEGER NOT NULL, media_id INTEGER NOT NULL, media_role TEXT DEFAULT 'gallery', sort_order INTEGER DEFAULT 0, FOREIGN KEY (entry_id) REFERENCES module_entries(id) ON DELETE CASCADE, FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE);
@@ -188,6 +282,19 @@ def init_db():
     me_cols=[c['name'] for c in db.execute("PRAGMA table_info(module_entries)").fetchall()]
     if 'gallery_images' not in me_cols:
         db.execute("ALTER TABLE module_entries ADD COLUMN gallery_images TEXT DEFAULT ''")
+    # Migration: add tier_link columns to module_entries
+    if 'tier_link_type' not in me_cols:
+        db.execute("ALTER TABLE module_entries ADD COLUMN tier_link_type TEXT DEFAULT ''")
+    if 'tier_link_id' not in me_cols:
+        db.execute("ALTER TABLE module_entries ADD COLUMN tier_link_id INTEGER DEFAULT 0")
+    # Migration: ensure entry_audio_video table exists
+    db.execute("""CREATE TABLE IF NOT EXISTS entry_audio_video (id INTEGER PRIMARY KEY AUTOINCREMENT, entry_id INTEGER NOT NULL, media_type TEXT NOT NULL DEFAULT 'audio', source_type TEXT NOT NULL DEFAULT 'upload', file_path TEXT DEFAULT '', external_url TEXT DEFAULT '', description TEXT DEFAULT '', sort_order INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (entry_id) REFERENCES module_entries(id) ON DELETE CASCADE)""")
+    # Migration: update module fields_schema for predefined modules
+    for slug, schema in MODULE_SCHEMAS.items():
+        existing = db.execute("SELECT id, fields_schema FROM modules WHERE slug=?", (slug,)).fetchone()
+        if existing and (not existing['fields_schema'] or existing['fields_schema'] in ('[]', '')):
+            db.execute("UPDATE modules SET fields_schema=? WHERE id=?", (json.dumps(schema), existing['id']))
+    db.commit()
     # Migration: add view_count column to tables that need global views
     for table in ('itineraries','key_places','key_spots','sub_spots'):
         cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
@@ -364,9 +471,10 @@ def seed_db():
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_port','587'))
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_user',''))
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_pass',''))
-    # Modules
+    # Modules with field schemas
     for name,slug,desc,icon,order in [('Holy Dhams','holy-dhams','Sacred destinations','\U0001f6d5',1),('Temples','temples','Temple profiles','\U0001f3db\ufe0f',2),('Sacred Stories','sacred-stories','Mythological tales','\U0001f4d6',3),('Festivals','festivals','Religious events','\U0001f3ea',4),('Pilgrimage Guides','pilgrimage-guides','Travel guides','\U0001f6b6',5),('Events','events','Spiritual events','\U0001f4c5',6),('Bhajans & Kirtans','bhajans-kirtans','Devotional music','\U0001f3b5',7),('Spiritual Articles','spiritual-articles','Spiritual writings','\U0001f4dd',8)]:
-        db.execute("INSERT INTO modules (name,slug,description,icon,sort_order,is_active,created_by) VALUES (?,?,?,?,?,1,1)", (name,slug,desc,icon,order))
+        schema_json = json.dumps(MODULE_SCHEMAS.get(slug, []))
+        db.execute("INSERT INTO modules (name,slug,description,icon,sort_order,is_active,fields_schema,created_by) VALUES (?,?,?,?,?,1,?,1)", (name,slug,desc,icon,order,schema_json))
     # Tags
     for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843'),('Braj Dham','braj-dham','#E84855'),('Gaudiya Vaishnava','gaudiya-vaishnava','#6C5CE7'),('Sapta Puri','sapta-puri','#FF6B35'),('Ram Bhakti','ram-bhakti','#E53935'),('Sapt Hari','sapt-hari','#1E88E5')]:
         db.execute("INSERT INTO tags (name,slug,color) VALUES (?,?,?)", (name,slug,color))
@@ -619,7 +727,7 @@ def get_dham_hierarchy(place_id):
 @app.context_processor
 def inject_globals():
     db=get_db(); modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
-    return {'current_user':get_current_user(),'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS}
+    return {'current_user':get_current_user(),'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS,'module_schemas':MODULE_SCHEMAS}
 
 # ═══════════════════════════════════════════
 # FRONTEND ROUTES
@@ -885,9 +993,25 @@ def module_page(slug):
 def entry_detail(mod_slug,entry_slug):
     db=get_db(); module=db.execute("SELECT * FROM modules WHERE slug=?",(mod_slug,)).fetchone()
     if not module: abort(404)
-    entry=db.execute("SELECT me.*,p.title as place_title,p.slug as place_slug FROM module_entries me LEFT JOIN places p ON me.place_id=p.id WHERE me.module_id=? AND me.slug=? AND me.status='published'",(module['id'],entry_slug)).fetchone()
+    entry=db.execute("SELECT me.*,p.title as place_title,p.slug as place_slug FROM module_entries me LEFT JOIN places p ON me.place_id=p.id WHERE me.module_id=? AND me.slug=?",(module['id'],entry_slug)).fetchone()
     if not entry: abort(404)
-    return render_template('frontend/entry.html',module=module,entry=entry,media=[])
+    # Get tier link info
+    tier_link_info=None
+    if entry['tier_link_type'] and entry['tier_link_id']:
+        tlt=entry['tier_link_type']; tlid=entry['tier_link_id']
+        if tlt=='dham': tier_link_info=db.execute("SELECT title,slug,'dham' as tier FROM places WHERE id=?",(tlid,)).fetchone()
+        elif tlt=='key_place': tier_link_info=db.execute("SELECT kp.title,kp.slug,p.slug as dham_slug,'key_place' as tier FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(tlid,)).fetchone()
+        elif tlt=='key_spot': tier_link_info=db.execute("SELECT ks.title,ks.slug,kp.slug as kp_slug,p.slug as dham_slug,'key_spot' as tier FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(tlid,)).fetchone()
+        elif tlt=='sub_spot': tier_link_info=db.execute("SELECT ss.title,ss.slug,ks.slug as ks_slug,kp.slug as kp_slug,p.slug as dham_slug,'sub_spot' as tier FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ss.id=?",(tlid,)).fetchone()
+    # Get audio/video items
+    audio_video=db.execute("SELECT * FROM entry_audio_video WHERE entry_id=? ORDER BY sort_order",(entry['id'],)).fetchall()
+    # Parse custom fields
+    try: custom_fields=json.loads(entry['custom_fields'] or '{}')
+    except: custom_fields={}
+    schema=json.loads(module['fields_schema'] or '[]')
+    # Gallery images
+    gallery=[x.strip() for x in (entry['gallery_images'] or '').split(',') if x.strip()]
+    return render_template('frontend/entry.html',module=module,entry=entry,custom_fields=custom_fields,schema=schema,tier_link_info=tier_link_info,audio_video=audio_video,gallery=gallery)
 
 @app.route('/search')
 def search(): q=request.args.get('q',''); return redirect(url_for('explore',q=q)) if q else redirect(url_for('explore'))
@@ -1636,17 +1760,46 @@ def admin_module_delete(mod_id): get_db().execute("DELETE FROM modules WHERE id=
 @app.route('/admin/entries/<int:mod_id>')
 @login_required
 def admin_entries(mod_id=None):
-    db=get_db(); q="SELECT me.*,m.name as module_name,m.icon as module_icon,p.title as place_title FROM module_entries me JOIN modules m ON me.module_id=m.id LEFT JOIN places p ON me.place_id=p.id"; params=[]
-    if mod_id: q+=" WHERE me.module_id=?"; params.append(mod_id)
-    return render_template('admin/entries.html',entries=db.execute(q+" ORDER BY me.updated_at DESC",params).fetchall(),modules=db.execute("SELECT * FROM modules ORDER BY sort_order").fetchall(),current_mod=mod_id)
+    db=get_db(); params=[]; where_clauses=[]
+    if mod_id: where_clauses.append("me.module_id=?"); params.append(mod_id)
+    status_filter=request.args.get('status','')
+    if status_filter: where_clauses.append("me.status=?"); params.append(status_filter)
+    search_q=request.args.get('q','').strip()
+    if search_q: where_clauses.append("me.title LIKE ?"); params.append(f'%{search_q}%')
+    dham_filter=request.args.get('dham','',type=int)
+    if dham_filter: where_clauses.append("me.tier_link_id=? AND me.tier_link_type='dham'"); params.append(dham_filter)
+    q="SELECT me.*,m.name as module_name,m.icon as module_icon,m.slug as module_slug,p.title as place_title FROM module_entries me JOIN modules m ON me.module_id=m.id LEFT JOIN places p ON me.place_id=p.id"
+    if where_clauses: q+=" WHERE "+" AND ".join(where_clauses)
+    q+=" ORDER BY me.updated_at DESC"
+    entries=db.execute(q,params).fetchall()
+    modules=db.execute("SELECT * FROM modules ORDER BY sort_order").fetchall()
+    dhams=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
+    return render_template('admin/entries.html',entries=entries,modules=modules,current_mod=mod_id,dhams=dhams,status_filter=status_filter,search_q=search_q,dham_filter=dham_filter)
 
 @app.route('/admin/entries/new', methods=['GET','POST'])
 @login_required
 def admin_entry_new():
     db=get_db()
     if request.method=='POST':
-        t=request.form['title']; s=slugify(t)
-        if db.execute("SELECT id FROM module_entries WHERE slug=? AND module_id=?",(s,request.form['module_id'])).fetchone(): s+='-'+uuid.uuid4().hex[:4]
+        f=request.form; t=f['title']; s=slugify(t); mid=f['module_id']
+        if db.execute("SELECT id FROM module_entries WHERE slug=? AND module_id=?",(s,mid)).fetchone(): s+='-'+uuid.uuid4().hex[:4]
+        # Build custom_fields JSON from module schema
+        module=db.execute("SELECT * FROM modules WHERE id=?",(mid,)).fetchone()
+        schema=json.loads(module['fields_schema'] or '[]') if module else []
+        cf={}
+        for field in schema:
+            fname=field['name']; ftype=field.get('type','text')
+            if ftype=='richtext':
+                cf[fname]=f.get(f'cf_{fname}','')
+            elif ftype=='image':
+                # Handle image upload for schema fields
+                if f'cf_{fname}_file' in request.files:
+                    uf=request.files[f'cf_{fname}_file']
+                    if uf and uf.filename: u=save_upload(uf,'images'); cf[fname]=u if u else ''
+                    else: cf[fname]=''
+                else: cf[fname]=''
+            else:
+                cf[fname]=f.get(f'cf_{fname}','')
         # Handle featured image
         fi=''
         if 'featured_image_file' in request.files:
@@ -1662,20 +1815,30 @@ def admin_entry_new():
             nk=f'entry_new_gallery_{idx}'
             if nk not in request.files: break
             gf=request.files[nk]
-            if gf and gf.filename:
-                rp=save_upload(gf,'images')
-                if rp: gi_paths.append(rp)
+            if gf and gf.filename: rp=save_upload(gf,'images'); gi_paths.append(rp) if rp else None
             idx+=1
         if 'gallery_files' in request.files:
             for gf in request.files.getlist('gallery_files'):
-                if gf and gf.filename:
-                    rp=save_upload(gf,'images')
-                    if rp: gi_paths.append(rp)
+                if gf and gf.filename: rp=save_upload(gf,'images'); gi_paths.append(rp) if rp else None
         gi_str=','.join(gi_paths)
-        db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,custom_fields,featured_image,gallery_images,status,sort_order,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            (request.form['module_id'],request.form.get('place_id',type=int) or None,t,s,request.form.get('content',''),request.form.get('custom_fields','{}'),fi,gi_str,request.form.get('status','draft'),request.form.get('sort_order',0,type=int),session['user_id']))
-        db.commit(); flash('Created!','success'); return redirect(url_for('admin_entries'))
-    return render_template('admin/entry_form.html',entry=None,modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall(),places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall(),editing=False)
+        # Tier linking
+        tier_link_type=f.get('tier_link_type','')
+        tier_link_id=f.get('tier_link_id',0,type=int)
+        db.execute("INSERT INTO module_entries (module_id,place_id,title,slug,content,custom_fields,featured_image,gallery_images,status,sort_order,tier_link_type,tier_link_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (mid,f.get('place_id',type=int) or None,t,s,f.get('content',''),json.dumps(cf),fi,gi_str,f.get('status','draft'),f.get('sort_order',0,type=int),tier_link_type,tier_link_id,session['user_id']))
+        db.commit()
+        entry_id=db.execute("SELECT last_insert_rowid()").fetchone()[0]
+        # Handle audio/video items
+        _save_entry_audio_video(db, entry_id, request)
+        db.commit()
+        flash('Created!','success'); return redirect(url_for('admin_entries'))
+    modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
+    places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
+    key_places=db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()
+    key_spots=db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()
+    sub_spots=db.execute("SELECT ss.id,ss.title,ks.title as ks_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id ORDER BY ks.title,ss.title").fetchall()
+    preselect_mod=request.args.get('module_id',type=int)
+    return render_template('admin/entry_form.html',entry=None,modules=modules,places=places,key_places=key_places,key_spots=key_spots,sub_spots=sub_spots,editing=False,module_schemas=MODULE_SCHEMAS,audio_video_items=[],preselect_mod=preselect_mod)
 
 @app.route('/admin/entries/<int:entry_id>/edit', methods=['GET','POST'])
 @login_required
@@ -1684,6 +1847,25 @@ def admin_entry_edit(entry_id):
     if not entry: abort(404)
     if request.method=='POST':
         f=request.form
+        # Build custom_fields JSON from module schema
+        module=db.execute("SELECT * FROM modules WHERE id=?",(f['module_id'],)).fetchone()
+        schema=json.loads(module['fields_schema'] or '[]') if module else []
+        # Start with existing custom fields to preserve any that aren't in schema
+        try: cf=json.loads(entry['custom_fields'] or '{}')
+        except: cf={}
+        for field in schema:
+            fname=field['name']; ftype=field.get('type','text')
+            if ftype=='richtext':
+                cf[fname]=f.get(f'cf_{fname}','')
+            elif ftype=='image':
+                existing_val=cf.get(fname,'')
+                if f'cf_{fname}_file' in request.files:
+                    uf=request.files[f'cf_{fname}_file']
+                    if uf and uf.filename: u=save_upload(uf,'images'); cf[fname]=u if u else existing_val
+                    else: cf[fname]=f.get(f'cf_{fname}_existing',existing_val)
+                else: cf[fname]=f.get(f'cf_{fname}_existing',existing_val)
+            else:
+                cf[fname]=f.get(f'cf_{fname}','')
         # Handle featured image
         fi=f.get('featured_image_existing','').strip()
         orig_fi=fi
@@ -1701,20 +1883,50 @@ def admin_entry_edit(entry_id):
             nk=f'entry_new_gallery_{idx}'
             if nk not in request.files: break
             gf=request.files[nk]
-            if gf and gf.filename:
-                rp=save_upload(gf,'images')
-                if rp: gi_list.append(rp)
+            if gf and gf.filename: rp=save_upload(gf,'images'); gi_list.append(rp) if rp else None
             idx+=1
         if 'gallery_files' in request.files:
             for gf in request.files.getlist('gallery_files'):
-                if gf and gf.filename:
-                    rp=save_upload(gf,'images')
-                    if rp: gi_list.append(rp)
+                if gf and gf.filename: rp=save_upload(gf,'images'); gi_list.append(rp) if rp else None
         gi_str=','.join(gi_list)
-        db.execute("UPDATE module_entries SET module_id=?,place_id=?,title=?,content=?,custom_fields=?,featured_image=?,gallery_images=?,status=?,sort_order=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
-            (f['module_id'],f.get('place_id',type=int) or None,f['title'],f.get('content',''),f.get('custom_fields','{}'),fi,gi_str,f.get('status','draft'),f.get('sort_order',0,type=int),entry_id))
+        # Tier linking
+        tier_link_type=f.get('tier_link_type','')
+        tier_link_id=f.get('tier_link_id',0,type=int)
+        db.execute("UPDATE module_entries SET module_id=?,place_id=?,title=?,content=?,custom_fields=?,featured_image=?,gallery_images=?,status=?,sort_order=?,tier_link_type=?,tier_link_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            (f['module_id'],f.get('place_id',type=int) or None,f['title'],f.get('content',''),json.dumps(cf),fi,gi_str,f.get('status','draft'),f.get('sort_order',0,type=int),tier_link_type,tier_link_id,entry_id))
+        # Handle audio/video: delete removed, add new
+        db.execute("DELETE FROM entry_audio_video WHERE entry_id=?",(entry_id,))
+        _save_entry_audio_video(db, entry_id, request)
         db.commit(); flash('Updated!','success'); return redirect(url_for('admin_entries'))
-    return render_template('admin/entry_form.html',entry=entry,modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall(),places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall(),editing=True)
+    modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
+    places=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
+    key_places=db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()
+    key_spots=db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()
+    sub_spots=db.execute("SELECT ss.id,ss.title,ks.title as ks_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id ORDER BY ks.title,ss.title").fetchall()
+    audio_video_items=db.execute("SELECT * FROM entry_audio_video WHERE entry_id=? ORDER BY sort_order",(entry_id,)).fetchall()
+    return render_template('admin/entry_form.html',entry=entry,modules=modules,places=places,key_places=key_places,key_spots=key_spots,sub_spots=sub_spots,editing=True,module_schemas=MODULE_SCHEMAS,audio_video_items=audio_video_items,preselect_mod=None)
+
+def _save_entry_audio_video(db, entry_id, req):
+    """Save audio/video items from entry form."""
+    idx=0
+    while True:
+        mt=req.form.get(f'av_type_{idx}')
+        if mt is None: break
+        src_type=req.form.get(f'av_source_{idx}','upload')
+        desc=req.form.get(f'av_desc_{idx}','')
+        ext_url=req.form.get(f'av_url_{idx}','')
+        fp=''
+        if src_type=='upload' and f'av_file_{idx}' in req.files:
+            uf=req.files[f'av_file_{idx}']
+            if uf and uf.filename:
+                allowed=ALLOWED_AUDIO_EXT if mt=='audio' else ALLOWED_VIDEO_EXT
+                ext=uf.filename.rsplit('.',1)[-1].lower() if '.' in uf.filename else ''
+                if ext in allowed: fp=save_upload(uf,'audio' if mt=='audio' else 'videos')
+        # Keep existing file path if re-saving
+        if not fp: fp=req.form.get(f'av_existing_{idx}','')
+        if fp or ext_url:
+            db.execute("INSERT INTO entry_audio_video (entry_id,media_type,source_type,file_path,external_url,description,sort_order) VALUES (?,?,?,?,?,?,?)",
+                (entry_id,mt,src_type,fp or '',ext_url or '',desc,idx))
 
 @app.route('/admin/entries/<int:entry_id>/delete', methods=['POST'])
 @login_required
@@ -2225,6 +2437,27 @@ def api_place_detail(slug):
 
 @app.route('/api/v1/modules')
 def api_modules(): return jsonify([dict(m) for m in get_db().execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()])
+
+@app.route('/api/v1/module-schema/<int:mod_id>')
+def api_module_schema(mod_id):
+    db=get_db(); m=db.execute("SELECT * FROM modules WHERE id=?",(mod_id,)).fetchone()
+    if not m: return jsonify({'error':'Not found'}),404
+    try: schema=json.loads(m['fields_schema'] or '[]')
+    except: schema=[]
+    return jsonify({'module':dict(m),'schema':schema})
+
+@app.route('/api/v1/tier-options/<tier_type>')
+def api_tier_options(tier_type):
+    db=get_db()
+    if tier_type=='dham':
+        return jsonify([{'id':r['id'],'title':r['title']} for r in db.execute("SELECT id,title FROM places ORDER BY title").fetchall()])
+    elif tier_type=='key_place':
+        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['dham_title']} for r in db.execute("SELECT kp.id,kp.title,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id ORDER BY p.title,kp.title").fetchall()])
+    elif tier_type=='key_spot':
+        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['kp_title']} for r in db.execute("SELECT ks.id,ks.title,kp.title as kp_title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id ORDER BY kp.title,ks.title").fetchall()])
+    elif tier_type=='sub_spot':
+        return jsonify([{'id':r['id'],'title':r['title'],'parent':r['ks_title']} for r in db.execute("SELECT ss.id,ss.title,ks.title as ks_title FROM sub_spots ss JOIN key_spots ks ON ss.key_spot_id=ks.id ORDER BY ks.title,ss.title").fetchall()])
+    return jsonify([])
 
 @app.route('/api/v1/modules/<slug>/entries')
 def api_module_entries(slug):

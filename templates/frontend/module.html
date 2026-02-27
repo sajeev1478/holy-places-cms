@@ -6,20 +6,34 @@
 <div style="font-size:48px;margin-bottom:16px">{{ module.icon }}</div>
 <h1 style="font-family:'Josefin Sans',sans-serif;font-size:clamp(32px,4vw,48px);margin-bottom:8px">{{ module.name }}</h1>
 <p style="color:var(--text-mid);font-size:16px;max-width:500px;margin:0 auto">{{ module.description }}</p>
+<div style="margin-top:12px;font-size:14px;color:var(--text-light)">{{ entries|length }} {{ 'entry' if entries|length == 1 else 'entries' }}</div>
 </div>
 </section>
 <div class="container section">
 {% if entries %}
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px">
 {% for entry in entries %}
-<div class="card" style="cursor:pointer" onclick="window.location='{{ url_for('entry_detail', mod_slug=module.slug, entry_slug=entry.slug) }}'">
-<div style="padding:24px">
+{% set cf = {} %}
+{% if entry.custom_fields %}
+{% set cf = entry.custom_fields %}
+{% endif %}
+<div class="card" style="cursor:pointer;overflow:hidden;transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 30px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''" onclick="window.location='{{ url_for('entry_detail', mod_slug=module.slug, entry_slug=entry.slug) }}'">
+{% if entry.featured_image %}
+<div style="height:180px;overflow:hidden">
+<img src="/static/uploads/{{ entry.featured_image }}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'" alt="{{ entry.title }}">
+</div>
+{% endif %}
+<div style="padding:20px">
 <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;color:var(--rose-deep);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">{{ module.icon }} {{ module.name }}</div>
 <h3 class="card-title"><a href="{{ url_for('entry_detail', mod_slug=module.slug, entry_slug=entry.slug) }}">{{ entry.title }}</a></h3>
 {% if entry.place_title %}
 <div class="card-loc"><i class="fas fa-link"></i> {{ entry.place_title }}</div>
 {% endif %}
-<p style="font-size:14px;color:var(--text-light);margin-top:8px">{{ entry.content|striptags|truncate(120) }}</p>
+<p style="font-size:14px;color:var(--text-light);margin-top:8px;line-height:1.5">{{ entry.content|striptags|truncate(140) }}</p>
+<div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-light)">
+{% if entry.status == 'published' %}<span style="background:#d4edda;color:#155724;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600">Published</span>{% endif %}
+<span>{{ entry.created_at[:10] if entry.created_at else '' }}</span>
+</div>
 </div>
 </div>
 {% endfor %}

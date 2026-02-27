@@ -3,6 +3,15 @@
 {% block page_title %}{{ 'Edit' if editing else 'Create' }} Module{% endblock %}
 
 {% block admin_content %}
+<style>
+.schema-preview{margin-top:12px;background:var(--bg-cream);border-radius:10px;padding:14px;border:1px solid var(--border)}
+.schema-field{display:flex;align-items:center;gap:8px;padding:6px 10px;background:white;border-radius:8px;margin-bottom:4px;font-size:13px;border:1px solid var(--border)}
+.schema-field .sf-icon{font-size:16px}
+.schema-field .sf-name{font-weight:600;flex:1}
+.schema-field .sf-type{font-size:11px;color:white;background:var(--primary);padding:2px 8px;border-radius:50px}
+.schema-note{font-size:11px;color:var(--text-light);margin-top:8px;font-style:italic}
+</style>
+
 <form method="POST" class="admin-card" style="max-width:700px">
 <div class="admin-card-body">
 <div class="form-group">
@@ -25,8 +34,16 @@
 </div>
 <div class="form-group">
 <label>Custom Fields Schema (JSON)</label>
-<textarea name="fields_schema" class="form-control" rows="4" placeholder='[{"name":"duration","type":"text","label":"Duration"}]'>{{ module.fields_schema if editing else '[]' }}</textarea>
-<div class="hint">Define custom fields as JSON array. Each field: {"name":"...", "type":"text|textarea|number|select", "label":"..."}</div>
+<textarea name="fields_schema" class="form-control" rows="6" id="schemaInput" placeholder='[{"name":"duration","type":"text","label":"Duration"}]' onchange="previewSchema()">{{ module.fields_schema if editing else '[]' }}</textarea>
+<div class="hint">Define custom fields as JSON array. Types: text, textarea, richtext, number, url, select, datetime, image</div>
+
+{% if editing and module.fields_schema %}
+<div class="schema-preview" id="schemaPreview">
+<div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--primary)">📋 Current Schema Fields:</div>
+{% set schema_parsed = [] %}
+<div id="schemaFields"></div>
+</div>
+{% endif %}
 </div>
 {% if editing %}
 <div class="form-group">
@@ -39,4 +56,20 @@
 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} Module</button>
 </div>
 </form>
+
+<script>
+function previewSchema() {
+    var c = document.getElementById('schemaFields');
+    if (!c) return;
+    try {
+        var schema = JSON.parse(document.getElementById('schemaInput').value || '[]');
+        var html = '';
+        schema.forEach(function(f) {
+            html += '<div class="schema-field"><span class="sf-icon">' + (f.icon||'📋') + '</span><span class="sf-name">' + f.label + '</span><span class="sf-type">' + f.type + '</span></div>';
+        });
+        c.innerHTML = html || '<div class="schema-note">No fields defined</div>';
+    } catch(e) { c.innerHTML = '<div style="color:#E74845;font-size:12px">Invalid JSON</div>'; }
+}
+document.addEventListener('DOMContentLoaded', previewSchema);
+</script>
 {% endblock %}
