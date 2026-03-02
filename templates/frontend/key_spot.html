@@ -120,7 +120,7 @@
 <h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:14px">Other Key Spots</h3>
 {% for sib in siblings %}
 <a href="{{ url_for('key_spot_detail', slug=place.slug, kp_slug=kp.slug, ks_slug=sib.slug) }}" style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;font-size:13px;transition:color .2s" onmouseover="this.style.color='{{ sib.cat_color or accent }}'" onmouseout="this.style.color='inherit'">
-<span style="font-size:14px">{{ sib.cat_icon or '📍' }}</span><strong>{{ sib.title }}</strong></a>
+<span style="font-size:18px">{{ sib.cat_icon or '📍' }}</span><strong>{{ sib.title }}</strong></a>
 {% endfor %}
 </div>{% endif %}
 

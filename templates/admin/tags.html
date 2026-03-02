@@ -75,7 +75,7 @@
 <div class="admin-card" style="margin-bottom:16px">
 <div class="admin-card-body">
 <form method="POST" action="{{ url_for('admin_spot_category_new') }}" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
-<div class="form-group" style="margin:0;width:60px"><label>Icon</label><input name="icon" class="form-control" value="📍" style="font-size:20px;text-align:center;padding:6px" maxlength="4"></div>
+<div class="form-group" style="margin:0;width:60px"><label>Icon</label><input type="hidden" name="icon" id="t3AddIconVal" value="📍"><button type="button" id="t3AddIconBtn" class="form-control icon-pick-btn" onclick="openIconPicker('t3AddIconVal','t3AddIconBtn')" style="font-size:22px;text-align:center;padding:6px;cursor:pointer;background:#fff;border:2px solid var(--border);border-radius:8px;width:100%;height:44px">📍</button></div>
 <div class="form-group" style="margin:0;flex:1;min-width:160px"><label>Category Name</label><input name="name" class="form-control" required placeholder="e.g. Temple, Ghat, Forest, Hill..."></div>
 <div class="form-group" style="margin:0;width:200px"><label>Description</label><input name="description" class="form-control" placeholder="Optional description"></div>
 <div class="form-group" style="margin:0;width:90px"><label>Color</label><input name="color" class="form-control" type="color" value="#E74845" style="padding:6px;height:44px"></div>
@@ -121,7 +121,7 @@
 <div class="admin-card" style="margin-bottom:16px">
 <div class="admin-card-body">
 <form method="POST" action="{{ url_for('admin_sub_category_new') }}" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
-<div class="form-group" style="margin:0;width:60px"><label>Icon</label><input name="icon" class="form-control" value="✦" style="font-size:20px;text-align:center;padding:6px" maxlength="4"></div>
+<div class="form-group" style="margin:0;width:60px"><label>Icon</label><input type="hidden" name="icon" id="t4AddIconVal" value="✦"><button type="button" id="t4AddIconBtn" class="form-control icon-pick-btn" onclick="openIconPicker('t4AddIconVal','t4AddIconBtn')" style="font-size:22px;text-align:center;padding:6px;cursor:pointer;background:#fff;border:2px solid var(--border);border-radius:8px;width:100%;height:44px">✦</button></div>
 <div class="form-group" style="margin:0;flex:1;min-width:160px"><label>Category Name</label><input name="name" class="form-control" required placeholder="e.g. Altar, Shrine, Samadhi, Pathway..."></div>
 <div class="form-group" style="margin:0;width:200px"><label>Description</label><input name="description" class="form-control" placeholder="Optional description"></div>
 <div class="form-group" style="margin:0;width:90px"><label>Color</label><input name="color" class="form-control" type="color" value="#9C27B0" style="padding:6px;height:44px"></div>
@@ -165,7 +165,7 @@
 <form id="catEditForm" method="POST">
 <div style="display:grid;gap:12px">
 <div style="display:flex;gap:12px">
-<div class="form-group" style="margin:0;width:70px"><label>Icon</label><input name="icon" id="catEditIcon" class="form-control" style="font-size:22px;text-align:center;padding:6px" maxlength="4"></div>
+<div class="form-group" style="margin:0;width:70px"><label>Icon</label><input type="hidden" name="icon" id="catEditIconVal"><button type="button" id="catEditIconBtn" class="form-control icon-pick-btn" onclick="openIconPicker('catEditIconVal','catEditIconBtn')" style="font-size:22px;text-align:center;padding:6px;cursor:pointer;background:#fff;border:2px solid var(--border);border-radius:8px;width:100%;height:44px">📍</button></div>
 <div class="form-group" style="margin:0;flex:1"><label>Name</label><input name="name" id="catEditName" class="form-control" required></div>
 </div>
 <div class="form-group" style="margin:0"><label>Description</label><input name="description" id="catEditDesc" class="form-control"></div>
@@ -179,12 +179,79 @@
 </div>
 </div>
 
+<!-- Icon Picker Modal -->
+<div id="iconPickerModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+<div style="background:white;border-radius:16px;padding:24px;width:520px;max-width:94vw;max-height:80vh;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+<h3 style="font-family:'Josefin Sans',sans-serif;font-size:18px;margin:0">Choose Icon</h3>
+<button type="button" onclick="closeIconPicker()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-light)">✕</button>
+</div>
+<input type="text" id="iconSearchBox" class="form-control" placeholder="🔍 Search icons..." oninput="filterIcons(this.value)" style="margin-bottom:12px;font-size:14px;padding:10px 14px">
+<div id="iconGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px;overflow-y:auto;max-height:50vh;padding:4px"></div>
+</div>
+</div>
+
 <script>
+const ICON_LIST=[
+{g:'Temples & Religion',icons:['🛕','🕉️','🙏','📿','🪔','🔔','🕌','⛪','🕍','✡️','☪️','✝️','☸️','🔱','🪷','💮','🧘','📜','🕊️','☯️']},
+{g:'Places & Buildings',icons:['🏛️','🏰','🏯','🗽','🗿','🏟️','🏗️','🏠','🏡','🏢','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏚️']},
+{g:'Nature & Geography',icons:['🌳','🌲','🏔️','⛰️','🌋','🏜️','🏝️','🏞️','🌊','💧','🪨','🌿','☘️','🌺','🌻','🌹','🌸','🌼','🪻','🍀']},
+{g:'Water & Ghats',icons:['🚿','⛲','🌊','💦','🏊','🛶','🚣','⛵','🌅','🌄','🏖️','🐚','🦪','🪸','🐟','🐠','🐬','🐋','🦭','🪷']},
+{g:'Spiritual Items',icons:['🪔','📿','🔔','🛕','🕉️','🔱','🪷','☸️','💎','🪬','✨','⭐','🌟','💫','🌙','☀️','🫧','🧿','📖','📕']},
+{g:'Directions & Travel',icons:['🧭','🗺️','📍','📌','🚩','🏳️','🚶','🚗','✈️','🚌','🚂','🛤️','🛣️','🚁','⛽','🛺','🏍️','🚲','🛵','🚕']},
+{g:'Food & Offerings',icons:['🍚','🍛','🍲','🥘','🥗','🍇','🥭','🍌','🥥','🍎','🧈','🍯','🥛','🫖','☕','🍵','🧁','🍰','🍩','🍪']},
+{g:'Music & Arts',icons:['🎵','🎶','🎸','🎹','🪘','🥁','🎺','🪈','🎻','🎤','🎭','🎨','🖼️','🪆','🧵','🪡','🎪','🎬','📸','📷']},
+{g:'People & Community',icons:['👤','👥','🧑‍🤝‍🧑','👨‍👩‍👧‍👦','👴','👵','🧑','🧓','💑','🙇','🙏','🧎','🫂','👑','🎓','🧑‍🏫','🧑‍⚕️','🧑‍🍳','🧑‍🌾','🧑‍🔧']},
+{g:'Animals',icons:['🐄','🐂','🐃','🐘','🐅','🐆','🦚','🐒','🐍','🐎','🦁','🐪','🦌','🦢','🐦','🦅','🕊️','🐢','🐊','🐫']},
+{g:'Events & Time',icons:['🎪','🎉','🎊','🎆','🎇','🎑','🎋','🏮','🪅','🕐','🕑','🕒','🕓','🕔','📅','📆','⏰','⌚','🗓️','📣']},
+{g:'Objects & Tools',icons:['🔑','🗝️','🏺','🪣','🧹','🪶','🕯️','🪙','💰','📦','🎁','🧰','⚱️','🫙','🧊','🪤','🧲','⚔️','🛡️','🪃']},
+{g:'Symbols',icons:['❤️','🧡','💛','💚','💙','💜','🤍','🖤','🤎','💝','♻️','☮️','⚛️','🔯','🕎','☦️','🆗','✅','❌','⭕']},
+{g:'Misc',icons:['🏷️','📋','📝','📎','🔖','🔗','💡','🔍','⚡','🎯','💠','🔶','🔷','🟠','🟢','🔵','🟣','🟤','⚪','⚫']}
+];
+let _iconTargetInput=null,_iconTargetBtn=null;
+function openIconPicker(inputId,btnId){
+    _iconTargetInput=document.getElementById(inputId);
+    _iconTargetBtn=document.getElementById(btnId);
+    const grid=document.getElementById('iconGrid');
+    grid.innerHTML='';
+    ICON_LIST.forEach(g=>{
+        const lbl=document.createElement('div');
+        lbl.style.cssText='grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid #f0f0f0;margin-bottom:2px';
+        lbl.textContent=g.g;lbl.className='icon-group-label';lbl.dataset.group=g.g;grid.appendChild(lbl);
+        g.icons.forEach(ic=>{
+            const b=document.createElement('button');b.type='button';
+            b.style.cssText='width:44px;height:44px;border:1.5px solid #eee;border-radius:10px;font-size:22px;cursor:pointer;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s';
+            b.textContent=ic;b.className='icon-grid-btn';b.dataset.name=(g.g+' '+ic).toLowerCase();
+            b.onmouseenter=function(){this.style.background='#FFF5F9';this.style.borderColor='#C76B8F';this.style.transform='scale(1.15)'};
+            b.onmouseleave=function(){this.style.background='#fff';this.style.borderColor='#eee';this.style.transform='scale(1)'};
+            b.onclick=function(){selectIcon(ic)};
+            grid.appendChild(b);
+        });
+    });
+    document.getElementById('iconSearchBox').value='';
+    document.getElementById('iconPickerModal').style.display='flex';
+}
+function closeIconPicker(){document.getElementById('iconPickerModal').style.display='none'}
+function selectIcon(ic){
+    if(_iconTargetInput)_iconTargetInput.value=ic;
+    if(_iconTargetBtn)_iconTargetBtn.textContent=ic;
+    closeIconPicker();
+}
+function filterIcons(q){
+    q=q.toLowerCase().trim();
+    document.querySelectorAll('#iconGrid .icon-grid-btn').forEach(b=>{b.style.display=(!q||b.dataset.name.includes(q))?'flex':'none'});
+    document.querySelectorAll('#iconGrid .icon-group-label').forEach(lbl=>{
+        const grp=lbl.dataset.group.toLowerCase();
+        const hasVisible=[...document.querySelectorAll('#iconGrid .icon-grid-btn')].some(b=>b.dataset.name.startsWith(grp)&&b.style.display!=='none');
+        lbl.style.display=(!q||hasVisible)?'block':'none';
+    });
+}
 function openCatEdit(type,id,name,desc,icon,color){
     const base=type==='spot'?'/admin/spot-category/':'/admin/sub-category/';
     document.getElementById('catEditForm').action=base+id+'/update';
     document.getElementById('catEditTitle').textContent=type==='spot'?'Edit T3 Category':'Edit T4 Category';
-    document.getElementById('catEditIcon').value=icon;
+    document.getElementById('catEditIconVal').value=icon;
+    document.getElementById('catEditIconBtn').textContent=icon;
     document.getElementById('catEditName').value=name;
     document.getElementById('catEditDesc').value=desc;
     document.getElementById('catEditColor').value=color;
