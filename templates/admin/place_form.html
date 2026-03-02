@@ -111,6 +111,9 @@
 .overview-card{flex-direction:column;align-items:flex-start;gap:10px}
 .overview-card .ov-actions{align-self:flex-end}
 .hier-bc{flex-wrap:wrap}
+/* Mobile: stack Save + Add Key Place buttons vertically */
+.kp-bottom-actions{flex-direction:column}
+.kp-bottom-actions .btn,.kp-bottom-actions .add-kp-btn{width:100%;min-width:unset!important}
 }
 </style>
 {% endblock %}
@@ -325,7 +328,7 @@
 <div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & External Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi">
 <div class="cf-sep">Custom Fields — Media</div>
-{% for cf in custom_fields %}{% if cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url','gallery_images') and cf.name != 'entry_fee' %}{% set cv = custom_values.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url') and cf.name != 'entry_fee' %}{% set cv = custom_values.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
 {% if cf.field_type in ('text','number') %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
 {% elif cf.field_type == 'url' %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder or 'URL' }}">
@@ -523,7 +526,7 @@
 
 <div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Media</div>
-{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url','gallery_images') and cf.name != 'entry_fee' %}{% set kcv = kpc.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url') and cf.name != 'entry_fee' %}{% set kcv = kpc.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
 {% if cf.field_type in ('text','number') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">
 {% elif cf.field_type == 'url' %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px"><input name="kp_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ kcv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
@@ -548,9 +551,9 @@
 {% if not key_places %}<div style="padding:32px;text-align:center;color:var(--text-light)"><div style="font-size:36px;opacity:.3">📍</div><p>No Key Places yet. Add major zones within this Dham.</p></div>{% endif %}
 </div></div>
 
-<div style="display:flex;gap:12px;margin-top:16px;align-items:center">
-<button type="button" class="add-kp-btn" onclick="addKeyPlace()" style="flex:1"><i class="fas fa-plus-circle"></i> Add Key Place (Tier 2)</button>
-<button type="submit" class="btn btn-primary" style="min-width:200px"><i class="fas fa-save"></i> Save All Changes</button>
+<div class="kp-bottom-actions" style="display:flex;gap:12px;margin-top:16px;align-items:center;flex-wrap:wrap">
+<button type="submit" class="btn btn-primary" style="min-width:200px;order:1"><i class="fas fa-save"></i> Save All Changes</button>
+<button type="button" class="add-kp-btn" onclick="addKeyPlace()" style="flex:1;order:2"><i class="fas fa-plus-circle"></i> Add Key Place (Tier 2)</button>
 </div>
 
 <div class="back-btn-row" style="margin-top:16px"><a href="javascript:switchTier(1)" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Tier 1 · Holy Dham</a></div>

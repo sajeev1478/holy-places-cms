@@ -174,7 +174,7 @@
 <!-- T3 ACC 6: Audio/Video CFs -->
 <div class="facc"><button type="button" class="facc-h ct3" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Media</div>
-{% for cf in custom_fields %}{% if cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url','gallery_images') and cf.name != 'entry_fee' %}{% set cv = scv.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url') and cf.name != 'entry_fee' %}{% set cv = scv.get(cf.id, {}) %}
 <div style="display:flex;gap:8px;align-items:start;margin-bottom:8px">
 <div style="flex:1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-bottom:5px"><span style="font-size:15px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
 {% if cf.field_type in ('text','number') %}<input name="ks_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}" style="font-size:13px">
