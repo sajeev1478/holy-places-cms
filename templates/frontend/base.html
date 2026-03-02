@@ -200,7 +200,7 @@ footer{padding:30px 0;background:var(--text-dark);color:rgba(255,255,255,.6)}
 .footer-col h4{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--rose);margin-bottom:10px}
 .footer-col a{display:block;color:rgba(255,255,255,.5);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;margin-bottom:6px;transition:color .3s}
 .footer-col a:hover{color:var(--rose)}
-.footer-bottom{max-width:1300px;margin:10px auto 0;padding:10px 40px 0;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px}
+.footer-bottom{max-width:1300px;margin:0 auto;padding:12px 40px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:rgba(255,255,255,.85);letter-spacing:.3px}
 
 /* ─── Pagination ─── */
 .pagination{display:flex;gap:6px;justify-content:center;margin-top:40px}
@@ -228,7 +228,7 @@ header.header-on-medium.scrolled,header.header-on-light.scrolled{background:rgba
 .container{padding:0 16px}
 .section{padding:60px 0}
 .footer-inner{grid-template-columns:1fr;gap:16px;padding:0 16px}
-.footer-bottom{flex-direction:column;gap:6px;text-align:center;padding:8px 16px 0}
+.footer-bottom{padding:10px 16px;text-align:center}
 }
 
 /* ─── Nuclear Mobile Overflow Prevention ─── */
@@ -528,7 +528,7 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 </div>
 </div>
 <div class="footer-bottom">
-<span>© {{ current_year }} Holy Dham CMS. Made with 🙏</span>
+<span>© {{ current_year }} Holy Dham. Made with devotion.</span>
 </div>
 </footer>
 
@@ -544,24 +544,23 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
     var st=window.scrollY||window.pageYOffset;
     var docH=document.documentElement.scrollHeight;
     var winH=window.innerHeight;
-    var atBottom=(st+winH)>=(docH-80);
-    if(st<200){btn.style.display='none';return}
+    var nearTop=(st<300);
+    if(st<100&&(docH-winH)>400){btn.style.display='flex';icon.className='fas fa-chevron-down';btn.style.background='var(--rose-deep)';return}
+    if(st<100){btn.style.display='none';return}
     btn.style.display='flex';
-    if(atBottom){
-      icon.className='fas fa-chevron-up';
-      btn.style.background='var(--text-dark)';
-    } else {
+    if(nearTop){
       icon.className='fas fa-chevron-down';
       btn.style.background='var(--rose-deep)';
+    } else {
+      icon.className='fas fa-chevron-up';
+      btn.style.background='var(--text-dark)';
     }
   }
   window.smartScroll=function(){
     var st=window.scrollY||window.pageYOffset;
-    var docH=document.documentElement.scrollHeight;
-    var winH=window.innerHeight;
-    var atBottom=(st+winH)>=(docH-80);
-    if(atBottom) window.scrollTo({top:0,behavior:'smooth'});
-    else window.scrollTo({top:docH,behavior:'smooth'});
+    var nearTop=(st<300);
+    if(nearTop) window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});
+    else window.scrollTo({top:0,behavior:'smooth'});
   };
   window.addEventListener('scroll',update);
   update();
