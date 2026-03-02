@@ -217,7 +217,7 @@ img{max-width:100%;height:auto}
 {% endif %}
 
 {% if place.short_description %}
-<div class="pc-desc">{{ place.short_description }}</div>
+<div class="pc-desc">{{ place.short_description|striptags }}</div>
 {% endif %}
 
 {% if place.full_content %}
@@ -328,7 +328,7 @@ img{max-width:100%;height:auto}
 <button onclick="toggleFullDetails({{ loop.index }})" style="background:var(--rose-pale);border:1px solid var(--rose);color:var(--rose-deep);padding:5px 12px;border-radius:50px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><i class="fas fa-times"></i> Collapse</button>
 </div>
 {% if place.featured_image %}<img src="/static/uploads/{{ place.featured_image }}" style="width:100%;border-radius:10px;margin-bottom:12px;max-height:280px;object-fit:cover" loading="lazy">{% endif %}
-{% if place.short_description %}<p style="font-size:14px;color:var(--text-mid);margin-bottom:10px;line-height:1.6">{{ place.short_description }}</p>{% endif %}
+{% if place.short_description %}<p style="font-size:14px;color:var(--text-mid);margin-bottom:10px;line-height:1.6">{{ place.short_description|striptags }}</p>{% endif %}
 {% if place.full_content %}<div style="font-size:14px;color:var(--text-mid);line-height:1.7;margin-bottom:12px">{{ place.full_content|safe }}</div>{% endif %}
 {% if place.city or place.state %}<div style="font-size:12px;color:var(--text-light);margin-bottom:6px"><i class="fas fa-map-pin" style="color:var(--saffron)"></i> {{ place.city }}{% if place.city and place.state %}, {% endif %}{{ place.state }}{% if place.country and place.country != 'India' %}, {{ place.country }}{% endif %}</div>{% endif %}
 {% if place.latitude and place.longitude %}<div style="font-size:12px;color:var(--text-light);margin-bottom:8px"><i class="fas fa-crosshairs" style="color:var(--sage)"></i> {{ place.latitude }}, {{ place.longitude }}</div>{% endif %}

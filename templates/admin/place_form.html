@@ -97,9 +97,9 @@
 @media(max-width:1024px){.place-two-col{grid-template-columns:1fr}.tier-tabs-grid{grid-template-columns:repeat(2,1fr)}.t1-top-bar{grid-template-columns:1fr!important}}
 @media(max-width:600px){.tier-tabs-grid{grid-template-columns:1fr}
 /* Custom field boxes responsive */
-.field-row .form-group textarea.form-control{min-height:80px;width:100%!important}
+.field-row .form-group textarea.form-control{min-height:80px;width:100%!important;resize:vertical}
 .field-row .form-group input.form-control{width:100%!important}
-.field-row .form-group .rich-editor{min-height:140px!important;width:100%!important}
+.field-row .form-group .rich-editor{min-height:140px!important;width:100%!important;resize:vertical;overflow:auto}
 .field-row{flex-direction:column;gap:8px}
 .field-main{width:100%!important}
 .field-toggle{padding-top:4px!important}
@@ -203,7 +203,8 @@
 <div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">📋</span> Core Information<span class="fab">3 fields</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi">
 <div class="form-group"><label>📝 Short Description <span class="red-star">*</span></label>
-<textarea name="short_description" class="form-control" rows="3" placeholder="Brief overview...">{{ place.short_description if editing else '' }}</textarea><input type="hidden" name="vis_short_description" value="on"></div>
+<input type="hidden" name="short_description" id="short_description_hidden" value="{{ place.short_description if editing else '' }}">
+<div class="rich-editor" data-target="short_description_hidden" style="background:white;min-height:100px"></div><input type="hidden" name="vis_short_description" value="on"></div>
 <div class="form-group"><label>📖 Full Description <span class="red-star">*</span></label>
 <input type="hidden" name="full_content" id="full_content" value="{{ place.full_content if editing else '' }}">
 <div class="rich-editor" data-target="full_content" style="background:white;min-height:200px"></div><input type="hidden" name="vis_full_content" value="on"></div>
@@ -430,7 +431,7 @@
 <!-- T2 ACC 1: Core -->
 <div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📋</span> Core Information<span class="fab">2 fields</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi">
-<div class="form-group"><label>📝 Short Description</label><textarea name="kp_{{ ki }}_short_description" class="form-control" rows="2">{{ kp.short_description }}</textarea></div>
+<div class="form-group"><label>📝 Short Description</label><input type="hidden" name="kp_{{ ki }}_short_description" id="kp_{{ ki }}_sd" value="{{ kp.short_description }}"><div class="rich-editor" data-target="kp_{{ ki }}_sd" style="background:white;min-height:80px"></div></div>
 <div class="form-group"><label>📖 Full Description</label><input type="hidden" name="kp_{{ ki }}_full_content" id="kp_{{ ki }}_fc" value="{{ kp.full_content }}"><div class="rich-editor" data-target="kp_{{ ki }}_fc" style="background:white;min-height:120px"></div></div>
 </div></div></div>
 
@@ -619,7 +620,7 @@
 </div>
 <div class="ov-cat" style="color:{{ spot.cat_color or '#E74845' }}">{{ spot.cat_name or 'Uncategorized' }}</div>
 <div class="ov-title">{{ spot.title }}{% if spot.hierarchy_id %} <span class="hid-badge" onclick="copyHid(this)" data-hid="{{ spot.hierarchy_id }}" style="font-size:9px;vertical-align:middle">{{ spot.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}</div>
-{% if spot.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px">{{ spot.short_description }}</div>{% endif %}
+{% if spot.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px">{{ spot.short_description|striptags }}</div>{% endif %}
 </div>
 <div class="ov-actions">
 <a href="{{ url_for('admin_key_spot_subs', ks_id=spot.id) }}" class="btn btn-secondary btn-sm" style="font-size:10px"><i class="fas fa-sitemap"></i> Key Points <span style="font-size:8px;padding:1px 5px;background:#9C27B0;color:white;border-radius:50px">T4</span></a>
@@ -712,7 +713,7 @@
 </div>
 <div class="ov-cat" style="color:{{ pt.cat_color or '#9C27B0' }}">{{ pt.cat_name or 'Uncategorized' }}</div>
 <div class="ov-title">{{ pt.title }}{% if pt.hierarchy_id %} <span class="hid-badge" onclick="copyHid(this)" data-hid="{{ pt.hierarchy_id }}" style="font-size:9px;vertical-align:middle">{{ pt.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}</div>
-{% if pt.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px">{{ pt.short_description }}</div>{% endif %}
+{% if pt.short_description %}<div style="font-size:12px;color:var(--text-light);margin-top:2px">{{ pt.short_description|striptags }}</div>{% endif %}
 </div>
 </div>
 {% endfor %}
@@ -760,7 +761,7 @@ function addKeyPlace() {
 <div class="kp-actions"><span class="chevron"><i class="fas fa-chevron-down"></i></span><button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();this.closest('.kp-accordion').remove()"><i class="fas fa-trash"></i></button></div></div>
 <div class="kp-accordion-body" style="max-height:3000px"><div class="kp-accordion-body-inner">
 <div class="form-group"><label>Title <span class="red-star">*</span></label><input name="kp_${kpIndex}_title" class="form-control" required placeholder="e.g. Vrindavan Town" onchange="this.closest('.kp-accordion').querySelector('.kp-title-display').textContent=this.value||'New Key Place'"></div>
-<div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2"></textarea></div>
+<div class="form-group"><label>Short Description</label><textarea name="kp_${kpIndex}_short_description" class="form-control" rows="2"></textarea><div style="font-size:10px;color:var(--text-light);margin-top:2px">💡 Save and reopen to get the rich text editor</div></div>
 <div class="form-group"><label>Long Description</label><textarea name="kp_${kpIndex}_full_content" class="form-control" rows="4"></textarea></div>
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
 <div class="form-group"><label>Featured Image</label><input type="file" name="kp_${kpIndex}_featured_image_file" class="form-control" accept="image/*"></div>
