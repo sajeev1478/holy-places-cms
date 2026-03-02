@@ -312,6 +312,15 @@ def init_db():
         cols=[c['name'] for c in db.execute(f"PRAGMA table_info({table})").fetchall()]
         if 'featured_image_desc' not in cols:
             db.execute(f"ALTER TABLE {table} ADD COLUMN featured_image_desc TEXT DEFAULT ''")
+    # Migration: add section_t1/t2/t3/t4 columns to custom_field_defs
+    cfd_cols=[c['name'] for c in db.execute("PRAGMA table_info(custom_field_defs)").fetchall()]
+    for col in ('section_t1','section_t2','section_t3','section_t4'):
+        if col not in cfd_cols:
+            db.execute(f"ALTER TABLE custom_field_defs ADD COLUMN {col} TEXT DEFAULT 'visitor'")
+    # Auto-migrate existing fields to correct sections based on name
+    section_map={'opening_hours':'visitor','best_time_to_visit':'visitor','dress_code':'visitor','how_to_reach':'visitor','accommodation':'visitor','history':'history','audio_narration':'media','video_tour':'media','external_audio_url':'media','external_video_url':'media','gallery_images':'images'}
+    for fname,sec in section_map.items():
+        db.execute("UPDATE custom_field_defs SET section_t1=?,section_t2=?,section_t3=?,section_t4=? WHERE name=? AND section_t1='visitor' AND section_t2='visitor' AND section_t3='visitor' AND section_t4='visitor'",(sec,sec,sec,sec,fname))
     db.commit()
 
 def _generate_dham_code(title, db):
@@ -478,9 +487,9 @@ def seed_db():
     # Tags
     for name,slug,color in [('Char Dham','char-dham','#C76B8F'),('Jyotirlinga','jyotirlinga','#E89B4F'),('Heritage','heritage','#8BAB8A'),('Pilgrimage','pilgrimage','#6B8AB5'),('UNESCO','unesco','#B58A6B'),('Sikh Heritage','sikh-heritage','#C4A44E'),('Buddhist','buddhist','#8A6BB5'),('ISKCON','iskcon','#D4A843'),('Braj Dham','braj-dham','#E84855'),('Gaudiya Vaishnava','gaudiya-vaishnava','#6C5CE7'),('Sapta Puri','sapta-puri','#FF6B35'),('Ram Bhakti','ram-bhakti','#E53935'),('Sapt Hari','sapt-hari','#1E88E5')]:
         db.execute("INSERT INTO tags (name,slug,color) VALUES (?,?,?)", (name,slug,color))
-    # Custom Fields with icons
-    for name,label,ftype,ph,order,applies,icon in [('audio_narration','Audio Narration','audio','Upload audio',1,'both','\U0001f3b5'),('video_tour','Video Tour','video','Upload or paste URL',2,'both','\U0001f3ac'),('gallery_images','Gallery Images','images','Upload photos',3,'both','\U0001f5bc\ufe0f'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both','\U0001f550'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both','\U0001f324\ufe0f'),('how_to_reach','How to Reach','textarea','Directions',6,'place','\U0001f697'),('accommodation','Accommodation','textarea','Stay options',7,'place','\U0001f3e8'),('history','History & Significance','richtext','Detailed history',8,'both','\U0001f4dc'),('dress_code','Dress Code','text','If any',9,'both','\U0001f97b'),('external_audio_url','External Audio Link','url','Audio URL',11,'both','\U0001f517'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both','\U0001f517')]:
-        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon) VALUES (?,?,?,?,?,?,?)", (name,label,ftype,ph,order,applies,icon))
+    # Custom Fields with icons and sections
+    for name,label,ftype,ph,order,applies,icon,sec in [('audio_narration','Audio Narration','audio','Upload audio',1,'both','\U0001f3b5','media'),('video_tour','Video Tour','video','Upload or paste URL',2,'both','\U0001f3ac','media'),('gallery_images','Gallery Images','images','Upload photos',3,'both','\U0001f5bc\ufe0f','images'),('opening_hours','Opening Hours','text','e.g. 6 AM - 9 PM',4,'both','\U0001f550','visitor'),('best_time_to_visit','Best Time to Visit','text','e.g. Oct-Mar',5,'both','\U0001f324\ufe0f','visitor'),('how_to_reach','How to Reach','textarea','Directions',6,'place','\U0001f697','visitor'),('accommodation','Accommodation','textarea','Stay options',7,'place','\U0001f3e8','visitor'),('history','History & Significance','richtext','Detailed history',8,'both','\U0001f4dc','history'),('dress_code','Dress Code','text','If any',9,'both','\U0001f97b','visitor'),('external_audio_url','External Audio Link','url','Audio URL',11,'both','\U0001f517','media'),('external_video_url','External Video Link','url','YouTube/Vimeo URL',12,'both','\U0001f517','media')]:
+        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon,section_t1,section_t2,section_t3,section_t4) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (name,label,ftype,ph,order,applies,icon,sec,sec,sec,sec))
 
     # ═══════════════════════════════════════════════════════════════
     # ─── AYODHYA DHAM (Tier 1) — Primary Dham ───
@@ -1051,8 +1060,10 @@ def admin_fields():
 def admin_field_new():
     db=get_db(); name=slugify(request.form['label']).replace('-','_')
     icon=request.form.get('icon','📋')
+    s1=request.form.get('section_t1','visitor'); s2=request.form.get('section_t2','visitor')
+    s3=request.form.get('section_t3','visitor'); s4=request.form.get('section_t4','visitor')
     try:
-        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon) VALUES (?,?,?,?,?,?,?)",(name,request.form['label'],request.form['field_type'],request.form.get('placeholder',''),request.form.get('sort_order',0,type=int),request.form.get('applies_to','both'),icon))
+        db.execute("INSERT INTO custom_field_defs (name,label,field_type,placeholder,sort_order,applies_to,icon,section_t1,section_t2,section_t3,section_t4) VALUES (?,?,?,?,?,?,?,?,?,?,?)",(name,request.form['label'],request.form['field_type'],request.form.get('placeholder',''),request.form.get('sort_order',0,type=int),request.form.get('applies_to','both'),icon,s1,s2,s3,s4))
         db.commit(); flash('Field created!','success')
     except sqlite3.IntegrityError: flash('Field already exists.','error')
     return redirect(url_for('admin_fields'))
@@ -1061,8 +1072,8 @@ def admin_field_new():
 @login_required
 def admin_field_update(field_id):
     db=get_db(); f=request.form
-    db.execute("UPDATE custom_field_defs SET label=?,field_type=?,placeholder=?,sort_order=?,applies_to=?,icon=? WHERE id=?",
-        (f['label'],f['field_type'],f.get('placeholder',''),f.get('sort_order',0,type=int),f.get('applies_to','both'),f.get('icon','📋'),field_id))
+    db.execute("UPDATE custom_field_defs SET label=?,field_type=?,placeholder=?,sort_order=?,applies_to=?,icon=?,section_t1=?,section_t2=?,section_t3=?,section_t4=? WHERE id=?",
+        (f['label'],f['field_type'],f.get('placeholder',''),f.get('sort_order',0,type=int),f.get('applies_to','both'),f.get('icon','📋'),f.get('section_t1','visitor'),f.get('section_t2','visitor'),f.get('section_t3','visitor'),f.get('section_t4','visitor'),field_id))
     db.commit(); flash('Field updated!','success')
     return redirect(url_for('admin_fields'))
 
@@ -1093,7 +1104,7 @@ def admin_places():
 def admin_place_new():
     db=get_db()
     if request.method=='POST': return _save_place(None)
-    return render_template('admin/place_form.html',place=None,tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall(),place_tags=[],custom_fields=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','place') ORDER BY sort_order").fetchall(),custom_values={},key_places=[],key_place_customs={},editing=False,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall())
+    return render_template('admin/place_form.html',place=None,tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall(),place_tags=[],custom_fields=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall(),custom_values={},key_places=[],key_place_customs={},editing=False,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall())
 
 @app.route('/admin/places/<int:place_id>/edit', methods=['GET','POST'])
 @login_required
@@ -1103,7 +1114,7 @@ def admin_place_edit(place_id):
     if request.method=='POST': return _save_place(place_id)
     tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall()
     ptags=[r['tag_id'] for r in db.execute("SELECT tag_id FROM place_tags WHERE place_id=?",(place_id,)).fetchall()]
-    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','place') ORDER BY sort_order").fetchall()
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     cvs={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM place_custom_values WHERE place_id=?",(place_id,)).fetchall()}
     kps=db.execute("SELECT * FROM key_places WHERE parent_place_id=? ORDER BY sort_order",(place_id,)).fetchall()
     kpc={}
@@ -1337,7 +1348,7 @@ def _load_full_dham_data(place_id):
         ssc[ss['id']] = {r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM sub_spot_custom_values WHERE sub_spot_id=?",(ss['id'],)).fetchall()}
     data['ss_customs'] = ssc
     # kp custom field definitions (applies to key_place)
-    data['kp_field_defs'] = db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place') ORDER BY sort_order").fetchall()
+    data['kp_field_defs'] = db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place','t2_plus') ORDER BY sort_order").fetchall()
     return data
 
 # ─── Photo Capture Page (Restricted — Full Read-Only View) ───
@@ -1496,7 +1507,7 @@ def admin_key_place_spots(kp_id):
     kp=db.execute("SELECT kp.*,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
     if not kp: abort(404)
     spots=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,sc.color as cat_color FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id WHERE ks.key_place_id=? ORDER BY ks.sort_order",(kp_id,)).fetchall()
-    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place','key_spot') ORDER BY sort_order").fetchall()
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_spot','t2_plus','t3_plus') ORDER BY sort_order").fetchall()
     ks_customs={}
     for s in spots:
         ks_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM key_spot_custom_values WHERE key_spot_id=?",(s['id'],)).fetchall()}
@@ -1616,7 +1627,7 @@ def admin_key_spot_subs(ks_id):
     ks=db.execute("SELECT ks.*,sc.name as cat_name,sc.icon as cat_icon,kp.title as kp_title,kp.id as kp_id,p.title as dham_title,p.slug as dham_slug,p.id as dham_id FROM key_spots ks LEFT JOIN spot_categories sc ON ks.category_id=sc.id JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
     if not ks: abort(404)
     subs=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id WHERE ss.key_spot_id=? ORDER BY ss.sort_order",(ks_id,)).fetchall()
-    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','key_place','sub_spot') ORDER BY sort_order").fetchall()
+    cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 AND applies_to IN ('both','sub_spot','t2_plus','t3_plus') ORDER BY sort_order").fetchall()
     ss_customs={}
     for s in subs:
         ss_customs[s['id']]={r['field_def_id']:{'value':r['value'],'is_visible':r['is_visible'],'description':r['description'] or ''} for r in db.execute("SELECT field_def_id,value,is_visible,description FROM sub_spot_custom_values WHERE sub_spot_id=?",(s['id'],)).fetchall()}

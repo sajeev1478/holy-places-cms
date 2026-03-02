@@ -104,8 +104,23 @@
 </select></div>
 <div class="form-group" style="margin:0;width:150px"><label>Placeholder</label><input name="placeholder" class="form-control" placeholder="Hint text"></div>
 <div class="form-group" style="margin:0;width:70px"><label>Order</label><input name="sort_order" class="form-control" type="number" value="0"></div>
-<div class="form-group" style="margin:0;width:140px"><label>Applies To</label><select name="applies_to" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto">
+<div class="form-group" style="margin:0;width:140px"><label>Applies To</label><select name="applies_to" id="newAppliesTo" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto" onchange="updateSectionBoxes('new')">
 <option value="both">🌐 All Tiers</option><option value="place">🏛️ T1 Only</option><option value="key_place">📍 T2 Only</option><option value="key_spot">🎯 T3 Only</option><option value="sub_spot">✦ T4 Only</option><option value="t2_plus">📍 T2+ (T2-T4)</option><option value="t3_plus">🎯 T3+ (T3-T4)</option>
+</select></div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;padding:10px 14px;background:#FFF5F9;border:1.5px dashed #C76B8F;border-radius:10px">
+<div style="width:100%;font-size:11px;font-weight:700;color:#C76B8F;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">📂 Show In Section (per tier)</div>
+<div class="form-group" style="margin:0;flex:1;min-width:120px" id="newT1Box"><label><span style="background:#C76B8F;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px">T1</span> Section</label><select name="section_t1" class="form-control" style="font-size:12px;padding:6px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor" selected>🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
+</select></div>
+<div class="form-group" style="margin:0;flex:1;min-width:120px" id="newT2Box"><label><span style="background:#2E86AB;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px">T2</span> Section</label><select name="section_t2" class="form-control" style="font-size:12px;padding:6px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor" selected>🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
+</select></div>
+<div class="form-group" style="margin:0;flex:1;min-width:120px" id="newT3Box"><label><span style="background:#E74845;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px">T3</span> Section</label><select name="section_t3" class="form-control" style="font-size:12px;padding:6px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor" selected>🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
+</select></div>
+<div class="form-group" style="margin:0;flex:1;min-width:120px" id="newT4Box"><label><span style="background:#9C27B0;color:#fff;padding:1px 6px;border-radius:4px;font-size:9px">T4</span> Section</label><select name="section_t4" class="form-control" style="font-size:12px;padding:6px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor" selected>🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
 </select></div>
 <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
 </form>
@@ -133,7 +148,7 @@
 </form>
 </td>
 <td style="display:flex;gap:6px">
-<button type="button" class="btn btn-secondary btn-sm" style="font-size:11px" onclick="openEditField({{ f.id }},'{{ f.label|e }}','{{ f.field_type }}','{{ (f.placeholder or '')|e }}',{{ f.sort_order }},'{{ f.applies_to }}','{{ f.icon or '📋' }}')"><i class="fas fa-edit"></i> Edit</button>
+<button type="button" class="btn btn-secondary btn-sm" style="font-size:11px" onclick="openEditField({{ f.id }},'{{ f.label|e }}','{{ f.field_type }}','{{ (f.placeholder or '')|e }}',{{ f.sort_order }},'{{ f.applies_to }}','{{ f.icon or '📋' }}','{{ f.section_t1 or 'visitor' }}','{{ f.section_t2 or 'visitor' }}','{{ f.section_t3 or 'visitor' }}','{{ f.section_t4 or 'visitor' }}')"><i class="fas fa-edit"></i> Edit</button>
 <form method="POST" action="{{ url_for('admin_field_delete', field_id=f.id) }}" style="display:inline" onsubmit="return confirm('Delete field and all values?')">
 <button class="btn btn-danger btn-sm btn-icon"><i class="fas fa-trash"></i></button>
 </form>
@@ -181,8 +196,23 @@
 </div>
 <div style="display:flex;gap:12px">
 <div class="form-group" style="margin:0;width:100px"><label>Order</label><input name="sort_order" id="editOrder" type="number" class="form-control"></div>
-<div class="form-group" style="margin:0;flex:1"><label>Scope</label><select name="applies_to" id="editScope" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto">
+<div class="form-group" style="margin:0;flex:1"><label>Scope</label><select name="applies_to" id="editScope" class="form-control" style="font-size:13px;padding:8px;height:auto;appearance:auto;-webkit-appearance:auto" onchange="updateSectionBoxes('edit')">
 <option value="both">🌐 All Tiers</option><option value="place">🏛️ T1 Only</option><option value="key_place">📍 T2 Only</option><option value="key_spot">🎯 T3 Only</option><option value="sub_spot">✦ T4 Only</option><option value="t2_plus">📍 T2+</option><option value="t3_plus">🎯 T3+</option>
+</select></div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:10px;background:#FFF5F9;border:1.5px dashed #C76B8F;border-radius:10px">
+<div style="width:100%;font-size:10px;font-weight:700;color:#C76B8F;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">📂 Show In Section</div>
+<div class="form-group" style="margin:0;flex:1;min-width:100px" id="editT1Box"><label style="font-size:10px"><span style="background:#C76B8F;color:#fff;padding:1px 5px;border-radius:3px;font-size:8px">T1</span></label><select name="section_t1" id="editSec1" class="form-control" style="font-size:11px;padding:5px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor">🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
+</select></div>
+<div class="form-group" style="margin:0;flex:1;min-width:100px" id="editT2Box"><label style="font-size:10px"><span style="background:#2E86AB;color:#fff;padding:1px 5px;border-radius:3px;font-size:8px">T2</span></label><select name="section_t2" id="editSec2" class="form-control" style="font-size:11px;padding:5px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor">🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
+</select></div>
+<div class="form-group" style="margin:0;flex:1;min-width:100px" id="editT3Box"><label style="font-size:10px"><span style="background:#E74845;color:#fff;padding:1px 5px;border-radius:3px;font-size:8px">T3</span></label><select name="section_t3" id="editSec3" class="form-control" style="font-size:11px;padding:5px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor">🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
+</select></div>
+<div class="form-group" style="margin:0;flex:1;min-width:100px" id="editT4Box"><label style="font-size:10px"><span style="background:#9C27B0;color:#fff;padding:1px 5px;border-radius:3px;font-size:8px">T4</span></label><select name="section_t4" id="editSec4" class="form-control" style="font-size:11px;padding:5px;height:auto;appearance:auto;-webkit-appearance:auto">
+<option value="core">📋 Core Information</option><option value="location">📍 Location & Geography</option><option value="images">🖼️ Images & Media</option><option value="visitor">🧳 Visitor Information</option><option value="history">📜 History & Spiritual Significance</option><option value="media">🎬 Audio, Video & External Links</option>
 </select></div>
 </div>
 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
@@ -219,7 +249,7 @@ document.addEventListener('click', function(e) {
         document.querySelectorAll('.icon-picker-dropdown').forEach(d => d.style.display = 'none');
     }
 });
-function openEditField(id, label, type, ph, order, scope, icon) {
+function openEditField(id, label, type, ph, order, scope, icon, s1, s2, s3, s4) {
     document.getElementById('editFieldForm').action = '/admin/fields/' + id + '/update';
     document.getElementById('editLabel').value = label;
     document.getElementById('editType').value = type;
@@ -228,8 +258,29 @@ function openEditField(id, label, type, ph, order, scope, icon) {
     document.getElementById('editScope').value = scope;
     document.getElementById('editIconBtn').textContent = icon;
     document.getElementById('editIconVal').value = icon;
+    document.getElementById('editSec1').value = s1 || 'visitor';
+    document.getElementById('editSec2').value = s2 || 'visitor';
+    document.getElementById('editSec3').value = s3 || 'visitor';
+    document.getElementById('editSec4').value = s4 || 'visitor';
     document.getElementById('editFieldModal').style.display = 'flex';
+    updateSectionBoxes('edit');
 }
 function closeEditField() { document.getElementById('editFieldModal').style.display = 'none'; }
+function updateSectionBoxes(prefix) {
+    const scopeEl = document.getElementById(prefix === 'new' ? 'newAppliesTo' : 'editScope');
+    const v = scopeEl.value;
+    const map = {
+        'both': [1,1,1,1], 'place': [1,0,0,0], 'key_place': [0,1,0,0],
+        'key_spot': [0,0,1,0], 'sub_spot': [0,0,0,1], 't2_plus': [0,1,1,1], 't3_plus': [0,0,1,1]
+    };
+    const active = map[v] || [1,1,1,1];
+    ['T1','T2','T3','T4'].forEach(function(t, i) {
+        const box = document.getElementById(prefix + t + 'Box');
+        if (box) {
+            box.style.opacity = active[i] ? '1' : '0.35';
+            box.style.pointerEvents = active[i] ? 'auto' : 'none';
+        }
+    });
+}
 </script>
 {% endblock %}

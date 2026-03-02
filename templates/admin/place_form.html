@@ -301,7 +301,7 @@
 <div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">🧳</span> Visitor Information<span class="fab">custom fields</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi">
 <div class="cf-sep">Custom Fields — Visitor Info</div>
-{% for cf in custom_fields %}{% if cf.name in ('opening_hours','best_time_to_visit','dress_code','how_to_reach','accommodation') %}{% set cv = custom_values.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.section_t1 == 'visitor' and cf.applies_to in ('both','place') %}{% set cv = custom_values.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
 {% if cf.field_type in ('text','number') %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
 {% elif cf.field_type == 'textarea' %}<textarea name="cf_{{ cf.id }}" class="form-control" rows="3">{{ cv.get('value','') }}</textarea>
@@ -315,7 +315,7 @@
 <div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">📜</span> History & Spiritual Significance<span class="fab">1 field</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi">
 <div class="cf-sep">Custom Fields — Spiritual</div>
-{% for cf in custom_fields %}{% if cf.name == 'history' %}{% set cv = custom_values.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.section_t1 == 'history' and cf.applies_to in ('both','place') %}{% set cv = custom_values.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }}</label>
 {% if cf.field_type == 'richtext' %}<input type="hidden" name="cf_{{ cf.id }}" id="cf_rt_{{ cf.id }}" value="{{ cv.get('value','') }}"><div class="rich-editor" data-target="cf_rt_{{ cf.id }}" style="background:white;min-height:160px"></div>
 {% else %}<textarea name="cf_{{ cf.id }}" class="form-control" rows="4">{{ cv.get('value','') }}</textarea>{% endif %}
@@ -328,7 +328,7 @@
 <div class="facc"><button type="button" class="facc-h ct1" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & External Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi">
 <div class="cf-sep">Custom Fields — Media</div>
-{% for cf in custom_fields %}{% if cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url') and cf.name != 'entry_fee' %}{% set cv = custom_values.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.section_t1 == 'media' and cf.applies_to in ('both','place') %}{% set cv = custom_values.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label>{{ cf.label }} <span style="font-size:10px;color:var(--text-light)">{{ cf.field_type }}</span></label>
 {% if cf.field_type in ('text','number') %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder }}">
 {% elif cf.field_type == 'url' %}<input name="cf_{{ cf.id }}" class="form-control" value="{{ cv.get('value','') }}" placeholder="{{ cf.placeholder or 'URL' }}">
@@ -439,7 +439,7 @@
 </div></div></div>
 
 <!-- T2 ACC 2: Location -->
-<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📍</span> Location<span class="fab">2 fields</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📍</span> Location & Geography<span class="fab">2 fields</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi">
 <div id="loc_kp_{{ ki }}" class="loc-picker">
 <div class="loc-picker-title"><i class="fas fa-map-marker-alt" style="color:#2E86AB"></i> Location Picker <span class="loc-badge" style="background:#2E86AB">T2</span><button class="loc-info-btn" type="button" onclick="document.getElementById('locInfoPopup').classList.add('active')" title="How to use"><i class="fas fa-info"></i></button></div>
@@ -508,25 +508,25 @@
 {% if custom_fields %}{% set kpc = key_place_customs.get(kp.id, {}) %}
 <div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">🧳</span> Visitor Information<span class="fab">custom</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Visitor Info</div>
-{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name in ('opening_hours','best_time_to_visit','dress_code') %}{% set kcv = kpc.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.section_t2 == 'visitor' and cf.applies_to in ('both','key_place','t2_plus') %}{% set kcv = kpc.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
 {% if cf.field_type in ('text','number') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% elif cf.field_type == 'textarea' %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="2" style="font-size:13px">{{ kcv.get('value','') }}</textarea>{% else %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">{% endif %}
 </div></div><div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div></div>
 {% endif %}{% endfor %}
 </div></div></div>
 
-<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📜</span> History & Spiritual<span class="fab">1 field</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">📜</span> History & Spiritual Significance<span class="fab">1 field</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Spiritual</div>
-{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name == 'history' %}{% set kcv = kpc.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.section_t2 == 'history' and cf.applies_to in ('both','key_place','t2_plus') %}{% set kcv = kpc.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px"><span style="font-size:14px">{{ cf.icon or '📜' }}</span> {{ cf.label }}</label>
 {% if cf.field_type == 'richtext' %}<input type="hidden" name="kp_{{ ki }}_cf_{{ cf.id }}" id="kp_{{ ki }}_cf_rt_{{ cf.id }}" value="{{ kcv.get('value','') }}"><div class="rich-editor" data-target="kp_{{ ki }}_cf_rt_{{ cf.id }}" style="background:white;min-height:120px"></div>{% else %}<textarea name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" rows="3">{{ kcv.get('value','') }}</textarea>{% endif %}
 </div></div><div class="field-toggle" style="padding-top:24px"><label class="toggle-label"><label class="toggle-switch" style="width:40px;height:22px"><input type="checkbox" name="kp_{{ ki }}_cf_vis_{{ cf.id }}" {{ 'checked' if kcv.get('is_visible',1) }} onchange="updateToggleText(this)"><span class="toggle-slider"></span></label><span class="status-text {{ 'on' if kcv.get('is_visible',1) else 'off' }}" style="font-size:11px">{{ 'On' if kcv.get('is_visible',1) else 'Off' }}</span></label></div></div>
 {% endif %}{% endfor %}
 </div></div></div>
 
-<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
+<div class="facc"><button type="button" class="facc-h ct2" onclick="togFacc(this)"><span class="fai">🎬</span> Audio, Video & External Links<span class="fab">media</span><i class="fas fa-chevron-down fac"></i></button>
 <div class="facc-b"><div class="facc-bi"><div class="cf-sep">Custom Fields — Media</div>
-{% for cf in custom_fields %}{% if cf.applies_to in ('both','key_place') and cf.name in ('audio_narration','video_tour','external_audio_url','external_video_url') and cf.name != 'entry_fee' %}{% set kcv = kpc.get(cf.id, {}) %}
+{% for cf in custom_fields %}{% if cf.section_t2 == 'media' and cf.applies_to in ('both','key_place','t2_plus') %}{% set kcv = kpc.get(cf.id, {}) %}
 <div class="field-row"><div class="field-main"><div class="form-group"><label style="font-size:12px;display:flex;align-items:center;gap:4px"><span style="font-size:14px">{{ cf.icon or '📋' }}</span> {{ cf.label }}</label>
 {% if cf.field_type in ('text','number') %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px">
 {% elif cf.field_type == 'url' %}<input name="kp_{{ ki }}_cf_{{ cf.id }}" class="form-control" value="{{ kcv.get('value','') }}" style="font-size:13px"><input name="kp_{{ ki }}_cf_desc_{{ cf.id }}" class="form-control" value="{{ kcv.get('description','') }}" placeholder="📝 Description" style="font-size:11px;margin-top:4px">
