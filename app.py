@@ -874,6 +874,7 @@ def contact():
         elif not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',email): errors.append('That email address doesn\'t look quite right. Could you double-check it?')
         if not subject: errors.append('A brief subject helps us understand your message better.')
         if not message: errors.append('Please write your message so we can help you.')
+        elif len(message)>3000: errors.append('Your message exceeds the 3000 character limit. Kindly shorten it a bit.')
         if not captcha_answer: errors.append('Please solve the small math puzzle to verify you\'re a real person.')
         elif captcha_answer!=captcha_expected: errors.append('The math answer wasn\'t quite right. Please try again with the new puzzle.')
         if errors:

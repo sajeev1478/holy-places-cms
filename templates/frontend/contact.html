@@ -63,10 +63,6 @@ textarea.cf-input{resize:vertical;min-height:120px}
 <p>Our team reads every message with care. We aim to respond within 24-48 hours. For urgent matters, please mention it in your subject line.</p>
 
 <div class="ci-item">
-<div class="ci-icon">✉️</div>
-<div><div class="ci-label">Email</div><div class="ci-value">namaste@holydham.com</div></div>
-</div>
-<div class="ci-item">
 <div class="ci-icon">📍</div>
 <div><div class="ci-label">Location</div><div class="ci-value">Serving from India, For the World</div></div>
 </div>
@@ -138,7 +134,11 @@ textarea.cf-input{resize:vertical;min-height:120px}
 
 <div class="cf-group">
 <label class="cf-label">Your Message <span class="req">*</span></label>
-<textarea name="message" class="cf-input" placeholder="Please share your thoughts with us. We read every message carefully and value your time..." required>{{ form.get('message','') }}</textarea>
+<textarea name="message" id="msgArea" class="cf-input" maxlength="3000" placeholder="Please share your thoughts with us. We read every message carefully and value your time..." required>{{ form.get('message','') }}</textarea>
+<div class="cf-hint" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+<span id="msgLimitWarn" style="color:#C62828;font-size:12px;display:none">🙏 You've reached the character limit — kindly remove some text.</span>
+<span id="msgCounter" style="margin-left:auto;font-size:12px;color:var(--text-light)">3000 characters remaining</span>
+</div>
 </div>
 
 <div class="cf-captcha">
@@ -159,4 +159,20 @@ textarea.cf-input{resize:vertical;min-height:120px}
 </div>
 </div>
 </section>
+
+<script>
+(function(){
+var ta=document.getElementById('msgArea'),counter=document.getElementById('msgCounter'),warn=document.getElementById('msgLimitWarn'),max=3000;
+function update(){
+var rem=max-ta.value.length;
+if(rem<0)rem=0;
+counter.textContent=rem+' character'+(rem!==1?'s':'')+' remaining';
+if(rem===0){counter.style.color='#C62828';counter.style.fontWeight='600';warn.style.display='inline';}
+else if(rem<=200){counter.style.color='#E65100';counter.style.fontWeight='500';warn.style.display='none';}
+else{counter.style.color='var(--text-light)';counter.style.fontWeight='normal';warn.style.display='none';}
+}
+ta.addEventListener('input',update);
+update();
+})();
+</script>
 {% endblock %}
