@@ -200,7 +200,7 @@ footer{padding:60px 0;background:var(--text-dark);color:rgba(255,255,255,.6)}
 .footer-col h4{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--rose);margin-bottom:16px}
 .footer-col a{display:block;color:rgba(255,255,255,.5);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;margin-bottom:10px;transition:color .3s}
 .footer-col a:hover{color:var(--rose)}
-.footer-bottom{max-width:1300px;margin:24px auto 0;padding:24px 40px 0;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px}
+.footer-bottom{max-width:1300px;margin:24px auto 0;padding:24px 40px 0;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px}
 
 /* ─── Pagination ─── */
 .pagination{display:flex;gap:6px;justify-content:center;margin-top:40px}
@@ -515,7 +515,8 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 <a href="{{ url_for('about') }}">About Us</a>
 <a href="{{ url_for('contact') }}">Contact</a>
 <a href="{{ url_for('privacy') }}">Privacy Policy</a>
-<a href="{{ url_for('terms') }}">Terms of Service</a>
+<a href="{{ url_for('terms') }}">Terms of Use</a>
+<a href="{{ url_for('disclaimer') }}">Disclaimer</a>
 </div>
 <div class="footer-col">
 <h4>Connect</h4>
@@ -525,7 +526,6 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 </div>
 <div class="footer-bottom">
 <span>© {{ current_year }} Holy Dham CMS. Made with 🙏</span>
-<span><a href="{{ url_for('privacy') }}" style="color:inherit">Privacy</a> · <a href="{{ url_for('terms') }}" style="color:inherit">Terms</a> · <a href="{{ url_for('about') }}" style="color:inherit">About</a></span>
 </div>
 </footer>
 

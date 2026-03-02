@@ -1,0 +1,80 @@
+{% extends "frontend/base.html" %}
+{% block title %}Disclaimer{% endblock %}
+{% block meta_desc %}HolyDham disclaimer — important notices about the informational content on our holy places of India website.{% endblock %}
+
+{% block extra_css %}
+<style>
+.legal-hero{padding:140px 0 40px;background:linear-gradient(180deg,var(--rose-pale) 0%,var(--cream) 100%);text-align:center}
+.legal-hero h1{font-family:'Josefin Sans',sans-serif;font-size:clamp(28px,4vw,42px);margin-bottom:8px}
+.legal-hero p{color:var(--text-light);font-size:14px}
+.legal-body{max-width:800px;margin:0 auto;padding:48px 40px 80px}
+.legal-body h2{font-family:'Josefin Sans',sans-serif;font-size:22px;color:var(--text-dark);margin:36px 0 12px;padding-top:20px;border-top:1px solid var(--border)}
+.legal-body h2:first-of-type{border-top:none;margin-top:0;padding-top:0}
+.legal-body p{color:var(--text-mid);line-height:1.85;margin-bottom:14px;font-size:15px}
+.legal-body ul{color:var(--text-mid);margin:8px 0 16px 24px;line-height:1.85;font-size:15px}
+.legal-body li{margin-bottom:6px}
+.legal-body strong{color:var(--text-dark)}
+.legal-updated{font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--text-light);background:var(--cream-dark);display:inline-block;padding:6px 16px;border-radius:50px;margin-bottom:28px}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="legal-hero">
+<div class="container">
+<h1>⚠️ Disclaimer</h1>
+<p>Last updated: {{ current_year }}</p>
+</div>
+</section>
+
+<div class="legal-body">
+<span class="legal-updated">Effective Date: January 1, {{ current_year }}</span>
+
+{% if sections %}
+{% for sec in sections %}
+{% if sec.type == 'legal_section' %}
+<h2>{{ sec.title }}</h2>
+{{ sec.content|safe }}
+{% elif sec.type == 'rich_text' %}
+{{ sec.content|safe }}
+{% elif sec.type == 'hero' %}
+{# hero overrides the page hero - skip in body #}
+{% endif %}
+{% endfor %}
+{% else %}
+<h2>1. General Information</h2>
+<p>The information provided on HolyDham ("Website") is for <strong>general informational purposes only</strong>. HolyDham is dedicated to curating and sharing knowledge about holy places, temples, pilgrimage sites, and sacred destinations across India. All content on this Website is published in good faith and is intended for educational and spiritual reference.</p>
+<p>While we make every effort to keep the information accurate and up-to-date, we make no representations or warranties of any kind — express or implied — about the completeness, accuracy, reliability, or suitability of the information, images, or related content presented on this Website for any purpose.</p>
+
+<h2>2. No Professional Advice</h2>
+<p>The content on HolyDham does not constitute professional advice of any kind, including but not limited to travel advice, religious guidance, legal counsel, or medical recommendations. Any action you take based on the information on this Website is <strong>strictly at your own risk</strong>. We strongly recommend consulting appropriate professionals, local authorities, or official sources before making decisions related to pilgrimage travel, health precautions, or local regulations.</p>
+
+<h2>3. Accuracy of Information</h2>
+<p>Information about holy places — including temple timings, darshan schedules, travel routes, local customs, entry fees, and historical facts — is gathered from publicly available sources, community contributions, and traditional knowledge. Such details are subject to change without notice. HolyDham cannot guarantee that all information on the Website reflects current conditions at any given sacred site.</p>
+<p>Spiritual traditions, historical accounts, and religious narratives presented on this Website may reflect specific sampradayas (traditions) or regional perspectives. Interpretations can vary, and we encourage readers to explore multiple sources and traditions.</p>
+
+<h2>4. External Links</h2>
+<p>This Website may contain links to external websites and resources, such as mapping services, temple official pages, government tourism portals, and other third-party sites. These links are provided for your convenience and additional reference. HolyDham does not endorse, control, or take responsibility for the content, accuracy, or privacy practices of any linked external website.</p>
+
+<h2>5. Images & Media</h2>
+<p>Images, photographs, and media content displayed on HolyDham are either original, sourced from contributors, obtained from publicly available repositories, or used under fair-use principles for educational purposes. If you believe any content on this Website infringes your copyright, please contact us through our contact page and we will promptly review and address the concern.</p>
+
+<h2>6. User-Submitted Content</h2>
+<p>If users submit corrections, suggestions, or information through our contact form, HolyDham reserves the right to use, modify, or discard such submissions. We do not verify the accuracy of user-submitted content and are not responsible for any errors or misinformation originating from user contributions.</p>
+
+<h2>7. No Liability</h2>
+<p>Under no circumstances shall HolyDham, its creators, contributors, or administrators be held liable for any loss, damage, injury, or inconvenience arising from the use of or reliance on any information provided on this Website. This includes, but is not limited to:</p>
+<ul>
+<li>Travel disruptions or issues encountered during pilgrimages planned using information from this Website</li>
+<li>Inaccurate temple timings, closure dates, or local regulations</li>
+<li>Any personal injury, health issues, or financial loss during visits to holy places</li>
+<li>Actions taken based on historical or spiritual content presented on the Website</li>
+</ul>
+
+<h2>8. Changes to This Disclaimer</h2>
+<p>HolyDham reserves the right to update or modify this Disclaimer at any time. Changes will be posted on this page with an updated effective date. Your continued use of the Website after any modifications constitutes acceptance of the revised Disclaimer.</p>
+
+<h2>9. Contact Us</h2>
+<p>If you have any questions or concerns about this Disclaimer, please reach out to us through our <a href="{{ url_for('contact') }}">contact page</a>. 🙏</p>
+{% endif %}
+</div>
+{% endblock %}
