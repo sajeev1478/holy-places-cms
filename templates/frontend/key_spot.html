@@ -4,7 +4,7 @@
 <!-- Hero with category accent -->
 {% set accent = ks.cat_color or '#E74C3C' %}
 <section class="hero-section" style="background:linear-gradient(135deg,{{ accent }}dd 0%,{{ accent }}99 60%,{{ accent }}bb 100%);padding:70px 0 50px;color:white;position:relative;overflow:hidden">
-<div style="position:absolute;inset:0;background:url('/static/uploads/{{ ks.featured_image or place.featured_image }}') center/cover;opacity:.35"></div>
+<div style="position:absolute;inset:0;{% if ks.featured_image %}background:url('/static/uploads/{{ ks.featured_image }}') center/cover;{% endif %}opacity:.22"></div>
 <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,.1) 40%,rgba(0,0,0,.5) 100%)"></div>
 <div class="container" style="position:relative;z-index:1">
 <!-- Breadcrumb with tier badges -->
