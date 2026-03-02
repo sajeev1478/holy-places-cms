@@ -26,9 +26,57 @@ a{color:var(--rose-deep);text-decoration:none;transition:color .3s}
 a:hover{color:var(--rose-dark)}
 img{max-width:100%;height:auto}
 
-/* ─── Header ─── */
-header{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .4s;background:rgba(253,248,243,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.04)}
-header.scrolled{background:rgba(253,248,243,.98);backdrop-filter:blur(20px);box-shadow:0 2px 40px var(--shadow);border-bottom-color:transparent}
+/* ─── Header (Adaptive) ─── */
+header{position:fixed;top:0;left:0;right:0;z-index:100;transition:all .4s}
+/* Default: cream bg for pages WITHOUT hero sections */
+header.header-default{background:rgba(253,248,243,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,0,0,.04)}
+header.header-default.scrolled{background:rgba(253,248,243,.98);backdrop-filter:blur(20px);box-shadow:0 2px 40px var(--shadow);border-bottom-color:transparent}
+header.header-default .logo-text{color:var(--text-dark)}
+header.header-default .logo-text span{color:var(--rose-deep)}
+header.header-default nav a{color:var(--text-mid)}
+header.header-default nav a:hover,header.header-default nav a.active{color:var(--rose-deep);background:var(--rose-pale)}
+header.header-default .nav-search-box{background:white;border:1.5px solid var(--border)}
+header.header-default .nav-search-icon{color:var(--text-light)}
+header.header-default .nav-search-input{color:var(--text-dark)}
+header.header-default .nav-search-input::placeholder{color:var(--text-light)}
+header.header-default .mobile-toggle{color:var(--text-dark)}
+/* DARK hero → white text on dark glass */
+header.header-on-dark{background:rgba(0,0,0,.3);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.08)}
+header.header-on-dark.scrolled{background:rgba(0,0,0,.65);backdrop-filter:blur(20px);box-shadow:0 2px 40px rgba(0,0,0,.2);border-bottom-color:rgba(255,255,255,.05)}
+header.header-on-dark .logo-text{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+header.header-on-dark .logo-text span{color:#F4D03F}
+header.header-on-dark nav a{color:rgba(255,255,255,.88);text-shadow:0 1px 3px rgba(0,0,0,.3)}
+header.header-on-dark nav a:hover,header.header-on-dark nav a.active{color:#fff;background:rgba(255,255,255,.15)}
+header.header-on-dark .nav-search-box{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2)}
+header.header-on-dark .nav-search-icon{color:rgba(255,255,255,.6)}
+header.header-on-dark .nav-search-input{color:rgba(255,255,255,.9)}
+header.header-on-dark .nav-search-input::placeholder{color:rgba(255,255,255,.4)}
+header.header-on-dark .nav-search-kbd{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.5)}
+header.header-on-dark .mobile-toggle{color:#fff}
+/* MEDIUM hero → dark text on frosted glass */
+header.header-on-medium{background:rgba(255,255,255,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.08);box-shadow:0 1px 8px rgba(0,0,0,.04)}
+header.header-on-medium.scrolled{background:rgba(253,248,243,.96);backdrop-filter:blur(20px);box-shadow:0 2px 40px var(--shadow);border-bottom-color:transparent}
+header.header-on-medium .logo-text{color:#2D1F2E;text-shadow:0 1px 3px rgba(255,255,255,.4)}
+header.header-on-medium .logo-text span{color:var(--rose-deep)}
+header.header-on-medium nav a{color:#3D2B4E;text-shadow:0 1px 2px rgba(255,255,255,.3)}
+header.header-on-medium nav a:hover,header.header-on-medium nav a.active{color:var(--rose-deep);background:rgba(199,107,143,.1)}
+header.header-on-medium .nav-search-box{background:rgba(255,255,255,.65);border:1px solid rgba(0,0,0,.1)}
+header.header-on-medium .nav-search-icon{color:var(--text-light)}
+header.header-on-medium .nav-search-input{color:#2D1F2E}
+header.header-on-medium .nav-search-input::placeholder{color:#B5A5B6}
+header.header-on-medium .mobile-toggle{color:#2D1F2E}
+/* LIGHT hero → dark text on light glass */
+header.header-on-light{background:rgba(255,255,255,.4);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.05)}
+header.header-on-light.scrolled{background:rgba(253,248,243,.96);backdrop-filter:blur(20px);box-shadow:0 2px 40px var(--shadow);border-bottom-color:transparent}
+header.header-on-light .logo-text{color:#2D1F2E;text-shadow:0 1px 4px rgba(255,255,255,.5)}
+header.header-on-light .logo-text span{color:var(--rose-deep)}
+header.header-on-light nav a{color:#3D2B4E;text-shadow:0 1px 3px rgba(255,255,255,.4)}
+header.header-on-light nav a:hover,header.header-on-light nav a.active{color:var(--rose-deep);background:rgba(199,107,143,.08)}
+header.header-on-light .nav-search-box{background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08)}
+header.header-on-light .nav-search-icon{color:var(--text-light)}
+header.header-on-light .nav-search-input{color:#2D1F2E}
+header.header-on-light .nav-search-input::placeholder{color:#B5A5B6}
+header.header-on-light .mobile-toggle{color:#2D1F2E}
 .header-inner{max-width:1300px;margin:0 auto;padding:16px 40px;display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .logo-flower{font-size:28px}
@@ -519,6 +567,27 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 window.addEventListener('scroll',()=>{
   document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
 });
+
+/* ═══ ADAPTIVE HEADER: Auto-detect hero brightness ═══ */
+(function(){
+  const hdr=document.getElementById('header');
+  if(!hdr)return;
+  const hero=document.querySelector('.hero-section');
+  if(!hero){hdr.classList.add('header-default');return;}
+  /* Sample hero's computed background color */
+  const cs=getComputedStyle(hero);
+  const bg=cs.backgroundColor||'';
+  const m=bg.match(/\d+/g);
+  if(m&&m.length>=3){
+    const brightness=(parseInt(m[0])*299+parseInt(m[1])*587+parseInt(m[2])*114)/1000;
+    if(brightness<100)hdr.classList.add('header-on-dark');
+    else if(brightness>170)hdr.classList.add('header-on-light');
+    else hdr.classList.add('header-on-medium');
+  } else {
+    /* Fallback: dark gradients are most common in this CMS */
+    hdr.classList.add('header-on-dark');
+  }
+})();
 setTimeout(()=>{document.querySelectorAll('[style*="fadeIn"]').forEach(el=>el.style.opacity='0')},4000);
 
 /* ═══ INLINE LIVE SEARCH ═══ */
