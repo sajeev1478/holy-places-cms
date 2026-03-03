@@ -500,6 +500,18 @@ def seed_db():
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_port','587'))
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_user',''))
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_pass',''))
+    # Seed default nav items
+    existing_nav = db.execute("SELECT value FROM site_settings WHERE key='nav_items'").fetchone()
+    if not existing_nav:
+        mods = db.execute("SELECT id,name,slug FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
+        default_nav = [{"type":"home","label":"Home","visible":True}]
+        default_nav.append({"type":"dhams","label":"Holy Dhams","visible":True})
+        for m in mods:
+            if m['slug'] != 'holy-dhams':
+                default_nav.append({"type":"module","module_id":m['id'],"slug":m['slug'],"label":m['name'],"visible":True})
+        default_nav.append({"type":"page","page":"contact","label":"Contact","visible":True})
+        default_nav.append({"type":"page","page":"about","label":"About","visible":True})
+        db.execute("INSERT INTO site_settings (key,value) VALUES ('nav_items',?)",(json.dumps(default_nav),))
     # Modules with field schemas
     for name,slug,desc,icon,order in [('Holy Dhams','holy-dhams','Sacred destinations','\U0001f6d5',1),('Temples','temples','Temple profiles','\U0001f3db\ufe0f',2),('Sacred Stories','sacred-stories','Mythological tales','\U0001f4d6',3),('Festivals','festivals','Religious events','\U0001f3ea',4),('Pilgrimage Guides','pilgrimage-guides','Travel guides','\U0001f6b6',5),('Events','events','Spiritual events','\U0001f4c5',6),('Bhajans & Kirtans','bhajans-kirtans','Devotional music','\U0001f3b5',7),('Spiritual Articles','spiritual-articles','Spiritual writings','\U0001f4dd',8)]:
         schema_json = json.dumps(MODULE_SCHEMAS.get(slug, []))
@@ -939,7 +951,25 @@ def inject_globals():
     cu=get_current_user()
     pac=get_pending_approvals_count() if cu else 0
     assigned=get_user_assigned_dhams(cu['id']) if cu and cu['role']=='editor' else []
-    return {'current_user':cu,'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'is_admin_or_above':is_admin_or_above,'can_edit_dham':can_edit_dham,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS,'module_schemas':MODULE_SCHEMAS,'pending_approvals_count':pac,'user_assigned_dhams':assigned}
+    nav_row=db.execute("SELECT value FROM site_settings WHERE key='nav_items'").fetchone()
+    nav_items_raw=json.loads(nav_row['value']) if nav_row else []
+    nav_items_resolved=[]
+    for ni in nav_items_raw:
+        if not ni.get('visible',True): continue
+        item={'label':ni['label'],'type':ni['type']}
+        if ni['type']=='home': item['url']='/'; item['endpoint']='home'
+        elif ni['type']=='dhams': item['url']='/dhams'; item['endpoint']='all_dhams'
+        elif ni['type']=='module':
+            mod=db.execute("SELECT slug FROM modules WHERE id=? AND is_active=1",(ni.get('module_id',0),)).fetchone()
+            if not mod: continue
+            item['url']='/m/'+mod['slug']; item['endpoint']='module_page'; item['slug']=mod['slug']
+        elif ni['type']=='page':
+            pg=ni.get('page','')
+            if pg=='contact': item['url']='/contact'; item['endpoint']='contact'
+            elif pg=='about': item['url']='/about'; item['endpoint']='about'
+            else: continue
+        nav_items_resolved.append(item)
+    return {'current_user':cu,'active_modules':modules,'nav_items':nav_items_resolved,'current_year':datetime.now().year,'has_permission':has_permission,'is_admin_or_above':is_admin_or_above,'can_edit_dham':can_edit_dham,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS,'module_schemas':MODULE_SCHEMAS,'pending_approvals_count':pac,'user_assigned_dhams':assigned}
 
 # ═══════════════════════════════════════════
 # FRONTEND ROUTES
@@ -2803,6 +2833,40 @@ def admin_sub_category_delete(cat_id):
     db.execute("DELETE FROM sub_spot_categories WHERE id=?",(cat_id,))
     db.commit(); flash('T4 category deleted.','info')
     return redirect(url_for('admin_tags'))
+
+
+# ─── Navigation Manager ───
+@app.route('/admin/navigation', methods=['GET','POST'])
+@login_required
+def admin_nav_manager():
+    cu=get_current_user()
+    if cu['role']!='system_admin': flash('Access denied','error'); return redirect(url_for('admin_dashboard'))
+    db=get_db()
+    if request.method=='POST':
+        action=request.form.get('action','save')
+        if action=='save':
+            items_json=request.form.get('nav_items','[]')
+            try:
+                items=json.loads(items_json)
+                db.execute("INSERT INTO site_settings (key,value) VALUES ('nav_items',?) ON CONFLICT(key) DO UPDATE SET value=?",(json.dumps(items),json.dumps(items)))
+                db.commit()
+                flash('Navigation saved successfully','success')
+            except: flash('Error saving navigation','error')
+        elif action=='reset':
+            mods=db.execute("SELECT id,name,slug FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
+            default_nav=[{"type":"home","label":"Home","visible":True},{"type":"dhams","label":"Holy Dhams","visible":True}]
+            for m in mods:
+                if m['slug']!='holy-dhams': default_nav.append({"type":"module","module_id":m['id'],"slug":m['slug'],"label":m['name'],"visible":True})
+            default_nav.append({"type":"page","page":"contact","label":"Contact","visible":True})
+            default_nav.append({"type":"page","page":"about","label":"About","visible":True})
+            db.execute("INSERT INTO site_settings (key,value) VALUES ('nav_items',?) ON CONFLICT(key) DO UPDATE SET value=?",(json.dumps(default_nav),json.dumps(default_nav)))
+            db.commit()
+            flash('Navigation reset to defaults','success')
+        return redirect(url_for('admin_nav_manager'))
+    row=db.execute("SELECT value FROM site_settings WHERE key='nav_items'").fetchone()
+    nav_items=json.loads(row['value']) if row else []
+    modules=db.execute("SELECT id,name,slug,icon FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
+    return render_template('admin/nav_manager.html',nav_items=nav_items,modules=modules)
 
 # ─── Admin Help Guide ───
 @app.route('/admin/help')

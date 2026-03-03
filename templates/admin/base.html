@@ -749,6 +749,11 @@ textarea.form-control{resize:vertical;min-height:60px}
 <i class="fas fa-file-alt"></i> Site Pages
 </a>
 {% endif %}
+{% if current_user and current_user.role == 'system_admin' %}
+<a class="sidebar-link {{ 'active' if request.endpoint == 'admin_nav_manager' }}" href="{{ url_for('admin_nav_manager') }}">
+<i class="fas fa-bars"></i> Navigation
+</a>
+{% endif %}
 <a class="sidebar-link" href="{{ url_for('home') }}" target="_blank">
 <i class="fas fa-external-link-alt"></i> View Website
 </a>

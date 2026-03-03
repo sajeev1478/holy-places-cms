@@ -1,0 +1,204 @@
+{% extends "admin/base.html" %}
+{% block title %}Navigation Manager{% endblock %}
+{% block page_title %}<i class="fas fa-bars"></i> Navigation Manager{% endblock %}
+{% block content %}
+<style>
+.nav-mgr{max-width:700px;margin:0 auto}
+.nav-info{background:linear-gradient(135deg,#f8f0ff,#fff0f5);border-radius:16px;padding:20px 24px;margin-bottom:28px;font-size:14px;color:#555;line-height:1.6;border:1px solid rgba(199,107,143,.12)}
+.nav-info strong{color:var(--rose-deep)}
+.nav-list{list-style:none;padding:0;margin:0 0 24px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:white;border-radius:12px;margin-bottom:8px;border:1px solid var(--border);transition:all .2s;cursor:grab}
+.nav-item:active{cursor:grabbing}
+.nav-item.dragging{opacity:.4;border-color:var(--rose)}
+.nav-item.drag-over{border-top:3px solid var(--rose-deep);margin-top:-3px}
+.nav-handle{color:var(--text-light);font-size:16px;cursor:grab;flex-shrink:0}
+.nav-label{flex:1;font-weight:600;font-size:14px;color:var(--text-dark)}
+.nav-label input{border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:14px;font-weight:600;width:140px;font-family:inherit}
+.nav-type{font-size:11px;padding:3px 10px;border-radius:50px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.nav-type.home{background:#e8f5e9;color:#2e7d32}
+.nav-type.dhams{background:#fff3e0;color:#e65100}
+.nav-type.module{background:#e3f2fd;color:#1565c0}
+.nav-type.page{background:#f3e5f5;color:#7b1fa2}
+.nav-toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.nav-toggle input{opacity:0;width:0;height:0}
+.nav-toggle .slider{position:absolute;inset:0;background:#ccc;border-radius:24px;cursor:pointer;transition:.3s}
+.nav-toggle .slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s}
+.nav-toggle input:checked+.slider{background:var(--primary)}
+.nav-toggle input:checked+.slider::before{transform:translateX(20px)}
+.nav-actions{display:flex;gap:10px;margin-top:20px}
+.nav-actions button{padding:10px 24px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
+.nav-actions .btn-save{background:var(--primary);color:white}
+.nav-actions .btn-save:hover{background:var(--rose-deep)}
+.nav-actions .btn-reset{background:white;color:var(--text-mid);border:1px solid var(--border)}
+.nav-actions .btn-reset:hover{border-color:var(--rose);color:var(--rose-deep)}
+.nav-add{margin-bottom:24px}
+.nav-add select{padding:8px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:14px;margin-right:8px}
+.nav-add button{padding:8px 18px;border-radius:10px;background:var(--sage);color:white;border:none;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
+.nav-add button:hover{background:#5a9e6f}
+.nav-remove{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:4px;transition:color .2s}
+.nav-remove:hover{color:#e53935}
+.nav-preview{margin-top:28px;background:var(--text-dark);border-radius:14px;padding:16px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.nav-preview-label{font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;width:100%;margin-bottom:4px}
+.nav-preview a{color:rgba(255,255,255,.8);font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;text-decoration:none;padding:6px 12px;border-radius:6px}
+.nav-preview a:hover{background:rgba(255,255,255,.1);color:white}
+</style>
+
+<div class="nav-mgr">
+
+<div class="nav-info">
+<strong>Manage your website's top navigation bar.</strong> Drag items to reorder, toggle visibility, edit labels, or add new modules/pages. Changes take effect immediately after saving.
+</div>
+
+<!-- Add Item -->
+<div class="nav-add">
+<select id="addItemSelect">
+<option value="">+ Add item to navigation...</option>
+<optgroup label="Built-in Pages">
+<option value="home" data-type="home">Home</option>
+<option value="dhams" data-type="dhams">Holy Dhams</option>
+<option value="contact" data-type="page" data-page="contact">Contact</option>
+<option value="about" data-type="page" data-page="about">About</option>
+</optgroup>
+<optgroup label="Modules">
+{% for mod in modules %}
+<option value="mod_{{ mod.id }}" data-type="module" data-modid="{{ mod.id }}" data-slug="{{ mod.slug }}">{{ mod.icon }} {{ mod.name }}</option>
+{% endfor %}
+</optgroup>
+</select>
+<button onclick="addNavItem()">Add</button>
+</div>
+
+<!-- Nav Items List -->
+<ul class="nav-list" id="navList">
+{% for item in nav_items %}
+<li class="nav-item" draggable="true" data-index="{{ loop.index0 }}">
+<span class="nav-handle"><i class="fas fa-grip-vertical"></i></span>
+<span class="nav-type {{ item.type }}">{{ item.type }}</span>
+<span class="nav-label">
+<input type="text" value="{{ item.label }}" onchange="updateLabel({{ loop.index0 }},this.value)">
+</span>
+<label class="nav-toggle">
+<input type="checkbox" {{ 'checked' if item.visible }} onchange="toggleVis({{ loop.index0 }},this.checked)">
+<span class="slider"></span>
+</label>
+<button class="nav-remove" onclick="removeItem({{ loop.index0 }})" title="Remove"><i class="fas fa-trash-alt"></i></button>
+</li>
+{% endfor %}
+</ul>
+
+<!-- Actions -->
+<div class="nav-actions">
+<button class="btn-save" onclick="saveNav()"><i class="fas fa-save"></i> Save Navigation</button>
+<form method="POST" style="display:inline" onsubmit="return confirm('Reset navigation to defaults?')">
+<input type="hidden" name="action" value="reset">
+<button type="submit" class="btn-reset"><i class="fas fa-undo"></i> Reset to Default</button>
+</form>
+</div>
+
+<!-- Live Preview -->
+<div class="nav-preview" id="navPreview">
+<div class="nav-preview-label">Live Preview</div>
+</div>
+
+</div>
+
+<script>
+var navItems={{ nav_items|tojson }};
+
+function renderList(){
+  var ul=document.getElementById('navList');
+  ul.innerHTML='';
+  navItems.forEach(function(it,i){
+    var li=document.createElement('li');
+    li.className='nav-item';
+    li.draggable=true;
+    li.dataset.index=i;
+    li.innerHTML='<span class="nav-handle"><i class="fas fa-grip-vertical"></i></span>'
+      +'<span class="nav-type '+it.type+'">'+it.type+'</span>'
+      +'<span class="nav-label"><input type="text" value="'+it.label+'" onchange="updateLabel('+i+',this.value)"></span>'
+      +'<label class="nav-toggle"><input type="checkbox" '+(it.visible?'checked':'')+' onchange="toggleVis('+i+',this.checked)"><span class="slider"></span></label>'
+      +'<button class="nav-remove" onclick="removeItem('+i+')" title="Remove"><i class="fas fa-trash-alt"></i></button>';
+    ul.appendChild(li);
+  });
+  initDrag();
+  updatePreview();
+}
+
+function updateLabel(i,v){navItems[i].label=v;updatePreview()}
+function toggleVis(i,v){navItems[i].visible=v;updatePreview()}
+function removeItem(i){if(confirm('Remove "'+navItems[i].label+'" from navigation?')){navItems.splice(i,1);renderList()}}
+
+function addNavItem(){
+  var sel=document.getElementById('addItemSelect');
+  var opt=sel.options[sel.selectedIndex];
+  if(!opt.value)return;
+  var t=opt.dataset.type;
+  var item={type:t,label:opt.text.replace(/^[\u{1F300}-\u{1FAFF}]\s*/u,''),visible:true};
+  if(t=='module'){item.module_id=parseInt(opt.dataset.modid);item.slug=opt.dataset.slug;item.label=opt.text.replace(/^.\s/,'')}
+  if(t=='page'){item.page=opt.dataset.page}
+  // Check duplicate
+  var dup=navItems.some(function(n){
+    if(t=='module')return n.type=='module'&&n.module_id==item.module_id;
+    if(t=='page')return n.type=='page'&&n.page==item.page;
+    return n.type==t;
+  });
+  if(dup){alert('This item is already in navigation');return}
+  navItems.push(item);
+  sel.selectedIndex=0;
+  renderList();
+}
+
+function saveNav(){
+  var form=document.createElement('form');
+  form.method='POST';
+  var i1=document.createElement('input');i1.name='action';i1.value='save';i1.type='hidden';
+  var i2=document.createElement('input');i2.name='nav_items';i2.value=JSON.stringify(navItems);i2.type='hidden';
+  form.appendChild(i1);form.appendChild(i2);
+  document.body.appendChild(form);form.submit();
+}
+
+function updatePreview(){
+  var p=document.getElementById('navPreview');
+  var html='<div class="nav-preview-label">Live Preview</div>';
+  navItems.forEach(function(it){
+    if(it.visible) html+='<a href="#">'+it.label+'</a>';
+  });
+  p.innerHTML=html;
+}
+
+// Drag & Drop
+function initDrag(){
+  var items=document.querySelectorAll('.nav-item');
+  var dragIdx=null;
+  items.forEach(function(item){
+    item.addEventListener('dragstart',function(e){
+      dragIdx=parseInt(this.dataset.index);
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    item.addEventListener('dragend',function(){
+      this.classList.remove('dragging');
+      document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('drag-over')});
+    });
+    item.addEventListener('dragover',function(e){
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      this.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave',function(){this.classList.remove('drag-over')});
+    item.addEventListener('drop',function(e){
+      e.preventDefault();
+      var dropIdx=parseInt(this.dataset.index);
+      if(dragIdx!==null && dragIdx!==dropIdx){
+        var moved=navItems.splice(dragIdx,1)[0];
+        navItems.splice(dropIdx,0,moved);
+        renderList();
+      }
+    });
+  });
+}
+
+initDrag();
+updatePreview();
+</script>
+{% endblock %}
