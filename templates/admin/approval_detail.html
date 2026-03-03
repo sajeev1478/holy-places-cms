@@ -1,0 +1,218 @@
+{% extends "admin/base.html" %}
+{% block title %}Change Approval #{{ item.id }}{% endblock %}
+{% block page_title %}Change Approval #{{ item.id }}{% endblock %}
+{% block topbar_actions %}<a href="{{ url_for('admin_approvals') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>{% endblock %}
+
+{% block admin_content %}
+<!-- Status Banner -->
+{% if item.status == 'pending' %}
+<div style="background:#FEFCBF;border:1px solid #ECC94B;border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+<span style="font-size:24px">⏳</span>
+<div><strong style="color:#744210">Pending Review</strong><div style="font-size:12px;color:#975A16">This change is waiting for approval.</div></div>
+</div>
+{% elif item.status == 'approved' %}
+<div style="background:#C6F6D5;border:1px solid #68D391;border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+<span style="font-size:24px">✅</span>
+<div><strong style="color:#22543D">Approved</strong> by {{ item.reviewer_name or 'Admin' }} on {{ item.reviewed_at[:16] if item.reviewed_at else '' }}
+{% if item.review_note %}<div style="font-size:12px;color:#276749;margin-top:4px">Note: {{ item.review_note }}</div>{% endif %}
+</div>
+</div>
+{% elif item.status == 'rejected' %}
+<div style="background:#FED7D7;border:1px solid #FC8181;border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+<span style="font-size:24px">❌</span>
+<div><strong style="color:#742A2A">Rejected</strong> by {{ item.reviewer_name or 'Admin' }} on {{ item.reviewed_at[:16] if item.reviewed_at else '' }}
+{% if item.review_note %}<div style="font-size:12px;color:#9B2C2C;margin-top:4px">Reason: {{ item.review_note }}</div>{% endif %}
+</div>
+</div>
+{% endif %}
+
+<!-- Summary Card -->
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-header"><h3><i class="fas fa-info-circle"></i> Change Summary</h3></div>
+<div style="padding:20px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Dham</div>
+<div style="font-size:15px;font-weight:600">🛕 {{ item.dham_name or '—' }}</div>
+</div>
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Tier</div>
+<div><span style="display:inline-block;padding:3px 10px;background:var(--primary-light);color:var(--primary);border-radius:50px;font-size:12px;font-weight:700">{{ item.tier }}</span></div>
+</div>
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Action</div>
+<div>{% if item.action_type == 'edit' %}📝 Edit{% elif item.action_type == 'create' %}➕ Create{% elif item.action_type == 'photo_upload' %}📷 Photo Upload{% else %}{{ item.action_type }}{% endif %}</div>
+</div>
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Submitted By</div>
+<div style="display:flex;align-items:center;gap:8px">
+<span style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">{{ item.user_name[0] if item.user_name else '?' }}</span>
+<div><div style="font-weight:600;font-size:13px">{{ item.user_name }}</div><div style="font-size:11px;color:var(--text-light)">{{ item.user_role|replace('_',' ')|title }}</div></div>
+</div>
+</div>
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Date & Time</div>
+<div style="font-size:13px">{{ item.created_at[:19] if item.created_at else '' }}</div>
+</div>
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:4px">Entity</div>
+<div style="font-size:13px">{{ item.entity_title or '—' }}</div>
+</div>
+</div>
+{% if item.change_summary %}
+<div style="background:var(--cream-dark);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text)">
+<strong>Changes:</strong> {{ item.change_summary }}
+</div>
+{% endif %}
+</div>
+</div>
+
+<!-- Data Comparison -->
+{% if item.action_type == 'photo_upload' %}
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-header"><h3><i class="fas fa-images"></i> Uploaded Images</h3></div>
+<div style="padding:20px">
+{% set images = upd.get('images', []) %}
+{% if images %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
+{% for img in images %}
+<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+<img src="/static/uploads/{{ img.path }}" style="width:100%;height:160px;object-fit:cover" alt="Upload">
+<div style="padding:10px;font-size:12px">
+<div><strong>Tier:</strong> {{ img.tier }}</div>
+<div><strong>Type:</strong> {{ img.type }}</div>
+{% if img.entity %}<div><strong>Entity:</strong> {{ img.entity }}</div>{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<p style="color:var(--text-light)">No image previews available.</p>
+{% endif %}
+</div>
+</div>
+{% else %}
+<!-- Field-level comparison for text edits -->
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-header"><h3><i class="fas fa-exchange-alt"></i> Data Comparison</h3></div>
+<div style="padding:20px">
+{% set display_fields = [] %}
+{% for key in prev %}{% if key not in ('_t2_changes','_t3_entries','_t4_entries') %}{% if display_fields.append(key) %}{% endif %}{% endif %}{% endfor %}
+{% for key in upd %}{% if key not in ('_t2_changes','_t3_entries','_t4_entries','t3_entries','t4_entries','images') and key not in display_fields %}{% if display_fields.append(key) %}{% endif %}{% endif %}{% endfor %}
+
+{% if display_fields %}
+<table class="admin-table" style="font-size:13px">
+<thead><tr><th>Field</th><th style="background:#FFF5F5;color:#C53030">Previous</th><th style="background:#F0FFF4;color:#276749">Updated</th></tr></thead>
+<tbody>
+{% for field in display_fields %}
+<tr>
+<td style="font-weight:600;white-space:nowrap">{{ field|replace('_',' ')|title }}</td>
+<td style="background:#FFF5F5;max-width:300px;overflow:hidden;text-overflow:ellipsis">{{ prev.get(field, '—')|truncate(200) }}</td>
+<td style="background:#F0FFF4;max-width:300px;overflow:hidden;text-overflow:ellipsis">{{ upd.get(field, '—')|truncate(200) }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+<!-- T2 sub-changes -->
+{% set t2_changes = upd.get('_t2_changes', []) %}
+{% if t2_changes %}
+<h4 style="margin:20px 0 10px;font-size:14px"><span style="padding:2px 8px;background:#3182CE15;color:#3182CE;border-radius:50px;font-size:11px;font-weight:700">T2</span> Key Place Changes</h4>
+{% for ch in t2_changes %}
+<div style="background:var(--cream-dark);border-radius:8px;padding:12px 16px;margin-bottom:8px;font-size:13px">
+<div style="font-weight:600;margin-bottom:6px">{% if ch.id %}📝 Edit: {{ ch.title }}{% else %}➕ New: {{ ch.title }}{% endif %}</div>
+{% for k, v in ch.get('upd', {}).items() %}
+{% if k not in ('parent_place_id','key_place_id') %}
+<div style="display:flex;gap:8px"><span style="color:var(--text-light);min-width:100px">{{ k|replace('_',' ')|title }}:</span> 
+{% if k in ch.get('prev',{}) %}<span style="text-decoration:line-through;color:#E53E3E;margin-right:8px">{{ ch.prev[k]|truncate(80) }}</span>{% endif %}
+<span style="color:#38A169">{{ v|truncate(80) }}</span></div>
+{% endif %}
+{% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- T3 sub-changes -->
+{% set t3_entries = upd.get('t3_entries', []) %}
+{% if t3_entries %}
+<h4 style="margin:20px 0 10px;font-size:14px"><span style="padding:2px 8px;background:#E7484510;color:#E74845;border-radius:50px;font-size:11px;font-weight:700">T3</span> Key Spot Changes</h4>
+{% for ch in t3_entries %}
+<div style="background:var(--cream-dark);border-radius:8px;padding:12px 16px;margin-bottom:8px;font-size:13px">
+<div style="font-weight:600;margin-bottom:6px">{% if ch.action == 'edit' %}📝 Edit: {{ ch.get('upd',{}).get('title', ch.get('title','')) }}{% else %}➕ New: {{ ch.get('upd',{}).get('title','') }}{% endif %}</div>
+{% for k, v in ch.get('upd', {}).items() %}
+{% if k not in ('key_place_id','key_spot_id') %}
+<div style="display:flex;gap:8px"><span style="color:var(--text-light);min-width:100px">{{ k|replace('_',' ')|title }}:</span> <span style="color:#38A169">{{ v|truncate(80) if v is string else v }}</span></div>
+{% endif %}
+{% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- T4 sub-changes -->
+{% set t4_entries = upd.get('t4_entries', []) %}
+{% if t4_entries %}
+<h4 style="margin:20px 0 10px;font-size:14px"><span style="padding:2px 8px;background:#805AD520;color:#805AD5;border-radius:50px;font-size:11px;font-weight:700">T4</span> Sub-Spot Changes</h4>
+{% for ch in t4_entries %}
+<div style="background:var(--cream-dark);border-radius:8px;padding:12px 16px;margin-bottom:8px;font-size:13px">
+<div style="font-weight:600;margin-bottom:6px">{% if ch.action == 'edit' %}📝 Edit: {{ ch.get('upd',{}).get('title', ch.get('title','')) }}{% else %}➕ New: {{ ch.get('upd',{}).get('title','') }}{% endif %}</div>
+{% for k, v in ch.get('upd', {}).items() %}
+{% if k not in ('key_place_id','key_spot_id') %}
+<div style="display:flex;gap:8px"><span style="color:var(--text-light);min-width:100px">{{ k|replace('_',' ')|title }}:</span> <span style="color:#38A169">{{ v|truncate(80) if v is string else v }}</span></div>
+{% endif %}
+{% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if not display_fields and not t2_changes and not t3_entries and not t4_entries %}
+<p style="color:var(--text-light)">No detailed comparison available.</p>
+{% endif %}
+</div>
+</div>
+{% endif %}
+
+<!-- Uploaded Files -->
+{% if files %}
+<div class="admin-card" style="margin-bottom:20px">
+<div class="admin-card-header"><h3><i class="fas fa-paperclip"></i> Uploaded Files</h3></div>
+<div style="padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+{% for fp in files %}
+<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+<img src="/static/uploads/{{ fp }}" style="width:100%;height:120px;object-fit:cover" alt="Upload" onerror="this.style.display='none'">
+<div style="padding:6px 10px;font-size:11px;color:var(--text-light);word-break:break-all">{{ fp }}</div>
+</div>
+{% endfor %}
+</div>
+</div>
+{% endif %}
+
+<!-- Approve / Reject Actions -->
+{% if item.status == 'pending' %}
+<div class="admin-card">
+<div class="admin-card-header"><h3><i class="fas fa-gavel"></i> Review Action</h3></div>
+<div style="padding:20px">
+<div style="margin-bottom:16px">
+<label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block">Review Note (optional)</label>
+<textarea id="reviewNote" class="form-control" rows="2" placeholder="Add a note for the submitter..."></textarea>
+</div>
+<div style="display:flex;gap:12px">
+<form method="POST" action="{{ url_for('admin_approval_action', approval_id=item.id) }}" style="flex:1" onsubmit="this.querySelector('[name=review_note]').value=document.getElementById('reviewNote').value">
+<input type="hidden" name="action" value="approve">
+<input type="hidden" name="review_note" value="">
+<button type="submit" class="btn btn-primary" style="width:100%;padding:12px;font-size:15px" onclick="return confirm('Approve these changes? They will be applied immediately.')">
+<i class="fas fa-check-circle"></i> Approve & Apply
+</button>
+</form>
+<form method="POST" action="{{ url_for('admin_approval_action', approval_id=item.id) }}" style="flex:1" onsubmit="this.querySelector('[name=review_note]').value=document.getElementById('reviewNote').value">
+<input type="hidden" name="action" value="reject">
+<input type="hidden" name="review_note" value="">
+<button type="submit" class="btn" style="width:100%;padding:12px;font-size:15px;background:#FED7D7;color:#C53030;border:1px solid #FC8181" onclick="return confirm('Reject these changes?')">
+<i class="fas fa-times-circle"></i> Reject
+</button>
+</form>
+</div>
+</div>
+</div>
+{% endif %}
+{% endblock %}

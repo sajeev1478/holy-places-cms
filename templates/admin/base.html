@@ -691,8 +691,15 @@ textarea.form-control{resize:vertical;min-height:60px}
 <a class="sidebar-link {{ 'active' if request.endpoint in ('admin_places','admin_place_new','admin_place_edit') }}" href="{{ url_for('admin_places') }}">
 <i class="fas fa-map-marked-alt"></i> Holy Dhams
 </a>
+{% if current_user and current_user.role in ('system_admin','admin') %}
+<a class="sidebar-link {{ 'active' if request.endpoint in ('admin_approvals','admin_approval_detail') }}" href="{{ url_for('admin_approvals') }}" style="position:relative">
+<i class="fas fa-clipboard-check"></i> Change Approvals
+{% if pending_approvals_count > 0 %}<span style="background:#E53E3E;color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:50px;margin-left:6px">{{ pending_approvals_count }}</span>{% endif %}
+</a>
+{% endif %}
 </div>
 
+{% if current_user and current_user.role != 'photographer' %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">Content</div>
 <a class="sidebar-link {{ 'active' if request.endpoint in ('admin_modules','admin_module_new','admin_module_edit') }}" href="{{ url_for('admin_modules') }}">
@@ -713,15 +720,18 @@ textarea.form-control{resize:vertical;min-height:60px}
 <i class="fas fa-route"></i> Itineraries
 </a>
 </div>
+{% endif %}
 
+{% if current_user and current_user.role != 'photographer' %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">Media</div>
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_media' }}" href="{{ url_for('admin_media') }}">
 <i class="fas fa-photo-video"></i> Media Library
 </a>
 </div>
+{% endif %}
 
-{% if current_user and current_user.role == 'system_admin' %}
+{% if current_user and current_user.role in ('system_admin','admin') %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">System</div>
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_fields' }}" href="{{ url_for('admin_fields') }}">

@@ -1,0 +1,87 @@
+{% extends "admin/base.html" %}
+{% block title %}Change Approvals{% endblock %}
+{% block page_title %}Change Approvals{% endblock %}
+
+{% block admin_content %}
+<div style="display:flex;gap:8px;margin-bottom:20px">
+<a class="btn btn-sm {{ 'btn-primary' if tab=='pending' else 'btn-secondary' }}" href="{{ url_for('admin_approvals', tab='pending') }}">
+🔴 Pending {% if tab=='pending' and total > 0 %}<span style="background:#E53E3E;color:#fff;font-size:11px;padding:1px 7px;border-radius:50px;margin-left:4px">{{ total }}</span>{% endif %}
+</a>
+<a class="btn btn-sm {{ 'btn-primary' if tab=='approved' else 'btn-secondary' }}" href="{{ url_for('admin_approvals', tab='approved') }}">
+✅ Reviewed
+</a>
+</div>
+
+<div class="admin-card">
+{% if items %}
+<div style="overflow-x:auto">
+<table class="admin-table">
+<thead>
+<tr>
+<th>Dham</th>
+<th>Tier</th>
+<th>Change</th>
+<th>By</th>
+<th>Date</th>
+{% if tab == 'approved' %}<th>Status</th><th>Reviewed By</th>{% endif %}
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+{% for item in items %}
+<tr>
+<td style="font-weight:600">{{ item.dham_name }}</td>
+<td><span class="badge" style="background:{% if item.tier=='T1' %}#C76B8F20;color:#C76B8F{% elif item.tier=='T2' %}#2E86AB20;color:#2E86AB{% elif item.tier=='T3' %}#38A16920;color:#38A169{% else %}#DD6B2020;color:#DD6B20{% endif %}">{{ item.tier }}</span></td>
+<td>
+<div style="font-weight:500">{{ item.entity_title }}</div>
+<div style="font-size:12px;color:var(--text-light);margin-top:2px">{{ item.change_summary[:80] }}{% if item.change_summary|length > 80 %}...{% endif %}</div>
+{% if item.action_type == 'photo_upload' %}<span style="font-size:11px;background:#F0FFF4;color:#276749;padding:2px 8px;border-radius:4px"><i class="fas fa-camera"></i> Photo Upload</span>{% endif %}
+</td>
+<td>
+<div style="font-weight:500">{{ item.user_name }}</div>
+<div style="font-size:11px;color:var(--text-light)">{{ item.user_role|replace('_',' ')|title }}</div>
+</td>
+<td style="font-size:12px;color:var(--text-light)">{{ item.created_at[:16] if item.created_at else '' }}</td>
+{% if tab == 'approved' %}
+<td>
+{% if item.status == 'approved' %}<span class="badge" style="background:#C6F6D5;color:#276749">Approved</span>
+{% elif item.status == 'rejected' %}<span class="badge" style="background:#FED7D7;color:#9B2C2C">Rejected</span>{% endif %}
+</td>
+<td style="font-size:13px">{{ item.reviewer_name or '—' }}<div style="font-size:11px;color:var(--text-light)">{{ item.reviewed_at[:16] if item.reviewed_at else '' }}</div></td>
+{% endif %}
+<td>
+<a href="{{ url_for('admin_approval_detail', approval_id=item.id) }}" class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> View</a>
+{% if tab == 'pending' %}
+<form method="POST" action="{{ url_for('admin_approval_action', approval_id=item.id) }}" style="display:inline">
+<input type="hidden" name="action" value="approve">
+<button type="submit" class="btn btn-sm" style="background:#38A169;color:#fff;border:none" onclick="return confirm('Approve these changes?')"><i class="fas fa-check"></i></button>
+</form>
+<form method="POST" action="{{ url_for('admin_approval_action', approval_id=item.id) }}" style="display:inline">
+<input type="hidden" name="action" value="reject">
+<button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Reject these changes?')"><i class="fas fa-times"></i></button>
+</form>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if total_pages > 1 %}
+<div style="display:flex;justify-content:center;gap:4px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+{% for p in range(1, total_pages+1) %}
+<a href="{{ url_for('admin_approvals', tab=tab, page=p) }}" class="btn btn-sm {{ 'btn-primary' if p==page else 'btn-secondary' }}">{{ p }}</a>
+{% endfor %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty">
+<span class="icon">{% if tab=='pending' %}📋{% else %}✅{% endif %}</span>
+<h3>{% if tab=='pending' %}No pending approvals{% else %}No reviewed changes yet{% endif %}</h3>
+<p>{% if tab=='pending' %}All changes are up to date. Editor and photographer changes will appear here for review.{% else %}Approved and rejected changes will be listed here as an audit trail.{% endif %}</p>
+</div>
+{% endif %}
+</div>
+{% endblock %}

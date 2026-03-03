@@ -1,4 +1,7 @@
 {% extends "admin/base.html" %}
+{% set is_editor = current_user and current_user.role == 'editor' %}
+{% set readonly_mode = is_editor and editing and not user_can_edit|default(true) %}
+{% set approval_mode = is_editor and editing and user_can_edit|default(true) %}
 {% block title %}{{ 'Edit' if editing else 'New' }} Holy Dham{% endblock %}
 {% block page_title %}{{ 'Edit' if editing else 'Create New' }} Holy Dham{% if editing and place.hierarchy_id %} <span class="hid-badge" onclick="copyHid(this)" data-hid="{{ place.hierarchy_id }}" style="font-size:12px;vertical-align:middle">{{ place.hierarchy_id }} <span class="hid-copy">📋</span></span>{% endif %}{% endblock %}
 {% block topbar_actions %}
@@ -122,6 +125,19 @@
 {% set vis = json.loads(place.field_visibility) if editing and place.field_visibility else {} %}
 {% set indian_states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli','Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'] %}
 
+{% if readonly_mode %}
+<div style="background:#FED7D7;border:1px solid #FC8181;border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+<span style="font-size:24px">🔒</span>
+<div><strong style="color:#742A2A">View Only</strong> — You are not assigned to this Dham. All fields are disabled. Contact an admin to request access.</div>
+</div>
+<style>.readonly-overlay input,.readonly-overlay select,.readonly-overlay textarea,.readonly-overlay button[type=submit],.readonly-overlay .rich-editor,.readonly-overlay .form-control{pointer-events:none!important;opacity:.55!important}.readonly-overlay .btn-primary,.readonly-overlay .btn-danger,.readonly-overlay [onclick*="delete"],.readonly-overlay [onclick*="remove"]{display:none!important}</style>
+{% elif approval_mode %}
+<div style="background:#EBF8FF;border:1px solid #90CDF4;border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+<span style="font-size:24px">📝</span>
+<div><strong style="color:#2B6CB0">Approval Mode</strong> — Your changes will be submitted for admin approval. They won't go live until approved.</div>
+</div>
+{% endif %}
+
 <!-- ═══ HIERARCHY SEARCH BAR ═══ -->
 <div style="margin-bottom:16px">
 <div class="hsearch-wrap">
@@ -173,7 +189,7 @@
 </div>
 </div>
 
-<form method="POST" enctype="multipart/form-data" id="mainPlaceForm">
+<form method="POST" enctype="multipart/form-data" id="mainPlaceForm" {% if readonly_mode %}class="readonly-overlay"{% endif %}>
 
 <!-- ════════════════════════════════════════════ -->
 <!-- TIER 1 CONTENT: HOLY DHAM -->
@@ -386,7 +402,7 @@
 
 <!-- Submit Button -->
 <div style="display:flex;justify-content:flex-end;padding:16px 0;margin-top:4px">
-<button type="submit" class="btn btn-primary" style="min-width:220px"><i class="fas fa-save"></i> {{ 'Update Holy Dham' if editing else 'Create Holy Dham' }}</button>
+<button type="submit" class="btn btn-primary" style="min-width:220px"{% if readonly_mode %} disabled{% endif %}><i class="fas fa-{% if approval_mode %}paper-plane{% else %}save{% endif %}"></i> {% if approval_mode %}Submit for Approval{% else %}{{ 'Update Holy Dham' if editing else 'Create Holy Dham' }}{% endif %}</button>
 </div>
 
 </div><!-- end tier-1-content -->
@@ -913,5 +929,31 @@ function filterT4ByKS(ksId) {
     container.classList.add('tier-filtered-list');
     setTimeout(function(){ container.classList.remove('tier-filtered-list'); }, 350);
 }
+
+/* ─── RBAC: Editor Approval Mode ─── */
+{% if approval_mode %}
+document.addEventListener('DOMContentLoaded', function(){
+    // Change all submit button text to "Submit for Approval"
+    document.querySelectorAll('#mainPlaceForm button[type="submit"]').forEach(function(btn){
+        if(btn.textContent.trim().includes('Save')){
+            btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Approval';
+        }
+    });
+    // Hide all delete/remove buttons (T2 remove, gallery delete, etc.)
+    document.querySelectorAll('#mainPlaceForm .btn-danger').forEach(function(btn){
+        btn.style.display='none';
+    });
+    document.querySelectorAll('#mainPlaceForm .gal-del').forEach(function(btn){
+        btn.style.display='none';
+    });
+});
+{% endif %}
+{% if readonly_mode %}
+document.addEventListener('DOMContentLoaded', function(){
+    // Disable the entire form submit
+    var frm=document.getElementById('mainPlaceForm');
+    if(frm) frm.addEventListener('submit',function(e){e.preventDefault();alert('This Dham is view-only for your account.');});
+});
+{% endif %}
 </script>
 {% endblock %}

@@ -80,7 +80,28 @@
 </div>
 </div>
 
-{% else %}
+<!-- Dham Assignment Section (for Editors) -->
+<div id="dhamAssignSection" style="display:none">
+<div class="form-group">
+<label><i class="fas fa-map-marked-alt" style="color:var(--primary)"></i> Assign Dham(s)</label>
+<div style="font-size:12px;color:var(--text-light);margin-bottom:10px;padding:8px 12px;background:#EBF8FF;border-radius:8px;border:1px solid #90CDF4">
+<strong>ℹ️</strong> Select which Holy Dham(s) this editor can edit. They can view all Dhams but only edit assigned ones. Changes will go through approval.
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+{% for dham in all_dhams %}
+<label class="form-check" style="padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+<input type="checkbox" name="assigned_dhams" value="{{ dham.id }}" {% if dham.id in assigned_dhams %}checked{% endif %}>
+<div>
+<div style="font-weight:600;font-size:13px">🛕 {{ dham.title }}</div>
+</div>
+</label>
+{% endfor %}
+</div>
+{% if not all_dhams %}
+<div style="padding:16px;text-align:center;color:var(--text-light);font-size:13px">No Dhams found. Create a Dham first.</div>
+{% endif %}
+</div>
+</div>
 {# ── EDIT USER FORM ── #}
 <div class="form-row">
 <div class="form-group">
@@ -175,6 +196,29 @@
 </div>
 </div>
 
+<!-- Dham Assignment Section (for Editors) - Edit -->
+<div id="dhamAssignSection" style="display:none">
+<div class="form-group">
+<label><i class="fas fa-map-marked-alt" style="color:var(--primary)"></i> Assign Dham(s)</label>
+<div style="font-size:12px;color:var(--text-light);margin-bottom:10px;padding:8px 12px;background:#EBF8FF;border-radius:8px;border:1px solid #90CDF4">
+<strong>ℹ️</strong> Select which Holy Dham(s) this editor can edit. They can view all Dhams but only edit assigned ones.
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+{% for dham in all_dhams %}
+<label class="form-check" style="padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+<input type="checkbox" name="assigned_dhams" value="{{ dham.id }}" {% if dham.id in assigned_dhams %}checked{% endif %}>
+<div>
+<div style="font-weight:600;font-size:13px">🛕 {{ dham.title }}</div>
+</div>
+</label>
+{% endfor %}
+</div>
+{% if not all_dhams %}
+<div style="padding:16px;text-align:center;color:var(--text-light);font-size:13px">No Dhams found. Create a Dham first.</div>
+{% endif %}
+</div>
+</div>
+
 <div class="form-group">
 <label class="form-check"><input type="checkbox" name="is_active" {{ 'checked' if user.is_active }}> Account is Active</label>
 </div>
@@ -196,10 +240,14 @@
 function togglePermissions(){
   var role=document.getElementById('roleSelect').value;
   var section=document.getElementById('permissionsSection');
+  var dhamSection=document.getElementById('dhamAssignSection');
   if(role==='system_admin'||role==='photographer'){
     section.style.display='none';
   }else{
     section.style.display='block';
+  }
+  if(dhamSection){
+    dhamSection.style.display=(role==='editor')?'block':'none';
   }
 }
 togglePermissions();

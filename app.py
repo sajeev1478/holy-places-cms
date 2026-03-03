@@ -254,6 +254,12 @@ def init_db():
     CREATE TABLE IF NOT EXISTS itineraries (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, leader_name TEXT DEFAULT '', group_name TEXT DEFAULT '', short_description TEXT DEFAULT '', full_content TEXT DEFAULT '', status TEXT DEFAULT 'draft', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS itinerary_places (id INTEGER PRIMARY KEY AUTOINCREMENT, itinerary_id INTEGER NOT NULL, tier TEXT NOT NULL, place_ref_id INTEGER NOT NULL, sort_order INTEGER DEFAULT 0, admin_notes TEXT DEFAULT '', time_group TEXT DEFAULT '', FOREIGN KEY (itinerary_id) REFERENCES itineraries(id) ON DELETE CASCADE);
     CREATE TABLE IF NOT EXISTS place_audio_video (id INTEGER PRIMARY KEY AUTOINCREMENT, tier TEXT NOT NULL, place_ref_id INTEGER NOT NULL, media_type TEXT NOT NULL DEFAULT 'audio', source_type TEXT NOT NULL DEFAULT 'upload', file_path TEXT DEFAULT '', external_url TEXT DEFAULT '', description TEXT DEFAULT '', sort_order INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+
+    /* ─── User-Dham Assignments (for Editors) ─── */
+    CREATE TABLE IF NOT EXISTS user_dham_assignments (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, place_id INTEGER NOT NULL, assigned_by INTEGER, assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, UNIQUE(user_id, place_id));
+
+    /* ─── Change Approvals System ─── */
+    CREATE TABLE IF NOT EXISTS change_approvals (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, action_type TEXT NOT NULL DEFAULT 'edit', tier TEXT NOT NULL, entity_table TEXT NOT NULL DEFAULT '', entity_id INTEGER, parent_id INTEGER, entity_title TEXT DEFAULT '', dham_id INTEGER, dham_name TEXT DEFAULT '', previous_data TEXT DEFAULT '{}', updated_data TEXT DEFAULT '{}', change_summary TEXT DEFAULT '', uploaded_files TEXT DEFAULT '[]', status TEXT DEFAULT 'pending', reviewed_by INTEGER, reviewed_at TIMESTAMP, review_note TEXT DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (reviewed_by) REFERENCES users(id));
     ''')
     db.commit()
     # Migration: add gallery_captions column if not exists
@@ -335,6 +341,9 @@ def init_db():
     # Ensure the 2 system admin emails are always system_admin and verified
     for sa_email in ('madana.murari.rns@iskcon.net','sajeev1478@gmail.com'):
         db.execute("UPDATE users SET role='system_admin', email_verified=1 WHERE email=?", (sa_email,))
+    # Migration: create RBAC + approval tables for existing databases
+    db.execute("""CREATE TABLE IF NOT EXISTS user_dham_assignments (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, place_id INTEGER NOT NULL, assigned_by INTEGER, assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, FOREIGN KEY (place_id) REFERENCES places(id) ON DELETE CASCADE, UNIQUE(user_id, place_id))""")
+    db.execute("""CREATE TABLE IF NOT EXISTS change_approvals (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, action_type TEXT NOT NULL DEFAULT 'edit', tier TEXT NOT NULL, entity_table TEXT NOT NULL DEFAULT '', entity_id INTEGER, parent_id INTEGER, entity_title TEXT DEFAULT '', dham_id INTEGER, dham_name TEXT DEFAULT '', previous_data TEXT DEFAULT '{}', updated_data TEXT DEFAULT '{}', change_summary TEXT DEFAULT '', uploaded_files TEXT DEFAULT '[]', status TEXT DEFAULT 'pending', reviewed_by INTEGER, reviewed_at TIMESTAMP, review_note TEXT DEFAULT '', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id), FOREIGN KEY (reviewed_by) REFERENCES users(id))""")
     db.commit()
 
 def _generate_dham_code(title, db):
@@ -810,8 +819,51 @@ def role_required(*roles):
         return d
     return dec
 def has_permission(user,pk):
-    if user['role']=='system_admin': return True
+    if user['role'] in ('system_admin','admin'): return True
     p=json.loads(user['permissions'] or '{}'); return p.get(pk,False) or p.get('all',False)
+
+# ─── RBAC Helpers ───
+def is_admin_or_above(user):
+    return user and user['role'] in ('system_admin','admin')
+
+def get_user_assigned_dhams(user_id):
+    db=get_db()
+    return [r['place_id'] for r in db.execute("SELECT place_id FROM user_dham_assignments WHERE user_id=?",(user_id,)).fetchall()]
+
+def can_edit_dham(user, place_id):
+    if not user: return False
+    if user['role'] in ('system_admin','admin'): return True
+    if user['role']=='editor':
+        return place_id in get_user_assigned_dhams(user['id'])
+    return False
+
+def get_dham_id_for_kp(kp_id):
+    db=get_db()
+    r=db.execute("SELECT p.id,p.title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
+    return (r['id'],r['title']) if r else (None,None)
+
+def get_dham_id_for_ks(ks_id):
+    db=get_db()
+    r=db.execute("SELECT p.id,p.title FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
+    return (r['id'],r['title']) if r else (None,None)
+
+def create_change_approval(user_id, action_type, tier, entity_table, entity_id, parent_id, entity_title, dham_id, dham_name, previous_data, updated_data, change_summary, uploaded_files=None):
+    db=get_db()
+    db.execute("""INSERT INTO change_approvals (user_id,action_type,tier,entity_table,entity_id,parent_id,
+                  entity_title,dham_id,dham_name,previous_data,updated_data,change_summary,uploaded_files)
+                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (user_id, action_type, tier, entity_table, entity_id, parent_id, entity_title, dham_id, dham_name,
+         json.dumps(previous_data,ensure_ascii=False) if isinstance(previous_data,dict) else previous_data,
+         json.dumps(updated_data,ensure_ascii=False) if isinstance(updated_data,dict) else updated_data,
+         change_summary, json.dumps(uploaded_files or [])))
+    db.commit()
+
+def get_pending_approvals_count():
+    try:
+        db=get_db()
+        r=db.execute("SELECT COUNT(*) FROM change_approvals WHERE status='pending'").fetchone()
+        return r[0] if r else 0
+    except: return 0
 def save_upload(file, subfolder='images'):
     if not file or file.filename=='': return None
     ext=file.filename.rsplit('.',1)[1].lower() if '.' in file.filename else ''
@@ -884,7 +936,10 @@ def get_dham_hierarchy(place_id):
 @app.context_processor
 def inject_globals():
     db=get_db(); modules=db.execute("SELECT * FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
-    return {'current_user':get_current_user(),'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS,'module_schemas':MODULE_SCHEMAS}
+    cu=get_current_user()
+    pac=get_pending_approvals_count() if cu else 0
+    assigned=get_user_assigned_dhams(cu['id']) if cu and cu['role']=='editor' else []
+    return {'current_user':cu,'active_modules':modules,'current_year':datetime.now().year,'has_permission':has_permission,'is_admin_or_above':is_admin_or_above,'can_edit_dham':can_edit_dham,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS,'module_schemas':MODULE_SCHEMAS,'pending_approvals_count':pac,'user_assigned_dhams':assigned}
 
 # ═══════════════════════════════════════════
 # FRONTEND ROUTES
@@ -1390,16 +1445,29 @@ def admin_places():
 @app.route('/admin/places/new', methods=['GET','POST'])
 @login_required
 def admin_place_new():
+    u=get_current_user()
+    if not is_admin_or_above(u):
+        flash('Only System Admins and Admins can create new Dhams.','error'); return redirect(url_for('admin_places'))
     db=get_db()
     if request.method=='POST': return _save_place(None)
-    return render_template('admin/place_form.html',place=None,tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall(),place_tags=[],custom_fields=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall(),custom_values={},key_places=[],key_place_customs={},editing=False,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall())
+    return render_template('admin/place_form.html',place=None,tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall(),place_tags=[],custom_fields=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall(),custom_values={},key_places=[],key_place_customs={},editing=False,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),user_can_edit=True)
 
 @app.route('/admin/places/<int:place_id>/edit', methods=['GET','POST'])
 @login_required
 def admin_place_edit(place_id):
     db=get_db(); place=db.execute("SELECT * FROM places WHERE id=?",(place_id,)).fetchone()
     if not place: abort(404)
-    if request.method=='POST': return _save_place(place_id)
+    u=get_current_user()
+    # Photographer: redirect to photos page
+    if u['role']=='photographer':
+        return redirect(url_for('admin_place_photos', place_id=place_id))
+    user_can_edit = can_edit_dham(u, place_id)
+    if request.method=='POST':
+        if not user_can_edit:
+            flash('You do not have permission to edit this Dham.','error'); return redirect(url_for('admin_places'))
+        if u['role']=='editor':
+            return _editor_save_for_approval(place_id, u)
+        return _save_place(place_id)
     tags=db.execute("SELECT * FROM tags ORDER BY name").fetchall()
     ptags=[r['tag_id'] for r in db.execute("SELECT tag_id FROM place_tags WHERE place_id=?",(place_id,)).fetchall()]
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
@@ -1418,7 +1486,7 @@ def admin_place_edit(place_id):
     all_points=db.execute("SELECT ss.*,ssc.name as cat_name,ssc.icon as cat_icon,ssc.color as cat_color,ks.title as ks_title,ks.id as ks_id,ks.slug as ks_slug,sc2.name as ks_cat_name,sc2.icon as ks_cat_icon,kp.title as kp_title,kp.id as kp_id FROM sub_spots ss LEFT JOIN sub_spot_categories ssc ON ss.category_id=ssc.id JOIN key_spots ks ON ss.key_spot_id=ks.id LEFT JOIN spot_categories sc2 ON ks.category_id=sc2.id JOIN key_places kp ON ks.key_place_id=kp.id WHERE kp.parent_place_id=? ORDER BY kp.sort_order,ks.sort_order,ss.sort_order",(place_id,)).fetchall()
     # Fetch gallery images from place_media
     gallery_media=db.execute("SELECT m.id,m.filename,m.original_name,m.file_type,m.caption FROM media m JOIN place_media pm ON m.id=pm.media_id WHERE pm.place_id=? AND m.file_type='image' ORDER BY pm.sort_order",(place_id,)).fetchall()
-    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points,gallery_media=gallery_media,t1_av=db.execute("SELECT * FROM place_audio_video WHERE tier='T1' AND place_ref_id=? ORDER BY sort_order",(place_id,)).fetchall())
+    return render_template('admin/place_form.html',place=place,tags=tags,place_tags=ptags,custom_fields=cfs,custom_values=cvs,key_places=kps,key_place_customs=kpc,editing=True,spot_categories=db.execute("SELECT * FROM spot_categories ORDER BY name").fetchall(),sub_spot_categories=db.execute("SELECT * FROM sub_spot_categories ORDER BY name").fetchall(),kp_spot_counts=kp_spot_counts,all_spots=all_spots,all_points=all_points,gallery_media=gallery_media,t1_av=db.execute("SELECT * FROM place_audio_video WHERE tier='T1' AND place_ref_id=? ORDER BY sort_order",(place_id,)).fetchall(),user_can_edit=user_can_edit)
 
 def _save_place(place_id):
     db=get_db(); f=request.form; title=f['title']; slug=slugify(title)
@@ -1590,9 +1658,70 @@ def _save_place(place_id):
     db.commit(); log_action(session['user_id'],'save_place','place',place_id,title)
     flash(f'Holy Dham "{title}" saved!','success'); return redirect(url_for('admin_places'))
 
+# ─── Editor Save → Approval Queue ───
+def _editor_save_for_approval(place_id, user):
+    """Collect editor changes and send to approval queue instead of saving directly."""
+    db=get_db(); f=request.form
+    place=db.execute("SELECT * FROM places WHERE id=?",(place_id,)).fetchone()
+    if not place: abort(404)
+    # Collect changed fields
+    t1_fields=['title','short_description','full_content','state','city','country','status']
+    prev={}; upd={}; changes=[]; fi_files=[]
+    for fld in t1_fields:
+        old_val=place[fld] or ''; new_val=f.get(fld,'')
+        if fld=='status': new_val=f.get('status','draft')
+        if str(old_val).strip() != str(new_val).strip():
+            prev[fld]=old_val; upd[fld]=new_val; changes.append(f"{fld} changed")
+    # Featured image
+    for fname in ('featured_image_file','featured_image_cam'):
+        if fname in request.files:
+            uf=request.files[fname]
+            if uf and uf.filename:
+                u_path=save_upload(uf,'images')
+                if u_path: upd['featured_image']=u_path; fi_files.append(u_path); changes.append("featured image changed")
+    # T2 key place changes
+    kpi=0; t2_changes=[]
+    while True:
+        kt=f.get(f'kp_{kpi}_title')
+        if kt is None: break
+        if not kt.strip(): kpi+=1; continue
+        kpid=f.get(f'kp_{kpi}_id',type=int)
+        entry_upd={'title':kt,'short_description':f.get(f'kp_{kpi}_short_description',''),'full_content':f.get(f'kp_{kpi}_full_content','')}
+        for imgf in (f'kp_{kpi}_featured_image_file',f'kp_{kpi}_featured_cam'):
+            if imgf in request.files:
+                uf=request.files[imgf]
+                if uf and uf.filename:
+                    u_path=save_upload(uf,'images')
+                    if u_path: entry_upd['featured_image']=u_path; fi_files.append(u_path)
+        if kpid:
+            kp=db.execute("SELECT title,short_description,full_content FROM key_places WHERE id=?",(kpid,)).fetchone()
+            kp_prev=dict(kp) if kp else {}
+            # Only include if actually changed
+            has_change=False
+            for k in ('title','short_description','full_content'):
+                if str(kp_prev.get(k,'') or '').strip() != str(entry_upd.get(k,'') or '').strip(): has_change=True
+            if 'featured_image' in entry_upd: has_change=True
+            if has_change: t2_changes.append({'id':kpid,'action':'edit','prev':kp_prev,'upd':entry_upd})
+        else:
+            entry_upd['parent_place_id']=place_id
+            t2_changes.append({'id':None,'action':'create','prev':{},'upd':entry_upd})
+            changes.append(f"New T2: {kt}")
+        kpi+=1
+    if t2_changes: upd['_t2_changes']=t2_changes; changes.append(f"{len(t2_changes)} T2 change(s)")
+    if not changes and not upd:
+        flash('No changes detected.','info'); return redirect(url_for('admin_place_edit',place_id=place_id))
+    summary='; '.join(changes[:10])
+    create_change_approval(user['id'],'edit','T1','places',place_id,None,place['title'],
+        place_id,place['title'],prev,upd,summary,fi_files)
+    flash('Your changes have been submitted for approval.','info')
+    return redirect(url_for('admin_places'))
+
 @app.route('/admin/places/<int:place_id>/delete', methods=['POST'])
 @login_required
 def admin_place_delete(place_id):
+    u=get_current_user()
+    if not is_admin_or_above(u):
+        flash('Only System Admins and Admins can delete.','error'); return redirect(url_for('admin_places'))
     db=get_db(); db.execute("DELETE FROM places WHERE id=?",(place_id,)); db.commit(); flash('Deleted.','info'); return redirect(url_for('admin_places'))
 
 # ═══════════════════════════════════════════════════════════════
@@ -1651,7 +1780,86 @@ def admin_place_photos(place_id):
     if not d: abort(404)
     place = d['place']
     if request.method == 'POST':
-        # Save T1 featured image
+        # Photographer: send to approval queue
+        if u['role'] == 'photographer':
+            uploaded=[]; summaries=[]
+            for fname in ('t1_featured_file','t1_featured_cam'):
+                if fname in request.files:
+                    uf=request.files[fname]
+                    if uf and uf.filename:
+                        u_path=save_upload(uf,'images')
+                        if u_path: uploaded.append({'tier':'T1','type':'featured','entity':place['title'],'path':u_path}); summaries.append(f"T1 featured: {place['title']}")
+            idx=0
+            while True:
+                nk=f't1_photo_gallery_{idx}'
+                if nk not in request.files: break
+                gf=request.files[nk]
+                if gf and gf.filename:
+                    rp=save_upload(gf,'images')
+                    if rp: uploaded.append({'tier':'T1','type':'gallery','entity':place['title'],'path':rp}); summaries.append(f"T1 gallery")
+                idx+=1
+            for kp in d['kps']:
+                kpid=kp['id']
+                for fname in (f'kp_{kpid}_featured_file',f'kp_{kpid}_featured_cam'):
+                    if fname in request.files:
+                        uf=request.files[fname]
+                        if uf and uf.filename:
+                            u_path=save_upload(uf,'images')
+                            if u_path: uploaded.append({'tier':'T2','type':'featured','entity':kp['title'],'entity_id':kpid,'path':u_path}); summaries.append(f"T2: {kp['title']}")
+                gidx=0
+                while True:
+                    nk=f'kp_{kpid}_photo_gallery_{gidx}'
+                    if nk not in request.files: break
+                    gf=request.files[nk]
+                    if gf and gf.filename:
+                        rp=save_upload(gf,'images')
+                        if rp: uploaded.append({'tier':'T2','type':'gallery','entity':kp['title'],'entity_id':kpid,'path':rp})
+                    gidx+=1
+            for ks in d['kss']:
+                ksid=ks['id']
+                for fname in (f'ks_{ksid}_featured_file',f'ks_{ksid}_featured_cam'):
+                    if fname in request.files:
+                        uf=request.files[fname]
+                        if uf and uf.filename:
+                            u_path=save_upload(uf,'images')
+                            if u_path: uploaded.append({'tier':'T3','type':'featured','entity':ks['title'],'entity_id':ksid,'path':u_path}); summaries.append(f"T3: {ks['title']}")
+                gidx=0
+                while True:
+                    nk=f'ks_{ksid}_photo_gallery_{gidx}'
+                    if nk not in request.files: break
+                    gf=request.files[nk]
+                    if gf and gf.filename:
+                        rp=save_upload(gf,'images')
+                        if rp: uploaded.append({'tier':'T3','type':'gallery','entity':ks['title'],'entity_id':ksid,'path':rp})
+                    gidx+=1
+            for ss in d['sss']:
+                ssid=ss['id']
+                for fname in (f'ss_{ssid}_featured_file',f'ss_{ssid}_featured_cam'):
+                    if fname in request.files:
+                        uf=request.files[fname]
+                        if uf and uf.filename:
+                            u_path=save_upload(uf,'images')
+                            if u_path: uploaded.append({'tier':'T4','type':'featured','entity':ss['title'],'entity_id':ssid,'path':u_path}); summaries.append(f"T4: {ss['title']}")
+                gidx=0
+                while True:
+                    nk=f'ss_{ssid}_photo_gallery_{gidx}'
+                    if nk not in request.files: break
+                    gf=request.files[nk]
+                    if gf and gf.filename:
+                        rp=save_upload(gf,'images')
+                        if rp: uploaded.append({'tier':'T4','type':'gallery','entity':ss['title'],'entity_id':ssid,'path':rp})
+                    gidx+=1
+            if uploaded:
+                fi_paths=[img['path'] for img in uploaded]
+                summary=f"{len(uploaded)} image(s): " + '; '.join(summaries[:5])
+                create_change_approval(u['id'],'photo_upload','T1','places',place_id,None,
+                    place['title'],place_id,place['title'],
+                    {},{'images':uploaded},summary,fi_paths)
+                flash(f'{len(uploaded)} image(s) submitted for approval.','info')
+            else:
+                flash('No images were uploaded.','warning')
+            return redirect(url_for('admin_place_photos', place_id=place_id))
+        # Admin/System Admin: save directly
         fi = place['featured_image'] or ''
         for fname in ('t1_featured_file', 't1_featured_cam'):
             if fname in request.files:
@@ -1804,11 +2012,49 @@ def admin_key_place_spots(kp_id):
 @app.route('/admin/key-place/<int:kp_id>/spots/save', methods=['POST'])
 @login_required
 def admin_key_spots_save(kp_id):
-    db=get_db(); f=request.form
+    db=get_db(); f=request.form; u=get_current_user()
+    # Get dham info for RBAC
+    _kp_row=db.execute("SELECT kp.parent_place_id,p.dham_code,p.id as dham_id,p.title as dham_title FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
+    if not _kp_row: abort(404)
+    if u['role']=='photographer':
+        flash('Photographers can only upload images via the Photos page.','error'); return redirect(url_for('admin_places'))
+    if u['role']=='editor':
+        if not can_edit_dham(u, _kp_row['dham_id']):
+            flash('You are not assigned to this Dham.','error'); return redirect(url_for('admin_places'))
+        # Collect T3 changes for approval
+        changes=[]; fi_files=[]; upd_entries=[]; i=0
+        while True:
+            t=f.get(f'ks_{i}_title')
+            if t is None: break
+            if not t.strip(): i+=1; continue
+            sid=f.get(f'ks_{i}_id',type=int)
+            entry={'title':t,'short_description':f.get(f'ks_{i}_short_description',''),'full_content':f.get(f'ks_{i}_full_content',''),
+                   'category_id':f.get(f'ks_{i}_category',''),'state':f.get(f'ks_{i}_state',''),'city':f.get(f'ks_{i}_city','')}
+            for imgf in (f'ks_{i}_featured_image_file',f'ks_{i}_featured_cam'):
+                if imgf in request.files:
+                    uf=request.files[imgf]
+                    if uf and uf.filename:
+                        u_path=save_upload(uf,'images')
+                        if u_path: entry['featured_image']=u_path; fi_files.append(u_path)
+            if sid:
+                old=db.execute("SELECT title,short_description,full_content FROM key_spots WHERE id=?",(sid,)).fetchone()
+                upd_entries.append({'id':sid,'action':'edit','prev':dict(old) if old else {},'upd':entry})
+            else:
+                upd_entries.append({'id':None,'action':'create','prev':{},'upd':entry})
+                changes.append(f"New T3: {t}")
+            i+=1
+        if upd_entries: changes.append(f"{len(upd_entries)} T3 change(s)")
+        kp_title=db.execute("SELECT title FROM key_places WHERE id=?",(kp_id,)).fetchone()
+        summary='; '.join(changes) if changes else 'T3 changes'
+        create_change_approval(u['id'],'edit','T3','key_spots',kp_id,kp_id,
+            kp_title['title'] if kp_title else 'Key Place',
+            _kp_row['dham_id'],_kp_row['dham_title'],
+            {},{'t3_entries':upd_entries},summary,fi_files)
+        flash('Your T3 changes have been submitted for approval.','info')
+        return redirect(url_for('admin_key_place_spots',kp_id=kp_id))
+    # Admin/System Admin: proceed normally
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     existing=[r['id'] for r in db.execute("SELECT id FROM key_spots WHERE key_place_id=?",(kp_id,)).fetchall()]
-    # Get dham_code for hierarchy ID
-    _kp_row=db.execute("SELECT kp.parent_place_id,p.dham_code FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
     _dham_code=_kp_row['dham_code'] if _kp_row else None
     _loc_user=get_current_user(); _loc_username=_loc_user['display_name'] if _loc_user else 'Unknown'
     _loc_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -1924,11 +2170,50 @@ def admin_key_spot_subs(ks_id):
 @app.route('/admin/key-spot/<int:ks_id>/subs/save', methods=['POST'])
 @login_required
 def admin_sub_spots_save(ks_id):
-    db=get_db(); f=request.form
+    db=get_db(); f=request.form; u=get_current_user()
+    # Get dham info for RBAC
+    _ks_dham=db.execute("SELECT p.id as dham_id,p.title as dham_title,p.dham_code FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
+    if not _ks_dham: abort(404)
+    if u['role']=='photographer':
+        flash('Photographers can only upload images via the Photos page.','error'); return redirect(url_for('admin_places'))
+    if u['role']=='editor':
+        if not can_edit_dham(u, _ks_dham['dham_id']):
+            flash('You are not assigned to this Dham.','error'); return redirect(url_for('admin_places'))
+        # Collect T4 changes for approval
+        changes=[]; fi_files=[]; upd_entries=[]; i=0
+        while True:
+            t=f.get(f'ss_{i}_title')
+            if t is None: break
+            if not t.strip(): i+=1; continue
+            sid=f.get(f'ss_{i}_id',type=int)
+            entry={'title':t,'short_description':f.get(f'ss_{i}_short_description',''),'full_content':f.get(f'ss_{i}_full_content',''),
+                   'category_id':f.get(f'ss_{i}_category',''),'state':f.get(f'ss_{i}_state',''),'city':f.get(f'ss_{i}_city','')}
+            for imgf in (f'ss_{i}_featured_image_file',f'ss_{i}_featured_cam'):
+                if imgf in request.files:
+                    uf=request.files[imgf]
+                    if uf and uf.filename:
+                        u_path=save_upload(uf,'images')
+                        if u_path: entry['featured_image']=u_path; fi_files.append(u_path)
+            if sid:
+                old=db.execute("SELECT title,short_description,full_content FROM sub_spots WHERE id=?",(sid,)).fetchone()
+                upd_entries.append({'id':sid,'action':'edit','prev':dict(old) if old else {},'upd':entry})
+            else:
+                upd_entries.append({'id':None,'action':'create','prev':{},'upd':entry})
+                changes.append(f"New T4: {t}")
+            i+=1
+        if upd_entries: changes.append(f"{len(upd_entries)} T4 change(s)")
+        ks_title=db.execute("SELECT title FROM key_spots WHERE id=?",(ks_id,)).fetchone()
+        summary='; '.join(changes) if changes else 'T4 changes'
+        create_change_approval(u['id'],'edit','T4','sub_spots',ks_id,ks_id,
+            ks_title['title'] if ks_title else 'Key Spot',
+            _ks_dham['dham_id'],_ks_dham['dham_title'],
+            {},{'t4_entries':upd_entries},summary,fi_files)
+        flash('Your T4 changes have been submitted for approval.','info')
+        return redirect(url_for('admin_key_spot_subs',ks_id=ks_id))
+    # Admin/System Admin: proceed normally
     cfs=db.execute("SELECT * FROM custom_field_defs WHERE is_active=1 ORDER BY sort_order").fetchall()
     existing=[r['id'] for r in db.execute("SELECT id FROM sub_spots WHERE key_spot_id=?",(ks_id,)).fetchall()]
-    # Get dham_code for hierarchy ID
-    _ks_row=db.execute("SELECT p.dham_code FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
+    _ks_row=_ks_dham
     _dham_code=_ks_row['dham_code'] if _ks_row else None
     _loc_user=get_current_user(); _loc_username=_loc_user['display_name'] if _loc_user else 'Unknown'
     _loc_now=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -2303,23 +2588,24 @@ def admin_media_delete(media_id):
 # ─── Users ───
 @app.route('/admin/users')
 @login_required
-@role_required('system_admin')
+@role_required('system_admin','admin')
 def admin_users(): return render_template('admin/users.html',users=get_db().execute("SELECT * FROM users ORDER BY created_at DESC").fetchall())
 
 @app.route('/admin/users/new', methods=['GET','POST'])
 @login_required
-@role_required('system_admin')
+@role_required('system_admin','admin')
 def admin_user_new():
     db=get_db()
+    all_dhams=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
     if request.method=='POST':
         email = request.form.get('email','').strip()
         role = request.form.get('role','editor')
         if not email:
             flash('Email is required.','error')
-            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False)
+            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False,all_dhams=all_dhams,assigned_dhams=[])
         if db.execute("SELECT id FROM users WHERE email=?",(email,)).fetchone():
             flash('A user with this email already exists.','error')
-            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False)
+            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False,all_dhams=all_dhams,assigned_dhams=[])
         # Generate secure password
         temp_password = generate_secure_password()
         # Generate verification token
@@ -2353,6 +2639,12 @@ def admin_user_new():
              json.dumps(perms), 1 if request.form.get('receive_reports') else 0,
              token, expiry.strftime('%Y-%m-%d %H:%M:%S'), temp_pw_enc, session['user_id']))
         db.commit()
+        # Save dham assignments for editors
+        new_user_id = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()['id']
+        if role == 'editor':
+            for dham_id in request.form.getlist('assigned_dhams'):
+                db.execute("INSERT OR IGNORE INTO user_dham_assignments (user_id,place_id,assigned_by) VALUES (?,?,?)", (new_user_id, int(dham_id), session['user_id']))
+            db.commit()
         # Send verification email
         base_url = request.url_root.rstrip('/')
         email_sent = send_verification_email(email, token, base_url)
@@ -2362,14 +2654,16 @@ def admin_user_new():
             flash(f'User created but verification email could not be sent. Check SMTP settings. You can resend from the user list.','warning')
         log_action(session['user_id'], 'create_user', 'user', None, f'Created user {email} with role {role}')
         return redirect(url_for('admin_users'))
-    return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False)
+    return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False,all_dhams=all_dhams,assigned_dhams=[])
 
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET','POST'])
 @login_required
-@role_required('system_admin')
+@role_required('system_admin','admin')
 def admin_user_edit(user_id):
     db=get_db(); user=db.execute("SELECT * FROM users WHERE id=?",(user_id,)).fetchone()
     if not user: abort(404)
+    all_dhams=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
+    assigned_dhams=[r['place_id'] for r in db.execute("SELECT place_id FROM user_dham_assignments WHERE user_id=?",(user_id,)).fetchall()]
     if request.method=='POST':
         u={'email':request.form['email'],'display_name':request.form.get('display_name',user['username']),
            'role':request.form.get('role',user['role']),
@@ -2380,21 +2674,27 @@ def admin_user_edit(user_id):
             valid, errors = validate_password(request.form['password'])
             if not valid:
                 for e in errors: flash(e,'error')
-                return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True)
+                return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True,all_dhams=all_dhams,assigned_dhams=assigned_dhams)
             u['password_hash']=hash_password(request.form['password'])
-        db.execute(f"UPDATE users SET {','.join(f'{k}=?' for k in u)} WHERE id=?",list(u.values())+[user_id]); db.commit(); flash('Updated!','success'); return redirect(url_for('admin_users'))
-    return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True)
+        db.execute(f"UPDATE users SET {','.join(f'{k}=?' for k in u)} WHERE id=?",list(u.values())+[user_id])
+        # Update dham assignments
+        db.execute("DELETE FROM user_dham_assignments WHERE user_id=?",(user_id,))
+        if u['role']=='editor' or request.form.get('role')=='editor':
+            for dham_id in request.form.getlist('assigned_dhams'):
+                db.execute("INSERT OR IGNORE INTO user_dham_assignments (user_id,place_id,assigned_by) VALUES (?,?,?)", (user_id, int(dham_id), session['user_id']))
+        db.commit(); flash('Updated!','success'); return redirect(url_for('admin_users'))
+    return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True,all_dhams=all_dhams,assigned_dhams=assigned_dhams)
 
 @app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
 @login_required
-@role_required('system_admin')
+@role_required('system_admin','admin')
 def admin_user_delete(user_id):
     if user_id==session['user_id']: flash('Cannot.','error'); return redirect(url_for('admin_users'))
     get_db().execute("UPDATE users SET is_active=0 WHERE id=?",(user_id,)); get_db().commit(); flash('Deactivated.','info'); return redirect(url_for('admin_users'))
 
 @app.route('/admin/users/<int:user_id>/resend-verification', methods=['POST'])
 @login_required
-@role_required('system_admin')
+@role_required('system_admin','admin')
 def admin_user_resend_verification(user_id):
     db = get_db()
     user = db.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
@@ -2493,6 +2793,216 @@ def admin_sub_category_delete(cat_id):
 @login_required
 def admin_help():
     return render_template('admin/help_guide.html')
+
+# ═══════════════════════════════════════════════════════════════
+# ─── Change Approvals System ───
+# ═══════════════════════════════════════════════════════════════
+
+@app.route('/admin/approvals')
+@login_required
+def admin_approvals():
+    u=get_current_user()
+    if not is_admin_or_above(u):
+        flash('Only admins can access Change Approvals.','error'); return redirect(url_for('admin_dashboard'))
+    db=get_db()
+    tab=request.args.get('tab','pending')
+    page=request.args.get('page',1,type=int)
+    per_page=20
+    if tab=='approved':
+        total=db.execute("SELECT COUNT(*) FROM change_approvals WHERE status IN ('approved','rejected')").fetchone()[0]
+        items=db.execute("""SELECT ca.*,u.display_name as user_name,u.role as user_role,
+                           r.display_name as reviewer_name
+                           FROM change_approvals ca
+                           JOIN users u ON ca.user_id=u.id
+                           LEFT JOIN users r ON ca.reviewed_by=r.id
+                           WHERE ca.status IN ('approved','rejected')
+                           ORDER BY ca.reviewed_at DESC LIMIT ? OFFSET ?""",(per_page,(page-1)*per_page)).fetchall()
+    else:
+        total=db.execute("SELECT COUNT(*) FROM change_approvals WHERE status='pending'").fetchone()[0]
+        items=db.execute("""SELECT ca.*,u.display_name as user_name,u.role as user_role
+                           FROM change_approvals ca
+                           JOIN users u ON ca.user_id=u.id
+                           WHERE ca.status='pending'
+                           ORDER BY ca.created_at DESC LIMIT ? OFFSET ?""",(per_page,(page-1)*per_page)).fetchall()
+    total_pages=(total+per_page-1)//per_page
+    return render_template('admin/change_approvals.html',items=items,tab=tab,page=page,total_pages=total_pages,total=total)
+
+@app.route('/admin/approvals/<int:approval_id>')
+@login_required
+def admin_approval_detail(approval_id):
+    u=get_current_user()
+    if not is_admin_or_above(u):
+        flash('Permission denied.','error'); return redirect(url_for('admin_dashboard'))
+    db=get_db()
+    item=db.execute("""SELECT ca.*,u.display_name as user_name,u.email as user_email,u.role as user_role,
+                       r.display_name as reviewer_name
+                       FROM change_approvals ca
+                       JOIN users u ON ca.user_id=u.id
+                       LEFT JOIN users r ON ca.reviewed_by=r.id
+                       WHERE ca.id=?""",(approval_id,)).fetchone()
+    if not item: abort(404)
+    prev=json.loads(item['previous_data'] or '{}')
+    upd=json.loads(item['updated_data'] or '{}')
+    files=json.loads(item['uploaded_files'] or '[]')
+    return render_template('admin/approval_detail.html',item=item,prev=prev,upd=upd,files=files)
+
+@app.route('/admin/approvals/<int:approval_id>/action', methods=['POST'])
+@login_required
+def admin_approval_action(approval_id):
+    u=get_current_user()
+    if not is_admin_or_above(u):
+        flash('Permission denied.','error'); return redirect(url_for('admin_dashboard'))
+    db=get_db()
+    action=request.form.get('action')
+    note=request.form.get('review_note','')
+    item=db.execute("SELECT * FROM change_approvals WHERE id=?",(approval_id,)).fetchone()
+    if not item: abort(404)
+    if item['status']!='pending':
+        flash('This item has already been reviewed.','warning'); return redirect(url_for('admin_approvals'))
+    if action=='approve':
+        # Apply the changes
+        _apply_approval(item)
+        db.execute("UPDATE change_approvals SET status='approved',reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,review_note=? WHERE id=?",
+            (u['id'],note,approval_id))
+        db.commit()
+        flash('Changes approved and applied!','success')
+    elif action=='reject':
+        # Delete uploaded files if rejected (don't eat disk space)
+        files=json.loads(item['uploaded_files'] or '[]')
+        for fp in files:
+            full_path=os.path.join(app.static_folder,'uploads',fp) if isinstance(fp,str) else ''
+            if full_path and os.path.exists(full_path):
+                try: os.remove(full_path)
+                except: pass
+        db.execute("UPDATE change_approvals SET status='rejected',reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,review_note=? WHERE id=?",
+            (u['id'],note,approval_id))
+        db.commit()
+        flash('Changes rejected.','info')
+    return redirect(url_for('admin_approvals'))
+
+def _apply_approval(item):
+    """Apply an approved change to the database."""
+    db=get_db()
+    upd=json.loads(item['updated_data'] or '{}')
+    tier=item['tier']; entity_id=item['entity_id']; action_type=item['action_type']
+
+    if action_type=='photo_upload':
+        # Apply photographer image uploads
+        images=upd.get('images',[])
+        for img in images:
+            t=img.get('tier','T1'); itype=img.get('type','gallery'); path=img.get('path','')
+            eid=img.get('entity_id'); entity=img.get('entity','')
+            if not path: continue
+            if t=='T1':
+                if itype=='featured':
+                    db.execute("UPDATE places SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(path,entity_id))
+                else:
+                    mid=db.execute("SELECT id FROM media WHERE filename=?",(path,)).fetchone()
+                    if mid: db.execute("INSERT INTO place_media (place_id,media_id,media_role) VALUES (?,?,?)",(entity_id,mid['id'],'gallery'))
+            elif t=='T2' and eid:
+                if itype=='featured':
+                    db.execute("UPDATE key_places SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(path,eid))
+                else:
+                    eg=db.execute("SELECT gallery_images FROM key_places WHERE id=?",(eid,)).fetchone()
+                    eg_val=eg['gallery_images'] or '' if eg else ''
+                    ng=(eg_val+','+path) if eg_val else path
+                    db.execute("UPDATE key_places SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(ng,eid))
+            elif t=='T3' and eid:
+                if itype=='featured':
+                    db.execute("UPDATE key_spots SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(path,eid))
+                else:
+                    eg=db.execute("SELECT gallery_images FROM key_spots WHERE id=?",(eid,)).fetchone()
+                    eg_val=eg['gallery_images'] or '' if eg else ''
+                    ng=(eg_val+','+path) if eg_val else path
+                    db.execute("UPDATE key_spots SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(ng,eid))
+            elif t=='T4' and eid:
+                if itype=='featured':
+                    db.execute("UPDATE sub_spots SET featured_image=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(path,eid))
+                else:
+                    eg=db.execute("SELECT gallery_images FROM sub_spots WHERE id=?",(eid,)).fetchone()
+                    eg_val=eg['gallery_images'] or '' if eg else ''
+                    ng=(eg_val+','+path) if eg_val else path
+                    db.execute("UPDATE sub_spots SET gallery_images=?,updated_at=CURRENT_TIMESTAMP WHERE id=?",(ng,eid))
+        db.commit(); return
+
+    if tier=='T1' and item['entity_table']=='places':
+        # Apply T1 field changes
+        allowed_fields=['title','short_description','full_content','state','city','country','status','featured_image']
+        sets=[]; vals=[]
+        for k,v in upd.items():
+            if k.startswith('_'): continue
+            if k in allowed_fields: sets.append(f"{k}=?"); vals.append(v)
+        if sets:
+            sets.append("updated_at=CURRENT_TIMESTAMP")
+            vals.append(entity_id)
+            db.execute(f"UPDATE places SET {','.join(sets)} WHERE id=?",vals)
+            if 'title' in upd:
+                db.execute("UPDATE places SET slug=? WHERE id=?",(slugify(upd['title']),entity_id))
+        # Apply T2 sub-changes
+        t2_changes=upd.get('_t2_changes',[])
+        for ch in t2_changes:
+            if ch.get('action')=='create':
+                d=ch.get('upd',{})
+                slug=slugify(d.get('title',''))
+                _place_row=db.execute("SELECT dham_code FROM places WHERE id=?",(entity_id,)).fetchone()
+                _dc=_place_row['dham_code'] if _place_row else None
+                hid=_gen_t2_id(_dc,db,entity_id) if _dc else None
+                db.execute("INSERT INTO key_places (parent_place_id,title,slug,short_description,full_content,hierarchy_id) VALUES (?,?,?,?,?,?)",
+                    (entity_id,d.get('title',''),slug,d.get('short_description',''),d.get('full_content',''),hid))
+            elif ch.get('action')=='edit' and ch.get('id'):
+                d=ch.get('upd',{})
+                sets=[]; vals=[]
+                for k in ('title','short_description','full_content','featured_image'):
+                    if k in d: sets.append(f"{k}=?"); vals.append(d[k])
+                if sets:
+                    sets.append("updated_at=CURRENT_TIMESTAMP"); vals.append(ch['id'])
+                    db.execute(f"UPDATE key_places SET {','.join(sets)} WHERE id=?",vals)
+                    if 'title' in d: db.execute("UPDATE key_places SET slug=? WHERE id=?",(slugify(d['title']),ch['id']))
+        db.commit(); return
+
+    if tier=='T3' and item['entity_table']=='key_spots':
+        entries=upd.get('t3_entries',[])
+        kp_id=entity_id
+        _kp_row=db.execute("SELECT kp.parent_place_id,p.dham_code FROM key_places kp JOIN places p ON kp.parent_place_id=p.id WHERE kp.id=?",(kp_id,)).fetchone()
+        _dc=_kp_row['dham_code'] if _kp_row else None
+        for ch in entries:
+            d=ch.get('upd',{})
+            if ch.get('action')=='create':
+                slug=slugify(d.get('title',''))
+                hid=_gen_t3_id(_dc,db,kp_id) if _dc else None
+                db.execute("INSERT INTO key_spots (key_place_id,category_id,title,slug,short_description,full_content,featured_image,state,city,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    (kp_id,d.get('category_id') or None,d.get('title',''),slug,d.get('short_description',''),d.get('full_content',''),d.get('featured_image',''),d.get('state',''),d.get('city',''),hid))
+            elif ch.get('action')=='edit' and ch.get('id'):
+                sets=[]; vals=[]
+                for k in ('title','short_description','full_content','featured_image','category_id','state','city'):
+                    if k in d: sets.append(f"{k}=?"); vals.append(d[k] if d[k] else None if k=='category_id' else d[k])
+                if sets:
+                    sets.append("updated_at=CURRENT_TIMESTAMP"); vals.append(ch['id'])
+                    db.execute(f"UPDATE key_spots SET {','.join(sets)} WHERE id=?",vals)
+                    if 'title' in d: db.execute("UPDATE key_spots SET slug=? WHERE id=?",(slugify(d['title']),ch['id']))
+        db.commit(); return
+
+    if tier=='T4' and item['entity_table']=='sub_spots':
+        entries=upd.get('t4_entries',[])
+        ks_id=entity_id
+        _ks_row=db.execute("SELECT p.dham_code FROM key_spots ks JOIN key_places kp ON ks.key_place_id=kp.id JOIN places p ON kp.parent_place_id=p.id WHERE ks.id=?",(ks_id,)).fetchone()
+        _dc=_ks_row['dham_code'] if _ks_row else None
+        for ch in entries:
+            d=ch.get('upd',{})
+            if ch.get('action')=='create':
+                slug=slugify(d.get('title',''))
+                hid=_gen_t4_id(_dc,db,ks_id) if _dc else None
+                db.execute("INSERT INTO sub_spots (key_spot_id,category_id,title,slug,short_description,full_content,featured_image,state,city,hierarchy_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    (ks_id,d.get('category_id') or None,d.get('title',''),slug,d.get('short_description',''),d.get('full_content',''),d.get('featured_image',''),d.get('state',''),d.get('city',''),hid))
+            elif ch.get('action')=='edit' and ch.get('id'):
+                sets=[]; vals=[]
+                for k in ('title','short_description','full_content','featured_image','category_id','state','city'):
+                    if k in d: sets.append(f"{k}=?"); vals.append(d[k] if d[k] else None if k=='category_id' else d[k])
+                if sets:
+                    sets.append("updated_at=CURRENT_TIMESTAMP"); vals.append(ch['id'])
+                    db.execute(f"UPDATE sub_spots SET {','.join(sets)} WHERE id=?",vals)
+                    if 'title' in d: db.execute("UPDATE sub_spots SET slug=? WHERE id=?",(slugify(d['title']),ch['id']))
+        db.commit(); return
 
 # ─── Gallery Image Delete API ───
 @app.route('/admin/api/delete-gallery-image', methods=['POST'])

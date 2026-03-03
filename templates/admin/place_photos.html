@@ -48,6 +48,13 @@
 @media(max-width:600px){.ro-grid{grid-template-columns:1fr}}
 </style>
 
+{% if current_user and current_user.role == 'photographer' %}
+<div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+<span style="font-size:24px">📷</span>
+<div><strong style="color:#276749">Photographer Mode</strong> — Your uploaded images will be submitted for admin approval. They will appear on the site after approval and will be auto-compressed.</div>
+</div>
+{% endif %}
+
 <div class="rp-notice">
 <i class="fas fa-info-circle"></i>
 <div><strong>Photo Capture Mode</strong> — All data is shown for reference (read-only). You can only upload or capture photos. Text, descriptions, status, tags, location, and all other fields cannot be edited here.</div>
@@ -198,7 +205,7 @@
 {% endif %}
 
 <div style="position:sticky;bottom:0;background:var(--bg);padding:14px 0;border-top:1px solid var(--border);margin-top:20px;z-index:10">
-<button type="submit" class="btn btn-primary" style="width:100%;max-width:400px"><i class="fas fa-save"></i> Save All Photos</button>
+<button type="submit" class="btn btn-primary" style="width:100%;max-width:400px"><i class="fas fa-{% if current_user and current_user.role == 'photographer' %}paper-plane{% else %}save{% endif %}"></i> {% if current_user and current_user.role == 'photographer' %}Submit Photos for Approval{% else %}Save All Photos{% endif %}</button>
 </div>
 </form>
 

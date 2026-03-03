@@ -1,9 +1,23 @@
 {% extends "admin/base.html" %}
 {% block title %}Holy Dhams{% endblock %}
 {% block page_title %}Holy Dhams{% endblock %}
-{% block topbar_actions %}<a href="{{ url_for('admin_place_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Dham</a>{% endblock %}
+{% block topbar_actions %}
+{% if current_user and current_user.role in ('system_admin','admin') %}
+<a href="{{ url_for('admin_place_new') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Dham</a>
+{% endif %}
+{% endblock %}
 
 {% block admin_content %}
+{% if current_user and current_user.role == 'editor' and user_assigned_dhams|length > 0 %}
+<div style="background:#EBF8FF;border:1px solid #90CDF4;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#2B6CB0">
+<i class="fas fa-info-circle"></i> You can edit <strong>{{ user_assigned_dhams|length }}</strong> assigned Dham(s). Other Dhams are view-only. Your changes will be sent for admin approval.
+</div>
+{% elif current_user and current_user.role == 'photographer' %}
+<div style="background:#F0FFF4;border:1px solid #9AE6B4;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#276749">
+<i class="fas fa-camera"></i> You can upload Featured &amp; Gallery images. Click the <strong>📷 Photos</strong> button. Your uploads will be sent for admin approval.
+</div>
+{% endif %}
+
 <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
 <a class="btn btn-sm {{ 'btn-primary' if not current_status else 'btn-secondary' }}" href="{{ url_for('admin_places') }}">All</a>
 <a class="btn btn-sm {{ 'btn-primary' if current_status=='published' else 'btn-secondary' }}" href="{{ url_for('admin_places', status='published') }}">Published</a>
@@ -25,11 +39,16 @@
 <thead><tr><th>ID</th><th>Dham Name</th><th>Location</th><th>Key Places</th><th>Status</th><th>Featured</th><th>Views</th><th>Updated</th><th>Actions</th></tr></thead>
 <tbody>
 {% for place in places %}
-<tr>
+<tr{% if current_user.role == 'editor' and place.id not in user_assigned_dhams %} style="opacity:0.55"{% endif %}>
 <td><span class="hid-badge" onclick="copyHid(this)" data-hid="{{ place.hierarchy_id or '—' }}" title="Click to copy">{{ place.hierarchy_id or '—' }} <span class="hid-copy">📋</span></span></td>
 <td>
 <a href="{{ url_for('admin_place_edit', place_id=place.id) }}" style="font-weight:600;color:var(--text)">{{ place.title }}</a>
-<div style="font-size:11px;color:var(--text-light);margin-top:2px">🙏 Tier 1 · {{ place.dham_code or '' }}</div>
+<div style="font-size:11px;color:var(--text-light);margin-top:2px">
+🙏 Tier 1 · {{ place.dham_code or '' }}
+{% if current_user.role == 'editor' %}
+{% if place.id in user_assigned_dhams %}<span style="color:#38A169;font-weight:600"> · ✅ Assigned</span>{% else %}<span style="color:#A0AEC0"> · 🔒 View only</span>{% endif %}
+{% endif %}
+</div>
 </td>
 <td style="font-size:13px;color:var(--text-light)">{{ place.city }}{% if place.city and place.state %}, {% endif %}{{ place.state }}</td>
 <td><span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--primary-light);color:var(--primary);border-radius:50px;font-size:12px;font-weight:600">📍 {{ place.kp_count }}</span></td>
@@ -38,18 +57,15 @@
 <td>{{ place.view_count }}</td>
 <td style="font-size:12px;color:var(--text-light)">{{ place.updated_at[:10] if place.updated_at else '' }}</td>
 <td class="actions">
-{% if has_permission(current_user, 'manage_places') %}
-<a href="{{ url_for('admin_place_edit', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+{% if current_user.role == 'photographer' %}
+<a href="{{ url_for('admin_place_photos', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Upload Photos" style="background:#2E86AB15;color:#2E86AB;border-color:#2E86AB40"><i class="fas fa-camera"></i></a>
+{% else %}
+<a href="{{ url_for('admin_place_edit', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="{% if current_user.role == 'editor' and place.id not in user_assigned_dhams %}View (Read-only){% else %}Edit{% endif %}"><i class="fas fa-{% if current_user.role == 'editor' and place.id not in user_assigned_dhams %}eye{% else %}edit{% endif %}"></i></a>
+<a href="{{ url_for('admin_place_photos', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Photos"><i class="fas fa-camera"></i></a>
 {% endif %}
-{% if has_permission(current_user, 'capture_photo') %}
-<a href="{{ url_for('admin_place_photos', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Photos" style="{% if not has_permission(current_user, 'manage_places') %}background:#2E86AB15;color:#2E86AB;border-color:#2E86AB40{% endif %}"><i class="fas fa-camera"></i></a>
-{% endif %}
-{% if has_permission(current_user, 'update_location') %}
-<a href="{{ url_for('admin_place_location', place_id=place.id) }}" class="btn btn-secondary btn-icon btn-sm" title="Location" style="{% if not has_permission(current_user, 'manage_places') %}background:#8BAB8A15;color:#3D6B3D;border-color:#8BAB8A40{% endif %}"><i class="fas fa-map-marker-alt"></i></a>
-{% endif %}
-<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary btn-icon btn-sm" title="View"><i class="fas fa-eye"></i></a>
-{% if has_permission(current_user, 'manage_places') %}
-<form method="POST" action="{{ url_for('admin_place_delete', place_id=place.id) }}" style="display:inline" onsubmit="return confirm('Delete this dham?')">
+<a href="{{ url_for('place_detail', slug=place.slug) }}" target="_blank" class="btn btn-secondary btn-icon btn-sm" title="View on site"><i class="fas fa-external-link-alt"></i></a>
+{% if current_user.role in ('system_admin','admin') %}
+<form method="POST" action="{{ url_for('admin_place_delete', place_id=place.id) }}" style="display:inline" onsubmit="return confirm('Delete this dham and all its data?')">
 <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Delete"><i class="fas fa-trash"></i></button>
 </form>
 {% endif %}
