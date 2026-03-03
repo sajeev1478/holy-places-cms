@@ -16,7 +16,7 @@
 <input type="checkbox" name="receive_users" value="{{ u.id }}" {{ 'checked' if u.receive_reports }} style="accent-color:var(--primary)">
 <span style="font-weight:600">{{ u.display_name or u.username }}</span>
 <span style="color:var(--text-light);font-size:11px">{{ u.email }}</span>
-<span style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:50px;background:{{ '#C76B8F15' if u.role=='super_admin' else '#2E86AB15' }};color:{{ '#C76B8F' if u.role=='super_admin' else '#2E86AB' }}">{{ u.role }}</span>
+<span style="margin-left:auto;font-size:10px;padding:2px 8px;border-radius:50px;background:{{ '#C76B8F15' if u.role=='system_admin' else '#2E86AB15' }};color:{{ '#C76B8F' if u.role=='system_admin' else '#2E86AB' }}">{{ u.role }}</span>
 </label>
 {% endfor %}
 </div>

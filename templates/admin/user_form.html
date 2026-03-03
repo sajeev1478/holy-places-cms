@@ -1,42 +1,45 @@
 {% extends "admin/base.html" %}
-{% block title %}{{ 'Edit' if editing else 'New' }} User{% endblock %}
-{% block page_title %}{{ 'Edit' if editing else 'Create' }} User{% endblock %}
+{% block title %}{{ 'Edit' if editing else 'Add New' }} User{% endblock %}
+{% block page_title %}{{ 'Edit' if editing else 'Add New' }} User{% endblock %}
 
 {% block admin_content %}
 <form method="POST" class="admin-card" style="max-width:700px">
 <div class="admin-card-body">
-<div class="form-row">
-<div class="form-group">
-<label>Username *</label>
-<input name="username" class="form-control" value="{{ user.username if editing else '' }}" {{ 'readonly' if editing }} required>
+
+{% if not editing %}
+{# ── NEW USER FORM ── #}
+<div style="background:#E3F2FD;border:1px solid #BBDEFB;border-radius:10px;padding:16px;margin-bottom:24px;font-size:13px;color:#1565C0;line-height:1.6">
+<strong>ℹ️ How it works:</strong> Enter the user's email and assign a role. The system will auto-generate a secure password, send a verification email, and after verification, send the login credentials.
 </div>
+
+<div class="form-group">
+<label>Email Address *</label>
+<input name="email" class="form-control" type="email" placeholder="user@example.com" required autofocus>
+</div>
+
 <div class="form-group">
 <label>Display Name</label>
-<input name="display_name" class="form-control" value="{{ user.display_name if editing else '' }}" required>
+<input name="display_name" class="form-control" placeholder="Optional — auto-generated from email if blank">
 </div>
-</div>
+
 <div class="form-group">
-<label>Email *</label>
-<input name="email" class="form-control" type="email" value="{{ user.email if editing else '' }}" required>
-</div>
-<div class="form-group">
-<label>Password {{ '(leave blank to keep current)' if editing else '*' }}</label>
-<input name="password" class="form-control" type="password" {{ '' if editing else 'required' }} placeholder="{{ '••••••••' if editing else 'Enter password' }}">
-</div>
-<div class="form-group">
-<label>Role</label>
-<select name="role" class="form-control">
-<option value="editor" {{ 'selected' if editing and user.role=='editor' }}>Editor</option>
-<option value="content_admin" {{ 'selected' if editing and user.role=='content_admin' }}>Content Admin</option>
-<option value="super_admin" {{ 'selected' if editing and user.role=='super_admin' }}>Super Admin</option>
+<label>Role *</label>
+<select name="role" class="form-control" id="roleSelect" onchange="togglePermissions()">
+<option value="admin">Admin</option>
+<option value="editor" selected>Editor</option>
+<option value="photographer">Photographer</option>
 </select>
-<div class="hint">Super Admin has all permissions. Content Admin and Editor permissions are set below.</div>
+<div class="hint" style="margin-top:6px;font-size:12px;color:var(--text-light)">
+<strong>Admin:</strong> Full content management + user management assistance<br>
+<strong>Editor:</strong> Content creation and editing<br>
+<strong>Photographer:</strong> Photo upload only
+</div>
 </div>
 
 <div class="form-group">
 <label>📩 Receive Error/Feedback Reports</label>
 <label class="form-check" style="padding:10px 14px;background:var(--bg);border-radius:8px">
-<input type="checkbox" name="receive_reports" value="1" {{ 'checked' if editing and user.receive_reports }}>
+<input type="checkbox" name="receive_reports" value="1">
 <div>
 <div style="font-weight:600;font-size:13px">Send reports to this user's email</div>
 <div style="font-size:11px;color:var(--text-light)">When visitors submit error reports or feedback, emails will also be sent to this user.</div>
@@ -44,6 +47,100 @@
 </label>
 </div>
 
+<div id="permissionsSection">
+<div class="form-group">
+<label>Permissions</label>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+{% for perm in perm_defs %}{% if perm.category != 'field_access' %}
+<label class="form-check" style="padding:10px 14px;background:var(--bg);border-radius:8px">
+<input type="checkbox" name="permissions" value="{{ perm.permission_key }}">
+<div>
+<div style="font-weight:600;font-size:13px">{{ perm.label }}</div>
+<div style="font-size:11px;color:var(--text-light)">{{ perm.description }}</div>
+</div>
+</label>
+{% endif %}{% endfor %}
+</div>
+<div style="margin-top:16px;padding-top:12px;border-top:2px solid var(--border)">
+<div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="fas fa-lock" style="color:var(--primary)"></i> Restricted Field Access</div>
+<div style="font-size:11px;color:var(--text-light);margin-bottom:10px;padding:8px 12px;background:#FFF3E0;border-radius:8px;border:1px solid #FFE0B2">
+<strong>⚠️ Important:</strong> These permissions open a dedicated page where the user can <strong>see all data across all tiers</strong> in <strong>read-only mode</strong> — but can <strong>only edit photos or GPS location</strong> as per the option given.</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+{% for perm in perm_defs %}{% if perm.category == 'field_access' %}
+<label class="form-check" style="padding:10px 14px;background:#E3F2FD;border-radius:8px;border:1px solid #BBDEFB">
+<input type="checkbox" name="permissions" value="{{ perm.permission_key }}">
+<div>
+<div style="font-weight:600;font-size:13px">{{ perm.label }}</div>
+<div style="font-size:11px;color:var(--text-light)">{{ perm.description }}</div>
+</div>
+</label>
+{% endif %}{% endfor %}
+</div>
+</div>
+</div>
+</div>
+
+{% else %}
+{# ── EDIT USER FORM ── #}
+<div class="form-row">
+<div class="form-group">
+<label>Username</label>
+<input class="form-control" value="{{ user.username }}" readonly style="background:#F5F0EB">
+</div>
+<div class="form-group">
+<label>Display Name</label>
+<input name="display_name" class="form-control" value="{{ user.display_name }}" required>
+</div>
+</div>
+<div class="form-group">
+<label>Email *</label>
+<input name="email" class="form-control" type="email" value="{{ user.email }}" required>
+</div>
+
+<div class="form-group">
+<label>Password (leave blank to keep current)</label>
+<div style="display:flex;gap:8px;align-items:start;flex-wrap:wrap">
+<div style="flex:1;min-width:250px;position:relative">
+<input name="password" class="form-control" type="password" id="editPw" placeholder="••••••••" oninput="checkEditRules()">
+<button type="button" onclick="toggleEditPw()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#8A7A8B;font-size:14px">👁️</button>
+</div>
+<button type="button" onclick="autoGenEdit()" style="padding:10px 14px;background:#F5F0EB;border:1px solid #E8DDD0;border-radius:10px;font-size:12px;cursor:pointer;white-space:nowrap">🔑 Generate</button>
+<button type="button" id="editCopyBtn" onclick="copyEditPw()" style="display:none;padding:10px 14px;background:#E8F5E9;border:1px solid #C8E6C9;border-radius:10px;font-size:12px;cursor:pointer;color:#2E7D32;white-space:nowrap">📋 Copy</button>
+</div>
+<div id="editGenResult" style="display:none;margin-top:8px;font-family:monospace;font-size:13px;padding:8px 14px;background:#FFF3E0;border-radius:8px;border:1px solid #FFE0B2;letter-spacing:1px"></div>
+<div id="editRulesBox" style="display:none;background:#F5F0EB;border-radius:8px;padding:12px;margin-top:10px;font-size:12px">
+<div style="font-weight:700;margin-bottom:8px">Password Rules:</div>
+<div class="erule" id="erule-len"><span class="eicon">○</span> Min 8 characters</div>
+<div class="erule" id="erule-upper"><span class="eicon">○</span> 1+ uppercase (A-Z)</div>
+<div class="erule" id="erule-lower"><span class="eicon">○</span> 1+ lowercase (a-z)</div>
+<div class="erule" id="erule-num"><span class="eicon">○</span> 1+ number (0-9)</div>
+<div class="erule" id="erule-special"><span class="eicon">○</span> 1+ special (!@#$%^&*)</div>
+</div>
+</div>
+
+<div class="form-group">
+<label>Role</label>
+<select name="role" class="form-control" id="roleSelect" onchange="togglePermissions()">
+<option value="system_admin" {{ 'selected' if user.role=='system_admin' }}>System Admin</option>
+<option value="admin" {{ 'selected' if user.role=='admin' }}>Admin</option>
+<option value="editor" {{ 'selected' if user.role=='editor' }}>Editor</option>
+<option value="photographer" {{ 'selected' if user.role=='photographer' }}>Photographer</option>
+</select>
+<div class="hint" style="margin-top:4px;font-size:11px;color:var(--text-light)">System Admin has all permissions.</div>
+</div>
+
+<div class="form-group">
+<label>📩 Receive Error/Feedback Reports</label>
+<label class="form-check" style="padding:10px 14px;background:var(--bg);border-radius:8px">
+<input type="checkbox" name="receive_reports" value="1" {{ 'checked' if user.receive_reports }}>
+<div>
+<div style="font-weight:600;font-size:13px">Send reports to this user's email</div>
+<div style="font-size:11px;color:var(--text-light)">When visitors submit error reports or feedback, emails will also be sent to this user.</div>
+</div>
+</label>
+</div>
+
+<div id="permissionsSection">
 <div class="form-group">
 <label>Permissions</label>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
@@ -61,7 +158,7 @@
 <div style="margin-top:16px;padding-top:12px;border-top:2px solid var(--border)">
 <div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="fas fa-lock" style="color:var(--primary)"></i> Restricted Field Access</div>
 <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;padding:8px 12px;background:#FFF3E0;border-radius:8px;border:1px solid #FFE0B2">
-<strong>⚠️ Important:</strong> These permissions open a dedicated page where the user can <strong>see all data across all tiers</strong> (titles, descriptions, status, tags, custom fields) in <strong>read-only mode</strong> for reference — but can <strong>only edit photos or GPS location</strong> as per the option given. No other content can be modified.</div>
+<strong>⚠️ Important:</strong> These permissions open a dedicated page where the user can <strong>see all data across all tiers</strong> in <strong>read-only mode</strong> — but can <strong>only edit photos or GPS location</strong> as per the option given.</div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 {% for perm in perm_defs %}{% if perm.category == 'field_access' %}
 <label class="form-check" style="padding:10px 14px;background:#E3F2FD;border-radius:8px;border:1px solid #BBDEFB">
@@ -76,8 +173,8 @@
 </div>
 </div>
 </div>
+</div>
 
-{% if editing %}
 <div class="form-group">
 <label class="form-check"><input type="checkbox" name="is_active" {{ 'checked' if user.is_active }}> Account is Active</label>
 </div>
@@ -85,7 +182,65 @@
 </div>
 <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end">
 <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Cancel</a>
-<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create' }} User</button>
+<button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ 'Update' if editing else 'Create & Send Invitation' }}</button>
 </div>
 </form>
+
+<style>
+.erule{display:flex;align-items:center;gap:6px;padding:2px 0;color:#8A7A8B}
+.erule.met{color:#2E7D32}
+.eicon{width:16px;text-align:center;font-size:11px}
+</style>
+
+<script>
+function togglePermissions(){
+  var role=document.getElementById('roleSelect').value;
+  var section=document.getElementById('permissionsSection');
+  if(role==='system_admin'||role==='photographer'){
+    section.style.display='none';
+  }else{
+    section.style.display='block';
+  }
+}
+togglePermissions();
+
+{% if editing %}
+function toggleEditPw(){var i=document.getElementById('editPw');i.type=i.type==='password'?'text':'password'}
+function checkEditRules(){
+  var pw=document.getElementById('editPw').value;
+  var box=document.getElementById('editRulesBox');
+  if(pw.length>0){box.style.display='block'}else{box.style.display='none';return}
+  var rules=[
+    {id:'erule-len',test:pw.length>=8},
+    {id:'erule-upper',test:/[A-Z]/.test(pw)},
+    {id:'erule-lower',test:/[a-z]/.test(pw)},
+    {id:'erule-num',test:/[0-9]/.test(pw)},
+    {id:'erule-special',test:/[!@#$%^&*]/.test(pw)}
+  ];
+  rules.forEach(function(r){
+    var el=document.getElementById(r.id);
+    if(r.test){el.classList.add('met');el.querySelector('.eicon').textContent='✓'}
+    else{el.classList.remove('met');el.querySelector('.eicon').textContent='○'}
+  });
+}
+function autoGenEdit(){
+  fetch('/admin/api/generate-password').then(r=>r.json()).then(d=>{
+    document.getElementById('editPw').value=d.password;
+    document.getElementById('editPw').type='text';
+    document.getElementById('editGenResult').textContent=d.password;
+    document.getElementById('editGenResult').style.display='block';
+    document.getElementById('editCopyBtn').style.display='inline-flex';
+    checkEditRules();
+  });
+}
+function copyEditPw(){
+  var t=document.getElementById('editGenResult').textContent;
+  navigator.clipboard.writeText(t).then(function(){
+    var btn=document.getElementById('editCopyBtn');
+    btn.textContent='✅ Copied!';
+    setTimeout(function(){btn.innerHTML='📋 Copy'},2000);
+  });
+}
+{% endif %}
+</script>
 {% endblock %}

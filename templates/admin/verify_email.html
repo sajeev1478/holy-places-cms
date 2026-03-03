@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Verification – Holy Dham CMS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F5F0EB;color:#2D1F2E}
+.container{width:100%;max-width:480px;padding:20px}
+.card{background:white;border-radius:20px;padding:48px 40px;box-shadow:0 8px 40px rgba(45,31,46,.06);border:1px solid #E8DDD0;text-align:center}
+.icon-big{font-size:56px;margin-bottom:16px;display:block}
+h1{font-family:'Playfair Display',serif;font-size:24px;margin-bottom:8px}
+p{color:#8A7A8B;font-size:14px;line-height:1.6;margin-bottom:16px}
+.success-box{background:#E8F5E9;border:1px solid #C8E6C9;border-radius:10px;padding:20px;margin:20px 0}
+.success-box p{color:#2E7D32;margin:0}
+.error-box{background:#FDE8E8;border:1px solid #F5C6C6;border-radius:10px;padding:20px;margin:20px 0}
+.error-box p{color:#8B2020;margin:0}
+.warning-box{background:#FFF3E0;border:1px solid #FFE0B2;border-radius:10px;padding:20px;margin:20px 0}
+.warning-box p{color:#E65100;margin:0}
+.btn{display:inline-block;padding:14px 30px;background:#C76B8F;color:white;text-decoration:none;border-radius:12px;font-weight:600;font-size:14px;border:none;cursor:pointer;font-family:'DM Sans';transition:background .2s}
+.btn:hover{background:#A04870}
+.btn-outline{background:transparent;border:1px solid #C76B8F;color:#C76B8F}
+.btn-outline:hover{background:#C76B8F;color:white}
+.resend-form{margin-top:20px}
+.resend-form input{padding:12px 16px;border:1px solid #E8DDD0;border-radius:10px;font-family:'DM Sans';font-size:14px;width:100%;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+{% if status == 'success' %}
+<span class="icon-big">✅</span>
+<h1>Email Verified!</h1>
+<div class="success-box">
+<p>Your email <strong>{{ email }}</strong> has been successfully verified.</p>
+</div>
+<p>Your login credentials have been sent to your email. Please check your inbox (and spam folder).</p>
+<a href="{{ url_for('admin_login') }}" class="btn" style="margin-top:12px">Go to Login</a>
+
+{% elif status == 'already_verified' %}
+<span class="icon-big">ℹ️</span>
+<h1>Already Verified</h1>
+<div class="success-box">
+<p>This email has already been verified. You can log in now.</p>
+</div>
+<a href="{{ url_for('admin_login') }}" class="btn" style="margin-top:12px">Go to Login</a>
+
+{% elif status == 'expired' %}
+<span class="icon-big">⏰</span>
+<h1>Link Expired</h1>
+<div class="warning-box">
+<p>This verification link has expired. Please request a new one.</p>
+</div>
+<div class="resend-form">
+<form method="POST" action="{{ url_for('admin_resend_verification') }}">
+<input type="hidden" name="email" value="{{ email }}">
+<button type="submit" class="btn">Resend Verification Email</button>
+</form>
+</div>
+
+{% elif status == 'invalid' %}
+<span class="icon-big">❌</span>
+<h1>Invalid Link</h1>
+<div class="error-box">
+<p>This verification link is invalid or has already been used.</p>
+</div>
+<a href="{{ url_for('admin_login') }}" class="btn btn-outline" style="margin-top:12px">Go to Login</a>
+{% endif %}
+</div>
+</div>
+</body>
+</html>

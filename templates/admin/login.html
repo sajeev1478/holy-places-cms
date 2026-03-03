@@ -20,11 +20,19 @@ body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:
 .form-group input:focus{border-color:#C76B8F}
 .login-btn{width:100%;padding:16px;background:#C76B8F;color:white;border:none;border-radius:12px;font-family:'DM Sans';font-size:15px;font-weight:600;cursor:pointer;transition:all .3s;margin-top:8px}
 .login-btn:hover{background:#A04870}
-.flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;background:#FDE8E8;color:#8B2020}
+.flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px}
+.flash-error{background:#FDE8E8;color:#8B2020}
+.flash-warning{background:#FFF3E0;color:#E65100}
+.flash-success{background:#E8F5E9;color:#2E7D32}
+.flash-info{background:#E3F2FD;color:#1565C0}
 .login-footer{text-align:center;margin-top:24px;font-size:13px;color:#8A7A8B}
-.login-footer a{color:#C76B8F}
-.demo-info{margin-top:20px;padding:16px;background:#F8E5EE;border-radius:10px;font-size:12px;color:#5A4A5B}
-.demo-info strong{display:block;margin-bottom:4px;color:#C76B8F}
+.login-footer a{color:#C76B8F;text-decoration:none}
+.login-footer a:hover{text-decoration:underline}
+.forgot-link{text-align:right;margin-top:-12px;margin-bottom:16px}
+.forgot-link a{font-size:13px;color:#C76B8F;text-decoration:none}
+.forgot-link a:hover{text-decoration:underline}
+.input-wrapper{position:relative}
+.toggle-pw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#8A7A8B;font-size:14px;padding:4px}
 </style>
 </head>
 <body>
@@ -36,28 +44,32 @@ body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:
 <p>Admin Panel Login</p>
 </div>
 {% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}{% for cat, msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+{% if messages %}{% for cat, msg in messages %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}{% endif %}
 {% endwith %}
 <form method="POST">
 <div class="form-group">
-<label>Username</label>
-<input name="username" type="text" placeholder="Enter username" required autofocus>
+<label>Email or Username</label>
+<input name="login_id" type="text" placeholder="Enter email or username" required autofocus>
 </div>
 <div class="form-group">
 <label>Password</label>
-<input name="password" type="password" placeholder="Enter password" required>
+<div class="input-wrapper">
+<input name="password" type="password" id="loginPw" placeholder="Enter password" required>
+<button type="button" class="toggle-pw" onclick="togglePw()">👁️</button>
+</div>
+</div>
+<div class="forgot-link">
+<a href="{{ url_for('admin_forgot_password') }}">Forgot Password?</a>
 </div>
 <button class="login-btn" type="submit">Sign In</button>
 </form>
-<div class="demo-info">
-<strong>Demo Credentials:</strong>
-Super Admin: admin / admin123<br>
-Editor: editor / editor123
-</div>
 </div>
 <div class="login-footer">
 <a href="{{ url_for('home') }}">← Back to Website</a>
 </div>
 </div>
+<script>
+function togglePw(){var i=document.getElementById('loginPw');i.type=i.type==='password'?'text':'password'}
+</script>
 </body>
 </html>

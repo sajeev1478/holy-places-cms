@@ -4,8 +4,8 @@ Holy Dham CMS - Main Application (v3)
 With Category Framework for Tier 3 & Tier 4
 """
 
-import os, json, uuid, hashlib, sqlite3, functools, re, random
-from datetime import datetime
+import os, json, uuid, hashlib, sqlite3, functools, re, random, secrets, string
+from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from flask import (Flask, render_template, request, redirect, url_for, flash,
     session, jsonify, abort, g)
@@ -217,7 +217,7 @@ def close_db(exception):
 def init_db():
     db = get_db()
     db.executescript('''
-    CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'editor', permissions TEXT DEFAULT '{}', is_active INTEGER DEFAULT 1, receive_reports INTEGER DEFAULT 0, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, last_login TIMESTAMP);
+    CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, display_name TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'editor', permissions TEXT DEFAULT '{}', is_active INTEGER DEFAULT 1, receive_reports INTEGER DEFAULT 0, email_verified INTEGER DEFAULT 0, verification_token TEXT, verification_token_expiry TIMESTAMP, reset_token TEXT, reset_token_expiry TIMESTAMP, must_change_password INTEGER DEFAULT 0, temp_password_enc TEXT, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, last_login TIMESTAMP);
     CREATE TABLE IF NOT EXISTS modules (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, description TEXT, icon TEXT DEFAULT '📁', sort_order INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1, fields_schema TEXT DEFAULT '[]', created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS places (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, short_description TEXT, full_content TEXT, state TEXT, city TEXT, country TEXT DEFAULT 'India', latitude REAL, longitude REAL, featured_image TEXT, status TEXT DEFAULT 'draft', is_featured INTEGER DEFAULT 0, view_count INTEGER DEFAULT 0, field_visibility TEXT DEFAULT '{}', dham_code TEXT, hierarchy_id TEXT UNIQUE, created_by INTEGER, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     CREATE TABLE IF NOT EXISTS custom_field_defs (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL, label TEXT NOT NULL, field_type TEXT NOT NULL DEFAULT 'text', placeholder TEXT DEFAULT '', icon TEXT DEFAULT '📋', is_active INTEGER DEFAULT 1, sort_order INTEGER DEFAULT 0, applies_to TEXT DEFAULT 'both', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
@@ -321,6 +321,20 @@ def init_db():
     section_map={'opening_hours':'visitor','best_time_to_visit':'visitor','dress_code':'visitor','how_to_reach':'visitor','accommodation':'visitor','history':'history','audio_narration':'media','video_tour':'media','external_audio_url':'media','external_video_url':'media','gallery_images':'images'}
     for fname,sec in section_map.items():
         db.execute("UPDATE custom_field_defs SET section_t1=?,section_t2=?,section_t3=?,section_t4=? WHERE name=? AND section_t1='visitor' AND section_t2='visitor' AND section_t3='visitor' AND section_t4='visitor'",(sec,sec,sec,sec,fname))
+
+    # Migration: add auth columns to users table
+    user_cols=[c['name'] for c in db.execute("PRAGMA table_info(users)").fetchall()]
+    for col, default in [('email_verified','0'),('verification_token','NULL'),('verification_token_expiry','NULL'),
+                          ('reset_token','NULL'),('reset_token_expiry','NULL'),('must_change_password','0'),('temp_password_enc','NULL')]:
+        if col not in user_cols:
+            db.execute(f"ALTER TABLE users ADD COLUMN {col} {'INTEGER DEFAULT '+default if default in ('0','1') else 'TEXT DEFAULT '+default}")
+    # Migration: upgrade super_admin → system_admin for existing databases
+    db.execute("UPDATE users SET role='system_admin' WHERE role='super_admin'")
+    # Migration: mark existing users as email_verified (they were created before this system)
+    db.execute("UPDATE users SET email_verified=1 WHERE email_verified=0 AND last_login IS NOT NULL")
+    # Ensure the 2 system admin emails are always system_admin and verified
+    for sa_email in ('madana.murari.rns@iskcon.net','sajeev1478@gmail.com'):
+        db.execute("UPDATE users SET role='system_admin', email_verified=1 WHERE email=?", (sa_email,))
     db.commit()
 
 def _generate_dham_code(title, db):
@@ -468,12 +482,9 @@ def seed_db():
     for slug,name,desc,icon,color in SUB_SPOT_CATEGORIES:
         db.execute("INSERT INTO sub_spot_categories (slug,name,description,icon,color) VALUES (?,?,?,?,?)",(slug,name,desc,icon,color))
 
-    # Users — Super Admins
-    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('admin','admin@holyplaces.com',hashlib.sha256(b'admin123').hexdigest(),'Super Admin','super_admin','{"all":true}',1))
-    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('sajeev','sajeev1478@gmail.com',hashlib.sha256(b'holyplace2025').hexdigest(),'Sajeev','super_admin','{"all":true}',1))
-    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('manoj','manojrpai@gmail.com',hashlib.sha256(b'holyplace2025').hexdigest(),'Manoj','super_admin','{"all":true}',1))
-    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports) VALUES (?,?,?,?,?,?,?)", ('madana','madana.murari.rns@iskcon.net',hashlib.sha256(b'holyplace2025').hexdigest(),'Madana Murari','super_admin','{"all":true}',1))
-    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,created_by) VALUES (?,?,?,?,?,?)", ('editor','editor@holyplaces.com',hashlib.sha256(b'editor123').hexdigest(),'Content Editor','editor',1))
+    # Users — System Admins (seeded)
+    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports,email_verified) VALUES (?,?,?,?,?,?,?,?)", ('madana','madana.murari.rns@iskcon.net',hashlib.sha256(b'holyplace2025').hexdigest(),'Madana Murari','system_admin','{"all":true}',1,1))
+    db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports,email_verified) VALUES (?,?,?,?,?,?,?,?)", ('sajeev','sajeev1478@gmail.com',hashlib.sha256(b'holyplace2025').hexdigest(),'Sajeev','system_admin','{"all":true}',1,1))
     # Default email settings
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('report_emails','sajeev1478@gmail.com,manojrpai@gmail.com,madana.murari.rns@iskcon.net'))
     db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES (?,?)",('smtp_host',''))
@@ -641,6 +652,138 @@ def seed_db():
 
 # ─── Helpers ───
 def hash_password(p): return hashlib.sha256(p.encode()).hexdigest()
+
+def generate_secure_password(length=12):
+    """Auto-generate password meeting all strict rules"""
+    upper = random.choice(string.ascii_uppercase)
+    lower = random.choice(string.ascii_lowercase)
+    digit = random.choice(string.digits)
+    special = random.choice('!@#$%^&*')
+    remaining = ''.join(secrets.choice(string.ascii_letters + string.digits + '!@#$%^&*') for _ in range(length - 4))
+    pwd_list = list(upper + lower + digit + special + remaining)
+    random.shuffle(pwd_list)
+    return ''.join(pwd_list)
+
+def validate_password(password):
+    """Returns (is_valid, list_of_errors)"""
+    errors = []
+    if len(password) < 8: errors.append('Minimum 8 characters required')
+    if not re.search(r'[A-Z]', password): errors.append('At least 1 uppercase letter (A-Z)')
+    if not re.search(r'[a-z]', password): errors.append('At least 1 lowercase letter (a-z)')
+    if not re.search(r'[0-9]', password): errors.append('At least 1 number (0-9)')
+    if not re.search(r'[!@#$%^&*]', password): errors.append('At least 1 special character (!@#$%^&*)')
+    return len(errors) == 0, errors
+
+def generate_token():
+    """Generate a secure URL-safe token"""
+    return secrets.token_urlsafe(48)
+
+def send_auth_email(to_email, subject, html_body):
+    """Send email using SMTP settings from site_settings"""
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        db = get_db()
+        smtp_host = db.execute("SELECT value FROM site_settings WHERE key='smtp_host'").fetchone()
+        smtp_port = db.execute("SELECT value FROM site_settings WHERE key='smtp_port'").fetchone()
+        smtp_user = db.execute("SELECT value FROM site_settings WHERE key='smtp_user'").fetchone()
+        smtp_pass = db.execute("SELECT value FROM site_settings WHERE key='smtp_pass'").fetchone()
+        if not (smtp_host and smtp_host['value'] and smtp_user and smtp_user['value']):
+            print("SMTP not configured — email not sent")
+            return False
+        mime = MIMEMultipart('alternative')
+        mime['Subject'] = subject
+        mime['From'] = smtp_user['value']
+        mime['To'] = to_email
+        mime.attach(MIMEText(html_body, 'html'))
+        server = smtplib.SMTP(smtp_host['value'], int(smtp_port['value'] if smtp_port else '587'))
+        server.starttls()
+        server.login(smtp_user['value'], smtp_pass['value'] if smtp_pass else '')
+        server.sendmail(smtp_user['value'], [to_email], mime.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Email send failed: {e}")
+        return False
+
+def send_verification_email(user_email, token, base_url):
+    """Send email verification link"""
+    verify_url = f"{base_url}/admin/verify-email/{token}"
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px;background:#FDF8F5;border-radius:12px">
+        <div style="text-align:center;margin-bottom:24px">
+            <span style="font-size:40px">🪷</span>
+            <h2 style="color:#2D1F2E;margin:8px 0 4px">Holy Dham CMS</h2>
+            <p style="color:#8A7A8B;font-size:14px">Admin Panel Invitation</p>
+        </div>
+        <div style="background:white;border-radius:10px;padding:28px;border:1px solid #E8DDD0">
+            <p style="color:#2D1F2E;font-size:15px;line-height:1.6">You have been invited to the <strong>Holy Dham CMS Admin Panel</strong>. Please verify your email to activate your account.</p>
+            <div style="text-align:center;margin:28px 0">
+                <a href="{verify_url}" style="display:inline-block;padding:14px 36px;background:#C76B8F;color:white;text-decoration:none;border-radius:10px;font-weight:600;font-size:15px">Verify My Email</a>
+            </div>
+            <p style="color:#8A7A8B;font-size:12px;text-align:center">This link expires in <strong>24 hours</strong>.</p>
+            <p style="color:#8A7A8B;font-size:11px;margin-top:16px;padding-top:16px;border-top:1px solid #E8DDD0">If the button doesn't work, copy and paste this URL:<br><a href="{verify_url}" style="color:#C76B8F;word-break:break-all">{verify_url}</a></p>
+        </div>
+    </div>"""
+    return send_auth_email(user_email, "Holy Dham CMS — Verify Your Email", html)
+
+def send_credentials_email(user_email, temp_password, base_url):
+    """Send login credentials after verification"""
+    login_url = f"{base_url}/admin/login"
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px;background:#FDF8F5;border-radius:12px">
+        <div style="text-align:center;margin-bottom:24px">
+            <span style="font-size:40px">🪷</span>
+            <h2 style="color:#2D1F2E;margin:8px 0 4px">Holy Dham CMS</h2>
+            <p style="color:#8A7A8B;font-size:14px">Your Login Credentials</p>
+        </div>
+        <div style="background:white;border-radius:10px;padding:28px;border:1px solid #E8DDD0">
+            <p style="color:#2D1F2E;font-size:15px;line-height:1.6">Your email has been verified! Here are your login credentials:</p>
+            <div style="background:#F5F0EB;border-radius:8px;padding:20px;margin:20px 0">
+                <table style="width:100%">
+                    <tr><td style="color:#8A7A8B;padding:6px 0;font-size:13px">Login URL</td><td style="font-weight:600;font-size:13px"><a href="{login_url}" style="color:#C76B8F">{login_url}</a></td></tr>
+                    <tr><td style="color:#8A7A8B;padding:6px 0;font-size:13px">Email</td><td style="font-weight:600;font-size:13px">{user_email}</td></tr>
+                    <tr><td style="color:#8A7A8B;padding:6px 0;font-size:13px">Temporary Password</td><td style="font-weight:600;font-size:13px;font-family:monospace;letter-spacing:1px">{temp_password}</td></tr>
+                </table>
+            </div>
+            <div style="background:#FFF3E0;border:1px solid #FFE0B2;border-radius:8px;padding:14px;margin:16px 0">
+                <p style="color:#E65100;font-size:13px;margin:0"><strong>⚠️ Important:</strong> You will be required to change your password on first login.</p>
+            </div>
+            <div style="margin-top:16px;padding:14px;background:#F3E5F5;border-radius:8px;border:1px solid #E1BEE7">
+                <p style="color:#4A148C;font-size:12px;margin:0 0 8px;font-weight:700">Password Rules:</p>
+                <ul style="color:#4A148C;font-size:12px;margin:0;padding-left:18px;line-height:1.8">
+                    <li>Minimum 8 characters</li>
+                    <li>At least 1 uppercase letter (A-Z)</li>
+                    <li>At least 1 lowercase letter (a-z)</li>
+                    <li>At least 1 number (0-9)</li>
+                    <li>At least 1 special character (!@#$%^&*)</li>
+                </ul>
+            </div>
+        </div>
+    </div>"""
+    return send_auth_email(user_email, "Holy Dham CMS — Your Login Credentials", html)
+
+def send_password_reset_email(user_email, token, base_url):
+    """Send password reset link"""
+    reset_url = f"{base_url}/admin/reset-password/{token}"
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px;background:#FDF8F5;border-radius:12px">
+        <div style="text-align:center;margin-bottom:24px">
+            <span style="font-size:40px">🪷</span>
+            <h2 style="color:#2D1F2E;margin:8px 0 4px">Holy Dham CMS</h2>
+            <p style="color:#8A7A8B;font-size:14px">Password Reset Request</p>
+        </div>
+        <div style="background:white;border-radius:10px;padding:28px;border:1px solid #E8DDD0">
+            <p style="color:#2D1F2E;font-size:15px;line-height:1.6">You requested a password reset. Click the button below to set a new password:</p>
+            <div style="text-align:center;margin:28px 0">
+                <a href="{reset_url}" style="display:inline-block;padding:14px 36px;background:#C76B8F;color:white;text-decoration:none;border-radius:10px;font-weight:600;font-size:15px">Reset My Password</a>
+            </div>
+            <p style="color:#8A7A8B;font-size:12px;text-align:center">This link expires in <strong>1 hour</strong>.</p>
+            <p style="color:#8A7A8B;font-size:11px;margin-top:16px;padding-top:16px;border-top:1px solid #E8DDD0">If you didn't request this, please ignore this email.</p>
+        </div>
+    </div>"""
+    return send_auth_email(user_email, "Holy Dham CMS — Password Reset", html)
 def slugify(text):
     import re; s=text.lower().strip(); s=re.sub(r'[^\w\s-]','',s); s=re.sub(r'[\s_]+','-',s); return re.sub(r'-+','-',s).strip('-')
 def get_current_user():
@@ -650,6 +793,11 @@ def login_required(f):
     @functools.wraps(f)
     def d(*a,**kw):
         if 'user_id' not in session: flash('Please log in.','warning'); return redirect(url_for('admin_login'))
+        # Check if user needs to change password (allow the change-password route itself)
+        if f.__name__ != 'admin_force_change_password':
+            user = get_current_user()
+            if user and user['must_change_password']:
+                return redirect(url_for('admin_force_change_password'))
         return f(*a,**kw)
     return d
 def role_required(*roles):
@@ -662,7 +810,7 @@ def role_required(*roles):
         return d
     return dec
 def has_permission(user,pk):
-    if user['role']=='super_admin': return True
+    if user['role']=='system_admin': return True
     p=json.loads(user['permissions'] or '{}'); return p.get(pk,False) or p.get('all',False)
 def save_upload(file, subfolder='images'):
     if not file or file.filename=='': return None
@@ -1037,15 +1185,150 @@ def search(): q=request.args.get('q',''); return redirect(url_for('explore',q=q)
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     if request.method=='POST':
-        db=get_db(); user=db.execute("SELECT * FROM users WHERE username=? AND is_active=1",(request.form.get('username',''),)).fetchone()
+        db=get_db()
+        login_id = request.form.get('login_id','').strip()
+        # Support login by email or username
+        user = db.execute("SELECT * FROM users WHERE (email=? OR username=?) AND is_active=1",(login_id, login_id)).fetchone()
         if user and user['password_hash']==hash_password(request.form.get('password','')):
-            session['user_id']=user['id']; db.execute("UPDATE users SET last_login=? WHERE id=?",(datetime.now(),user['id'])); db.commit()
-            flash('Welcome back, '+user['display_name']+'!','success'); return redirect(url_for('admin_dashboard'))
-        flash('Invalid credentials.','error')
+            if not user['email_verified']:
+                flash('Your email is not verified yet. Please check your inbox for the verification link.','warning')
+                return render_template('admin/login.html')
+            session['user_id']=user['id']
+            db.execute("UPDATE users SET last_login=? WHERE id=?",(datetime.now(),user['id'])); db.commit()
+            # Check if forced password change is needed
+            if user['must_change_password']:
+                flash('Please set a new password before continuing.','info')
+                return redirect(url_for('admin_force_change_password'))
+            flash('Welcome back, '+user['display_name']+'!','success')
+            return redirect(url_for('admin_dashboard'))
+        flash('Invalid email/username or password.','error')
     return render_template('admin/login.html')
 
 @app.route('/admin/logout')
 def admin_logout(): session.clear(); flash('Logged out.','info'); return redirect(url_for('admin_login'))
+
+# ─── Forced Password Change (first login) ───
+@app.route('/admin/change-password', methods=['GET','POST'])
+@login_required
+def admin_force_change_password():
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE id=?", (session['user_id'],)).fetchone()
+    if not user or not user['must_change_password']:
+        return redirect(url_for('admin_dashboard'))
+    if request.method == 'POST':
+        new_pw = request.form.get('new_password','')
+        confirm_pw = request.form.get('confirm_password','')
+        if new_pw != confirm_pw:
+            flash('Passwords do not match.','error')
+            return render_template('admin/force_change_password.html')
+        valid, errors = validate_password(new_pw)
+        if not valid:
+            for e in errors: flash(e,'error')
+            return render_template('admin/force_change_password.html')
+        db.execute("UPDATE users SET password_hash=?, must_change_password=0, temp_password_enc=NULL WHERE id=?",
+                   (hash_password(new_pw), session['user_id']))
+        db.commit()
+        flash('Password changed successfully! Welcome to the admin panel.','success')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('admin/force_change_password.html')
+
+# ─── Email Verification ───
+@app.route('/admin/verify-email/<token>')
+def admin_verify_email(token):
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE verification_token=?", (token,)).fetchone()
+    if not user:
+        return render_template('admin/verify_email.html', status='invalid')
+    if user['email_verified']:
+        return render_template('admin/verify_email.html', status='already_verified')
+    # Check expiry
+    if user['verification_token_expiry']:
+        expiry = datetime.strptime(user['verification_token_expiry'], '%Y-%m-%d %H:%M:%S') if isinstance(user['verification_token_expiry'], str) else user['verification_token_expiry']
+        if datetime.now() > expiry:
+            return render_template('admin/verify_email.html', status='expired', email=user['email'])
+    # Mark as verified
+    db.execute("UPDATE users SET email_verified=1, verification_token=NULL, verification_token_expiry=NULL WHERE id=?", (user['id'],))
+    db.commit()
+    # Send credentials email
+    base_url = request.url_root.rstrip('/')
+    temp_pw = user.get('temp_password_enc','')
+    if temp_pw:
+        # Decode the temp password (base64 encoded for storage)
+        import base64
+        try: temp_pw = base64.b64decode(temp_pw).decode()
+        except: temp_pw = ''
+    if temp_pw:
+        send_credentials_email(user['email'], temp_pw, base_url)
+    return render_template('admin/verify_email.html', status='success', email=user['email'])
+
+# ─── Resend Verification ───
+@app.route('/admin/resend-verification', methods=['POST'])
+def admin_resend_verification():
+    email = request.form.get('email','').strip()
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE email=? AND is_active=1", (email,)).fetchone()
+    if user and not user['email_verified']:
+        token = generate_token()
+        expiry = datetime.now() + timedelta(hours=24)
+        db.execute("UPDATE users SET verification_token=?, verification_token_expiry=? WHERE id=?",
+                   (token, expiry.strftime('%Y-%m-%d %H:%M:%S'), user['id']))
+        db.commit()
+        base_url = request.url_root.rstrip('/')
+        send_verification_email(email, token, base_url)
+    flash('If that email exists and is unverified, a new verification link has been sent.','info')
+    return redirect(url_for('admin_login'))
+
+# ─── Forgot Password ───
+@app.route('/admin/forgot-password', methods=['GET','POST'])
+def admin_forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email','').strip()
+        db = get_db()
+        user = db.execute("SELECT * FROM users WHERE email=? AND is_active=1 AND email_verified=1", (email,)).fetchone()
+        if user:
+            token = generate_token()
+            expiry = datetime.now() + timedelta(hours=1)
+            db.execute("UPDATE users SET reset_token=?, reset_token_expiry=? WHERE id=?",
+                       (token, expiry.strftime('%Y-%m-%d %H:%M:%S'), user['id']))
+            db.commit()
+            base_url = request.url_root.rstrip('/')
+            send_password_reset_email(email, token, base_url)
+        flash('If that email is registered, a password reset link has been sent.','info')
+        return redirect(url_for('admin_login'))
+    return render_template('admin/forgot_password.html')
+
+# ─── Reset Password ───
+@app.route('/admin/reset-password/<token>', methods=['GET','POST'])
+def admin_reset_password(token):
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE reset_token=?", (token,)).fetchone()
+    if not user:
+        return render_template('admin/reset_password.html', status='invalid')
+    if user['reset_token_expiry']:
+        expiry = datetime.strptime(user['reset_token_expiry'], '%Y-%m-%d %H:%M:%S') if isinstance(user['reset_token_expiry'], str) else user['reset_token_expiry']
+        if datetime.now() > expiry:
+            return render_template('admin/reset_password.html', status='expired')
+    if request.method == 'POST':
+        new_pw = request.form.get('new_password','')
+        confirm_pw = request.form.get('confirm_password','')
+        if new_pw != confirm_pw:
+            flash('Passwords do not match.','error')
+            return render_template('admin/reset_password.html', status='valid', token=token)
+        valid, errors = validate_password(new_pw)
+        if not valid:
+            for e in errors: flash(e,'error')
+            return render_template('admin/reset_password.html', status='valid', token=token)
+        db.execute("UPDATE users SET password_hash=?, reset_token=NULL, reset_token_expiry=NULL, must_change_password=0 WHERE id=?",
+                   (hash_password(new_pw), user['id']))
+        db.commit()
+        flash('Password reset successfully! You can now log in.','success')
+        return redirect(url_for('admin_login'))
+    return render_template('admin/reset_password.html', status='valid', token=token)
+
+# ─── API: Generate Password ───
+@app.route('/admin/api/generate-password')
+def api_generate_password():
+    return jsonify({'password': generate_secure_password()})
 
 @app.route('/admin')
 @login_required
@@ -2020,40 +2303,117 @@ def admin_media_delete(media_id):
 # ─── Users ───
 @app.route('/admin/users')
 @login_required
-@role_required('super_admin')
+@role_required('system_admin')
 def admin_users(): return render_template('admin/users.html',users=get_db().execute("SELECT * FROM users ORDER BY created_at DESC").fetchall())
 
 @app.route('/admin/users/new', methods=['GET','POST'])
 @login_required
-@role_required('super_admin')
+@role_required('system_admin')
 def admin_user_new():
     db=get_db()
     if request.method=='POST':
-        if db.execute("SELECT id FROM users WHERE username=? OR email=?",(request.form['username'],request.form['email'])).fetchone(): flash('Exists.','error')
+        email = request.form.get('email','').strip()
+        role = request.form.get('role','editor')
+        if not email:
+            flash('Email is required.','error')
+            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False)
+        if db.execute("SELECT id FROM users WHERE email=?",(email,)).fetchone():
+            flash('A user with this email already exists.','error')
+            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False)
+        # Generate secure password
+        temp_password = generate_secure_password()
+        # Generate verification token
+        token = generate_token()
+        expiry = datetime.now() + timedelta(hours=24)
+        # Create username from email
+        username = email.split('@')[0].lower().replace('.','_')
+        # Ensure unique username
+        base_username = username
+        counter = 1
+        while db.execute("SELECT id FROM users WHERE username=?",(username,)).fetchone():
+            username = f"{base_username}_{counter}"
+            counter += 1
+        display_name = request.form.get('display_name','').strip() or username.replace('_',' ').title()
+        # Store temp password encoded for later email
+        import base64
+        temp_pw_enc = base64.b64encode(temp_password.encode()).decode()
+        # Set permissions based on role
+        perms = {}
+        if role == 'admin':
+            perms = {k:True for k in request.form.getlist('permissions')}
+        elif role == 'photographer':
+            perms = {'capture_photo': True}
+        else:  # editor
+            perms = {k:True for k in request.form.getlist('permissions')}
+        db.execute("""INSERT INTO users (username,email,password_hash,display_name,role,permissions,
+                      receive_reports,email_verified,verification_token,verification_token_expiry,
+                      must_change_password,temp_password_enc,created_by)
+                      VALUES (?,?,?,?,?,?,?,0,?,?,1,?,?)""",
+            (username, email, hash_password(temp_password), display_name, role,
+             json.dumps(perms), 1 if request.form.get('receive_reports') else 0,
+             token, expiry.strftime('%Y-%m-%d %H:%M:%S'), temp_pw_enc, session['user_id']))
+        db.commit()
+        # Send verification email
+        base_url = request.url_root.rstrip('/')
+        email_sent = send_verification_email(email, token, base_url)
+        if email_sent:
+            flash(f'User created! Verification email sent to {email}.','success')
         else:
-            db.execute("INSERT INTO users (username,email,password_hash,display_name,role,permissions,receive_reports,created_by) VALUES (?,?,?,?,?,?,?,?)",
-                (request.form['username'],request.form['email'],hash_password(request.form['password']),request.form.get('display_name',request.form['username']),request.form.get('role','editor'),json.dumps({k:True for k in request.form.getlist('permissions')}),1 if request.form.get('receive_reports') else 0,session['user_id']))
-            db.commit(); flash('Created!','success'); return redirect(url_for('admin_users'))
+            flash(f'User created but verification email could not be sent. Check SMTP settings. You can resend from the user list.','warning')
+        log_action(session['user_id'], 'create_user', 'user', None, f'Created user {email} with role {role}')
+        return redirect(url_for('admin_users'))
     return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False)
 
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET','POST'])
 @login_required
-@role_required('super_admin')
+@role_required('system_admin')
 def admin_user_edit(user_id):
     db=get_db(); user=db.execute("SELECT * FROM users WHERE id=?",(user_id,)).fetchone()
     if not user: abort(404)
     if request.method=='POST':
-        u={'email':request.form['email'],'display_name':request.form.get('display_name',user['username']),'role':request.form.get('role','editor'),'permissions':json.dumps({k:True for k in request.form.getlist('permissions')}),'is_active':1 if request.form.get('is_active') else 0,'receive_reports':1 if request.form.get('receive_reports') else 0}
-        if request.form.get('password'): u['password_hash']=hash_password(request.form['password'])
+        u={'email':request.form['email'],'display_name':request.form.get('display_name',user['username']),
+           'role':request.form.get('role',user['role']),
+           'permissions':json.dumps({k:True for k in request.form.getlist('permissions')}),
+           'is_active':1 if request.form.get('is_active') else 0,
+           'receive_reports':1 if request.form.get('receive_reports') else 0}
+        if request.form.get('password'):
+            valid, errors = validate_password(request.form['password'])
+            if not valid:
+                for e in errors: flash(e,'error')
+                return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True)
+            u['password_hash']=hash_password(request.form['password'])
         db.execute(f"UPDATE users SET {','.join(f'{k}=?' for k in u)} WHERE id=?",list(u.values())+[user_id]); db.commit(); flash('Updated!','success'); return redirect(url_for('admin_users'))
     return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True)
 
 @app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
 @login_required
-@role_required('super_admin')
+@role_required('system_admin')
 def admin_user_delete(user_id):
     if user_id==session['user_id']: flash('Cannot.','error'); return redirect(url_for('admin_users'))
     get_db().execute("UPDATE users SET is_active=0 WHERE id=?",(user_id,)); get_db().commit(); flash('Deactivated.','info'); return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/<int:user_id>/resend-verification', methods=['POST'])
+@login_required
+@role_required('system_admin')
+def admin_user_resend_verification(user_id):
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+    if not user:
+        flash('User not found.','error'); return redirect(url_for('admin_users'))
+    if user['email_verified']:
+        flash('User email is already verified.','info'); return redirect(url_for('admin_users'))
+    token = generate_token()
+    expiry = datetime.now() + timedelta(hours=24)
+    db.execute("UPDATE users SET verification_token=?, verification_token_expiry=? WHERE id=?",
+               (token, expiry.strftime('%Y-%m-%d %H:%M:%S'), user['id']))
+    db.commit()
+    base_url = request.url_root.rstrip('/')
+    email_sent = send_verification_email(user['email'], token, base_url)
+    if email_sent:
+        flash(f'Verification email resent to {user["email"]}.','success')
+    else:
+        flash('Could not send email. Check SMTP settings.','error')
+    return redirect(url_for('admin_users'))
 
 # ─── Tags ───
 @app.route('/admin/tags', methods=['GET','POST'])
@@ -2292,8 +2652,8 @@ def admin_report_delete(rid):
 def admin_email_settings():
     db = get_db()
     user = db.execute("SELECT role FROM users WHERE id=?",(session.get('user_id'),)).fetchone()
-    if not user or user['role'] != 'super_admin':
-        flash('Only Super Admins can access email settings','error')
+    if not user or user['role'] != 'system_admin':
+        flash('Only System Admins can access email settings','error')
         return redirect(url_for('admin_dashboard'))
     if request.method == 'POST':
         for key in ['report_emails','smtp_host','smtp_port','smtp_user','smtp_pass']:
@@ -2310,14 +2670,14 @@ def admin_email_settings():
     users = db.execute("SELECT id,username,email,display_name,role,receive_reports FROM users WHERE is_active=1 ORDER BY role DESC,username").fetchall()
     return render_template('admin/email_settings.html', settings=settings, users=users)
 
-# ─── Admin: User management — super_admin check ───
+# ─── Admin: User management — system_admin check ───
 @app.route('/admin/users/<int:uid>/update-role', methods=['POST'])
 @login_required
 def admin_user_update_role(uid):
     db = get_db()
     caller = db.execute("SELECT role FROM users WHERE id=?",(session.get('user_id'),)).fetchone()
-    if not caller or caller['role'] != 'super_admin':
-        flash('Only Super Admins can change roles','error')
+    if not caller or caller['role'] != 'system_admin':
+        flash('Only System Admins can change roles','error')
         return redirect(url_for('admin_users'))
     new_role = request.form.get('role','editor')
     receive = 1 if request.form.get('receive_reports') else 0

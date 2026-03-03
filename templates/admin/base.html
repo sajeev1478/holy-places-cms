@@ -75,9 +75,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .badge{display:inline-block;padding:4px 12px;border-radius:50px;font-size:11px;font-weight:600}
 .badge-published{background:#D4E5D4;color:#3A6B3A}
 .badge-draft{background:#F5ECD4;color:#8B6B20}
-.badge-super_admin{background:var(--primary-light);color:var(--primary)}
+.badge-system_admin{background:var(--primary-light);color:var(--primary)}
+.badge-admin{background:#D4E0F5;color:#4060A4}
 .badge-content_admin{background:#D4E0F5;color:#4060A4}
 .badge-editor{background:#E8E5D4;color:#6B6540}
+.badge-photographer{background:#E0F0E0;color:#2E7D32}
 
 /* ─── Buttons ─── */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-family:'DM Sans';font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .2s;text-decoration:none}
@@ -719,7 +721,7 @@ textarea.form-control{resize:vertical;min-height:60px}
 </a>
 </div>
 
-{% if current_user and current_user.role == 'super_admin' %}
+{% if current_user and current_user.role == 'system_admin' %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">System</div>
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_fields' }}" href="{{ url_for('admin_fields') }}">
