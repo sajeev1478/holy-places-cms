@@ -958,7 +958,7 @@ def inject_globals():
         if not ni.get('visible',True): continue
         item={'label':ni['label'],'type':ni['type']}
         if ni['type']=='home': item['url']='/'; item['endpoint']='home'
-        elif ni['type']=='dhams': item['url']='/dhams'; item['endpoint']='all_dhams'
+        elif ni['type']=='dhams': item['url']='/all-dhams'; item['endpoint']='all_dhams'
         elif ni['type']=='module':
             mod=db.execute("SELECT slug FROM modules WHERE id=? AND is_active=1",(ni.get('module_id',0),)).fetchone()
             if not mod: continue
