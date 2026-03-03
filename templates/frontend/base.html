@@ -157,9 +157,11 @@ input[type="file"]::file-selector-button:hover{transform:translateY(-1px);box-sh
 .breadcrumb{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text-light);padding:16px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .breadcrumb a{color:var(--text-light);position:relative;padding-bottom:2px}
 .breadcrumb a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:var(--rose-deep);transition:width .3s ease}
+.breadcrumb a:hover{color:var(--text-light)!important}
 .breadcrumb a:hover::after{width:100%}
-.breadcrumb-nav a{position:relative;padding-bottom:2px}
+.breadcrumb-nav a{position:relative;padding-bottom:2px;color:inherit}
 .breadcrumb-nav a::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1.5px;background:white;transition:width .3s ease}
+.breadcrumb-nav a:hover{color:rgba(255,255,255,.65)!important}
 .breadcrumb-nav a:hover::after{width:100%}
 
 /* ─── Category Pills ─── */
