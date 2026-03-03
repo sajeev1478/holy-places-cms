@@ -19,7 +19,8 @@ body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:
 .form-group input{width:100%;padding:14px 16px;border:1px solid #E8DDD0;border-radius:12px;font-family:'DM Sans';font-size:15px;outline:none;transition:border .2s}
 .form-group input:focus{border-color:#C76B8F}
 .login-btn{width:100%;padding:16px;background:#C76B8F;color:white;border:none;border-radius:12px;font-family:'DM Sans';font-size:15px;font-weight:600;cursor:pointer;transition:all .3s;margin-top:8px}
-.login-btn:hover{background:#A04870}
+.login-btn:hover:not(:disabled){background:#A04870}
+.login-btn:disabled{background:#D4A5B9;cursor:not-allowed;opacity:.7}
 .flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px}
 .flash-error{background:#FDE8E8;color:#8B2020}
 .flash-warning{background:#FFF3E0;color:#E65100}
@@ -33,6 +34,24 @@ body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:
 .forgot-link a:hover{text-decoration:underline}
 .input-wrapper{position:relative}
 .toggle-pw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#8A7A8B;font-size:14px;padding:4px}
+/* ─── Drag CAPTCHA ─── */
+.captcha-wrap{margin-bottom:20px}
+.captcha-label{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.captcha-box{position:relative;background:#FAFAFA;border:2px solid #E8DDD0;border-radius:14px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;transition:border-color .3s}
+.captcha-box.active{border-color:#C76B8F}
+.captcha-box.done{border-color:#38A169}
+.captcha-canvas{display:block;width:100%;height:auto}
+.captcha-status{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;font-size:12px;font-weight:600;transition:all .3s}
+.captcha-status.idle{color:#8A7A8B;background:#F5F0EB}
+.captcha-status.progress{color:#C76B8F;background:#FDF2F8}
+.captcha-status.success{color:#276749;background:#C6F6D5}
+.captcha-status.fail{color:#9B2C2C;background:#FED7D7}
+.captcha-retry{font-size:11px;text-align:center;margin-top:6px}
+.captcha-retry a{color:#C76B8F;cursor:pointer;text-decoration:underline}
+@media(max-width:480px){
+  .login-card{padding:36px 24px}
+  .login-brand h1{font-size:24px}
+}
 </style>
 </head>
 <body>
@@ -46,7 +65,8 @@ body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}{% for cat, msg in messages %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}{% endif %}
 {% endwith %}
-<form method="POST">
+<form method="POST" id="loginForm">
+<input type="hidden" name="captcha_token" id="captchaToken" value="">
 <div class="form-group">
 <label>Email or Username</label>
 <input name="login_id" type="text" placeholder="Enter email or username" required autofocus>
@@ -61,15 +81,313 @@ body{font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:
 <div class="forgot-link">
 <a href="{{ url_for('admin_forgot_password') }}">Forgot Password?</a>
 </div>
-<button class="login-btn" type="submit">Sign In</button>
+
+<!-- Drag Path CAPTCHA -->
+<div class="captcha-wrap">
+<div class="captcha-label">🔒 Verify you're human</div>
+<div class="captcha-box" id="captchaBox">
+<canvas class="captcha-canvas" id="captchaCanvas"></canvas>
+<div class="captcha-status idle" id="captchaStatus">Drag the dot from <b>A</b> → <b>B</b> along the path</div>
+</div>
+<div class="captcha-retry" id="captchaRetry" style="display:none"><a onclick="initCaptcha()">↻ Try a different challenge</a></div>
+</div>
+
+<button class="login-btn" type="submit" id="loginBtn" disabled>Sign In</button>
 </form>
 </div>
 <div class="login-footer">
 <a href="{{ url_for('home') }}">← Back to Website</a>
 </div>
 </div>
+
 <script>
 function togglePw(){var i=document.getElementById('loginPw');i.type=i.type==='password'?'text':'password'}
+
+;(function(){
+  var CAPTCHA_TOKEN = "{{ captcha_token }}";
+  var canvas = document.getElementById('captchaCanvas');
+  var ctx = canvas.getContext('2d');
+  var box = document.getElementById('captchaBox');
+  var statusEl = document.getElementById('captchaStatus');
+  var retryDiv = document.getElementById('captchaRetry');
+  var tokenInput = document.getElementById('captchaToken');
+  var loginBtn = document.getElementById('loginBtn');
+
+  var W, H;
+  var pathPoints = [];
+  var startPt, endPt;
+  var dotX, dotY, dotR;
+  var dragging = false;
+  var completed = false;
+  var failed = false;
+  var nextTargetIdx = 0;
+  var pathTolerance;
+
+  function resize() {
+    var rect = box.getBoundingClientRect();
+    W = rect.width;
+    H = Math.min(130, Math.max(90, W * 0.32));
+    var DPR = window.devicePixelRatio || 1;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    pathTolerance = Math.max(16, W * 0.055);
+    dotR = Math.max(11, Math.min(16, W * 0.04));
+  }
+
+  /* ── Shape generators ── */
+  function genStraight() {
+    var y = H * 0.5 + (Math.random() - 0.5) * H * 0.3;
+    var pts = [], x1 = 32, x2 = W - 32;
+    for (var t = 0; t <= 1; t += 0.02) pts.push({x: x1 + (x2-x1)*t, y: y});
+    return pts;
+  }
+  function genWave() {
+    var pts = [], x1 = 32, x2 = W - 32;
+    var amp = H * 0.22, freq = 1.5 + Math.random() * 1.5, cy = H * 0.5;
+    for (var t = 0; t <= 1; t += 0.008) {
+      pts.push({x: x1 + (x2-x1)*t, y: cy + Math.sin(t * Math.PI * 2 * freq) * amp});
+    }
+    return pts;
+  }
+  function genArc() {
+    var pts = [], cx = W * 0.5, cy = H * 0.78;
+    var rx = W * 0.35, ry = H * 0.58;
+    for (var t = Math.PI; t >= 0; t -= 0.02) {
+      pts.push({x: cx + Math.cos(t) * rx, y: cy - Math.sin(t) * ry});
+    }
+    return pts;
+  }
+  function genZigzag() {
+    var x1 = 32, x2 = W - 32;
+    var segs = 3 + Math.floor(Math.random() * 2);
+    var corners = [];
+    for (var s = 0; s <= segs; s++) {
+      corners.push({x: x1 + s * (x2-x1)/segs, y: (s % 2 === 0) ? H * 0.25 : H * 0.75});
+    }
+    var pts = [];
+    for (var i = 0; i < corners.length - 1; i++) {
+      for (var t = 0; t < 1; t += 0.03) {
+        pts.push({x: corners[i].x + (corners[i+1].x-corners[i].x)*t, y: corners[i].y + (corners[i+1].y-corners[i].y)*t});
+      }
+    }
+    pts.push(corners[corners.length-1]);
+    return pts;
+  }
+  function genScurve() {
+    var pts = [], x1 = 32, x2 = W - 32, cy = H * 0.5, amp = H * 0.28;
+    for (var t = 0; t <= 1; t += 0.008) {
+      pts.push({x: x1 + (x2-x1)*t, y: cy - amp * Math.sin(t * Math.PI * 2)});
+    }
+    return pts;
+  }
+  function genLoop() {
+    var pts = [], cx = W * 0.5, cy = H * 0.5;
+    var rx = Math.min(W * 0.28, H * 0.42), ry = H * 0.35;
+    var start = 0.7, span = Math.PI * 1.6;
+    for (var t = start; t <= start + span; t += 0.03) {
+      pts.push({x: cx + Math.cos(t) * rx, y: cy + Math.sin(t) * ry});
+    }
+    return pts;
+  }
+
+  var generators = [genStraight, genWave, genArc, genZigzag, genScurve, genLoop];
+
+  window.initCaptcha = function() {
+    completed = false; failed = false; dragging = false; nextTargetIdx = 0;
+    tokenInput.value = '';
+    loginBtn.disabled = true;
+    box.className = 'captcha-box';
+    statusEl.className = 'captcha-status idle';
+    statusEl.innerHTML = 'Drag the dot from <b>A</b> → <b>B</b> along the path';
+    retryDiv.style.display = 'none';
+    resize();
+    pathPoints = generators[Math.floor(Math.random() * generators.length)]();
+    startPt = pathPoints[0];
+    endPt = pathPoints[pathPoints.length - 1];
+    dotX = startPt.x; dotY = startPt.y;
+    draw();
+  };
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // BG
+    ctx.fillStyle = '#FAFAFA'; ctx.fillRect(0, 0, W, H);
+
+    // Path tolerance zone (soft highlight)
+    ctx.beginPath();
+    ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+    for (var i = 1; i < pathPoints.length; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+    ctx.strokeStyle = 'rgba(199,107,143,0.08)';
+    ctx.lineWidth = pathTolerance * 2;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+
+    // Path line
+    ctx.beginPath();
+    ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+    for (var i = 1; i < pathPoints.length; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+    ctx.strokeStyle = completed ? '#9AE6B4' : failed ? '#FEB2B2' : '#E2CDD5';
+    ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+
+    // Progress fill
+    if (nextTargetIdx > 1 && !failed) {
+      ctx.beginPath();
+      ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+      var end = Math.min(nextTargetIdx, pathPoints.length - 1);
+      for (var i = 1; i <= end; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+      ctx.strokeStyle = completed ? '#38A169' : '#C76B8F';
+      ctx.lineWidth = 3.5; ctx.stroke();
+    }
+
+    // Dashed guide markers along path
+    if (!completed && !failed) {
+      for (var p = 0.25; p <= 0.75; p += 0.25) {
+        var idx = Math.floor(p * (pathPoints.length - 1));
+        ctx.beginPath();
+        ctx.arc(pathPoints[idx].x, pathPoints[idx].y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#D4A5B9'; ctx.fill();
+      }
+    }
+
+    // End marker B
+    ctx.beginPath(); ctx.arc(endPt.x, endPt.y, dotR * 0.7, 0, Math.PI * 2);
+    ctx.fillStyle = completed ? '#38A169' : '#E8DDD0'; ctx.fill();
+    ctx.strokeStyle = completed ? '#276749' : '#C5B8A8'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = completed ? '#fff' : '#6B5B6E';
+    ctx.font = 'bold ' + Math.round(dotR * 0.75) + 'px DM Sans';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('B', endPt.x, endPt.y);
+
+    // Start marker A
+    ctx.beginPath(); ctx.arc(startPt.x, startPt.y, dotR * 0.7, 0, Math.PI * 2);
+    ctx.fillStyle = '#E8DDD0'; ctx.fill();
+    ctx.strokeStyle = '#C5B8A8'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#6B5B6E';
+    ctx.fillText('A', startPt.x, startPt.y);
+
+    // Draggable dot
+    if (!completed) {
+      // Pulse glow
+      ctx.beginPath(); ctx.arc(dotX, dotY, dotR + 5, 0, Math.PI * 2);
+      ctx.fillStyle = failed ? 'rgba(229,62,62,0.12)' : dragging ? 'rgba(199,107,143,0.25)' : 'rgba(199,107,143,0.12)';
+      ctx.fill();
+      // Main dot
+      ctx.beginPath(); ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      var grad = ctx.createRadialGradient(dotX - 3, dotY - 3, 2, dotX, dotY, dotR);
+      if (failed) { grad.addColorStop(0, '#FC8181'); grad.addColorStop(1, '#E53E3E'); }
+      else { grad.addColorStop(0, '#E8A0BC'); grad.addColorStop(1, '#C76B8F'); }
+      ctx.fillStyle = grad; ctx.fill();
+      // Arrow icon
+      ctx.fillStyle = 'white';
+      ctx.font = Math.round(dotR * 0.85) + 'px DM Sans';
+      ctx.fillText('→', dotX + 0.5, dotY);
+    } else {
+      // Checkmark at end
+      ctx.beginPath(); ctx.arc(endPt.x, endPt.y, dotR + 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#38A169'; ctx.fill();
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold ' + Math.round(dotR * 0.9) + 'px DM Sans';
+      ctx.fillText('✓', endPt.x, endPt.y);
+    }
+  }
+
+  function getPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var cx = e.touches ? e.touches[0].clientX : e.clientX;
+    var cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return {x: cx - rect.left, y: cy - rect.top};
+  }
+
+  function dist(a, b) { return Math.sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y)); }
+
+  function nearestIdx(px, py) {
+    var best = 0, bestD = 1e9;
+    for (var i = 0; i < pathPoints.length; i++) {
+      var d = dist({x:px, y:py}, pathPoints[i]);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return {idx: best, dist: bestD};
+  }
+
+  function onDown(e) {
+    if (completed || failed) return;
+    var p = getPos(e);
+    if (dist(p, {x: dotX, y: dotY}) < dotR + 18) {
+      dragging = true;
+      box.classList.add('active');
+      statusEl.className = 'captcha-status progress';
+      statusEl.innerHTML = 'Keep going… stay on the path!';
+      e.preventDefault();
+    }
+  }
+
+  function onMove(e) {
+    if (!dragging || completed || failed) return;
+    e.preventDefault();
+    var p = getPos(e);
+    var near = nearestIdx(p.x, p.y);
+
+    if (near.dist > pathTolerance * 1.6) {
+      failed = true; dragging = false;
+      box.className = 'captcha-box';
+      statusEl.className = 'captcha-status fail';
+      statusEl.innerHTML = '✗ Went off the path — try again!';
+      retryDiv.style.display = 'block';
+      draw(); return;
+    }
+
+    // Allow forward movement (small backstep OK)
+    if (near.idx >= nextTargetIdx - 5) {
+      nextTargetIdx = Math.max(nextTargetIdx, near.idx);
+      dotX = pathPoints[Math.min(near.idx, pathPoints.length-1)].x;
+      dotY = pathPoints[Math.min(near.idx, pathPoints.length-1)].y;
+    }
+
+    var progress = nextTargetIdx / (pathPoints.length - 1);
+
+    // Reached end?
+    if (dist({x:dotX, y:dotY}, endPt) < dotR + 10 && progress > 0.85) {
+      completed = true; dragging = false;
+      dotX = endPt.x; dotY = endPt.y;
+      box.className = 'captcha-box done';
+      statusEl.className = 'captcha-status success';
+      statusEl.innerHTML = '✓ Verified successfully!';
+      tokenInput.value = CAPTCHA_TOKEN;
+      loginBtn.disabled = false;
+      retryDiv.style.display = 'none';
+    }
+    draw();
+  }
+
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    box.classList.remove('active');
+    if (!completed && !failed) {
+      var progress = nextTargetIdx / (pathPoints.length - 1);
+      if (progress < 0.85) {
+        failed = true;
+        statusEl.className = 'captcha-status fail';
+        statusEl.innerHTML = '✗ Released too early — try again!';
+        retryDiv.style.display = 'block';
+        draw();
+      }
+    }
+  }
+
+  canvas.addEventListener('mousedown', onDown);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+  canvas.addEventListener('touchstart', onDown, {passive: false});
+  window.addEventListener('touchmove', onMove, {passive: false});
+  window.addEventListener('touchend', onUp);
+
+  var _rt;
+  window.addEventListener('resize', function(){ clearTimeout(_rt); _rt = setTimeout(function(){ if (!completed) initCaptcha(); }, 250); });
+
+  initCaptcha();
+})();
 </script>
 </body>
 </html>

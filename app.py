@@ -1240,6 +1240,12 @@ def search(): q=request.args.get('q',''); return redirect(url_for('explore',q=q)
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     if request.method=='POST':
+        # Validate drag CAPTCHA
+        captcha_token = request.form.get('captcha_token','')
+        if not captcha_token or captcha_token != session.get('captcha_token',''):
+            flash('Please complete the verification challenge.','error')
+            session['captcha_token'] = secrets.token_hex(16)
+            return render_template('admin/login.html', captcha_token=session['captcha_token'])
         db=get_db()
         login_id = request.form.get('login_id','').strip()
         # Support login by email or username
@@ -1247,8 +1253,10 @@ def admin_login():
         if user and user['password_hash']==hash_password(request.form.get('password','')):
             if not user['email_verified']:
                 flash('Your email is not verified yet. Please check your inbox for the verification link.','warning')
-                return render_template('admin/login.html')
+                session['captcha_token'] = secrets.token_hex(16)
+                return render_template('admin/login.html', captcha_token=session['captcha_token'])
             session['user_id']=user['id']
+            session.pop('captcha_token', None)
             db.execute("UPDATE users SET last_login=? WHERE id=?",(datetime.now(),user['id'])); db.commit()
             # Check if forced password change is needed
             if user['must_change_password']:
@@ -1257,7 +1265,8 @@ def admin_login():
             flash('Welcome back, '+user['display_name']+'!','success')
             return redirect(url_for('admin_dashboard'))
         flash('Invalid email/username or password.','error')
-    return render_template('admin/login.html')
+    session['captcha_token'] = secrets.token_hex(16)
+    return render_template('admin/login.html', captcha_token=session['captcha_token'])
 
 @app.route('/admin/logout')
 def admin_logout(): session.clear(); flash('Logged out.','info'); return redirect(url_for('admin_login'))
