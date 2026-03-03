@@ -699,7 +699,7 @@ textarea.form-control{resize:vertical;min-height:60px}
 {% endif %}
 </div>
 
-{% if current_user and current_user.role != 'photographer' %}
+{% if current_user and current_user.role in ('system_admin','admin') %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">Content</div>
 <a class="sidebar-link {{ 'active' if request.endpoint in ('admin_modules','admin_module_new','admin_module_edit') }}" href="{{ url_for('admin_modules') }}">
@@ -722,21 +722,21 @@ textarea.form-control{resize:vertical;min-height:60px}
 </div>
 {% endif %}
 
-{% if current_user and current_user.role != 'photographer' %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">Media</div>
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_media' }}" href="{{ url_for('admin_media') }}">
 <i class="fas fa-photo-video"></i> Media Library
 </a>
 </div>
-{% endif %}
 
 {% if current_user and current_user.role in ('system_admin','admin') %}
 <div class="sidebar-section">
 <div class="sidebar-section-title">System</div>
+{% if current_user.role == 'system_admin' %}
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_fields' }}" href="{{ url_for('admin_fields') }}">
 <i class="fas fa-cogs"></i> Custom Fields
 </a>
+{% endif %}
 <a class="sidebar-link {{ 'active' if request.endpoint in ('admin_users','admin_user_new','admin_user_edit') }}" href="{{ url_for('admin_users') }}">
 <i class="fas fa-users-cog"></i> Users & Roles
 </a>
@@ -744,16 +744,20 @@ textarea.form-control{resize:vertical;min-height:60px}
 {% endif %}
 
 <div class="sidebar-section">
+{% if current_user and current_user.role in ('system_admin','admin') %}
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_pages' }}" href="{{ url_for('admin_pages') }}">
 <i class="fas fa-file-alt"></i> Site Pages
 </a>
+{% endif %}
 <a class="sidebar-link" href="{{ url_for('home') }}" target="_blank">
 <i class="fas fa-external-link-alt"></i> View Website
 </a>
+{% if current_user and current_user.role in ('system_admin','admin') %}
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_reports' }}" href="{{ url_for('admin_reports') }}">
 <i class="fas fa-flag"></i> Reports</a>
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_email_settings' }}" href="{{ url_for('admin_email_settings') }}">
 <i class="fas fa-envelope-open-text"></i> Email Settings</a>
+{% endif %}
 <a class="sidebar-link {{ 'active' if request.endpoint == 'admin_help' }}" href="{{ url_for('admin_help') }}">
 <i class="fas fa-question-circle"></i> Help Guide
 </a>
