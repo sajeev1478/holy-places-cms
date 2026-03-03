@@ -952,21 +952,27 @@ def inject_globals():
     pac=get_pending_approvals_count() if cu else 0
     assigned=get_user_assigned_dhams(cu['id']) if cu and cu['role']=='editor' else []
     nav_row=db.execute("SELECT value FROM site_settings WHERE key='nav_items'").fetchone()
-    nav_items_raw=json.loads(nav_row['value']) if nav_row else []
+    if nav_row:
+        nav_items_raw=json.loads(nav_row['value'])
+    else:
+        nav_items_raw=[{"type":"home","label":"Home","visible":True},{"type":"dhams","label":"Holy Dhams","visible":True}]
+        for m in modules:
+            if m['slug']!='holy-dhams': nav_items_raw.append({"type":"module","module_id":m['id'],"slug":m['slug'],"label":m['name'],"visible":True})
+        nav_items_raw+=[{"type":"page","page":"contact","label":"Contact","visible":True},{"type":"page","page":"about","label":"About","visible":True}]
     nav_items_resolved=[]
     for ni in nav_items_raw:
         if not ni.get('visible',True): continue
         item={'label':ni['label'],'type':ni['type']}
-        if ni['type']=='home': item['url']='/'; item['endpoint']='home'
-        elif ni['type']=='dhams': item['url']='/dhams'; item['endpoint']='all_dhams'
+        if ni['type']=='home': item['url']=url_for('home'); item['endpoint']='home'
+        elif ni['type']=='dhams': item['url']=url_for('all_dhams'); item['endpoint']='all_dhams'
         elif ni['type']=='module':
             mod=db.execute("SELECT slug FROM modules WHERE id=? AND is_active=1",(ni.get('module_id',0),)).fetchone()
             if not mod: continue
-            item['url']='/m/'+mod['slug']; item['endpoint']='module_page'; item['slug']=mod['slug']
+            item['url']=url_for('module_page',slug=mod['slug']); item['endpoint']='module_page'; item['slug']=mod['slug']
         elif ni['type']=='page':
             pg=ni.get('page','')
-            if pg=='contact': item['url']='/contact'; item['endpoint']='contact'
-            elif pg=='about': item['url']='/about'; item['endpoint']='about'
+            if pg=='contact': item['url']=url_for('contact'); item['endpoint']='contact'
+            elif pg=='about': item['url']=url_for('about'); item['endpoint']='about'
             else: continue
         nav_items_resolved.append(item)
     return {'current_user':cu,'active_modules':modules,'nav_items':nav_items_resolved,'current_year':datetime.now().year,'has_permission':has_permission,'is_admin_or_above':is_admin_or_above,'can_edit_dham':can_edit_dham,'builtin_fields':BUILTIN_FIELDS,'json':json,'field_icons':FIELD_ICONS,'field_default_icons':FIELD_DEFAULT_ICONS,'module_schemas':MODULE_SCHEMAS,'pending_approvals_count':pac,'user_assigned_dhams':assigned}
