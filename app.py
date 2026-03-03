@@ -2602,10 +2602,10 @@ def admin_user_new():
         role = request.form.get('role','editor')
         if not email:
             flash('Email is required.','error')
-            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False,all_dhams=all_dhams,assigned_dhams=[])
+            return render_template('admin/user_form.html',user=None,editing=False,all_dhams=all_dhams,assigned_dhams=[])
         if db.execute("SELECT id FROM users WHERE email=?",(email,)).fetchone():
             flash('A user with this email already exists.','error')
-            return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False,all_dhams=all_dhams,assigned_dhams=[])
+            return render_template('admin/user_form.html',user=None,editing=False,all_dhams=all_dhams,assigned_dhams=[])
         # Generate secure password
         temp_password = generate_secure_password()
         # Generate verification token
@@ -2623,14 +2623,14 @@ def admin_user_new():
         # Store temp password encoded for later email
         import base64
         temp_pw_enc = base64.b64encode(temp_password.encode()).decode()
-        # Set permissions based on role
+        # Set permissions based on role (auto-determined by RBAC)
         perms = {}
         if role == 'admin':
-            perms = {k:True for k in request.form.getlist('permissions')}
+            perms = {'all': True}
         elif role == 'photographer':
             perms = {'capture_photo': True}
-        else:  # editor
-            perms = {k:True for k in request.form.getlist('permissions')}
+        elif role == 'editor':
+            perms = {'manage_entries': True, 'manage_places': True, 'manage_tags': True, 'publish_content': True, 'manage_media': True}
         db.execute("""INSERT INTO users (username,email,password_hash,display_name,role,permissions,
                       receive_reports,email_verified,verification_token,verification_token_expiry,
                       must_change_password,temp_password_enc,created_by)
@@ -2654,7 +2654,7 @@ def admin_user_new():
             flash(f'User created but verification email could not be sent. Check SMTP settings. You can resend from the user list.','warning')
         log_action(session['user_id'], 'create_user', 'user', None, f'Created user {email} with role {role}')
         return redirect(url_for('admin_users'))
-    return render_template('admin/user_form.html',user=None,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),editing=False,all_dhams=all_dhams,assigned_dhams=[])
+    return render_template('admin/user_form.html',user=None,editing=False,all_dhams=all_dhams,assigned_dhams=[])
 
 @app.route('/admin/users/<int:user_id>/edit', methods=['GET','POST'])
 @login_required
@@ -2665,16 +2665,23 @@ def admin_user_edit(user_id):
     all_dhams=db.execute("SELECT id,title FROM places ORDER BY title").fetchall()
     assigned_dhams=[r['place_id'] for r in db.execute("SELECT place_id FROM user_dham_assignments WHERE user_id=?",(user_id,)).fetchall()]
     if request.method=='POST':
+        new_role=request.form.get('role',user['role'])
+        # Auto-determine permissions by role (RBAC)
+        if new_role=='system_admin': auto_perms={'all':True}
+        elif new_role=='admin': auto_perms={'all':True}
+        elif new_role=='photographer': auto_perms={'capture_photo':True}
+        elif new_role=='editor': auto_perms={'manage_entries':True,'manage_places':True,'manage_tags':True,'publish_content':True,'manage_media':True}
+        else: auto_perms={}
         u={'email':request.form['email'],'display_name':request.form.get('display_name',user['username']),
-           'role':request.form.get('role',user['role']),
-           'permissions':json.dumps({k:True for k in request.form.getlist('permissions')}),
+           'role':new_role,
+           'permissions':json.dumps(auto_perms),
            'is_active':1 if request.form.get('is_active') else 0,
            'receive_reports':1 if request.form.get('receive_reports') else 0}
         if request.form.get('password'):
             valid, errors = validate_password(request.form['password'])
             if not valid:
                 for e in errors: flash(e,'error')
-                return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True,all_dhams=all_dhams,assigned_dhams=assigned_dhams)
+                return render_template('admin/user_form.html',user=user,editing=True,all_dhams=all_dhams,assigned_dhams=assigned_dhams)
             u['password_hash']=hash_password(request.form['password'])
         db.execute(f"UPDATE users SET {','.join(f'{k}=?' for k in u)} WHERE id=?",list(u.values())+[user_id])
         # Update dham assignments
@@ -2683,7 +2690,7 @@ def admin_user_edit(user_id):
             for dham_id in request.form.getlist('assigned_dhams'):
                 db.execute("INSERT OR IGNORE INTO user_dham_assignments (user_id,place_id,assigned_by) VALUES (?,?,?)", (user_id, int(dham_id), session['user_id']))
         db.commit(); flash('Updated!','success'); return redirect(url_for('admin_users'))
-    return render_template('admin/user_form.html',user=user,perm_defs=db.execute("SELECT * FROM permission_definitions ORDER BY category,label").fetchall(),user_perms=json.loads(user['permissions'] or '{}'),editing=True,all_dhams=all_dhams,assigned_dhams=assigned_dhams)
+    return render_template('admin/user_form.html',user=user,editing=True,all_dhams=all_dhams,assigned_dhams=assigned_dhams)
 
 @app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
 @login_required
