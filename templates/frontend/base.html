@@ -508,9 +508,10 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 </div>
 <div class="footer-col">
 <h4>Explore</h4>
-{% for mod in active_modules[:4] %}
+<a href="{{ url_for('all_dhams') }}">Holy Dhams</a>
+{% for mod in active_modules[:4] %}{% if mod.slug != 'holy-dhams' %}
 <a href="{{ url_for('module_page', slug=mod.slug) }}">{{ mod.name }}</a>
-{% endfor %}
+{% endif %}{% endfor %}
 <a href="{{ url_for('about') }}">About Us</a>
 </div>
 <div class="footer-col">
@@ -522,7 +523,6 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
 <div class="footer-col">
 <h4>Connect</h4>
 <a href="{{ url_for('contact') }}">Contact Us</a>
-<a href="{{ url_for('all_dhams') }}">Browse Dhams</a>
 </div>
 </div>
 <div class="footer-bottom">
