@@ -89,10 +89,8 @@
 <!-- Actions -->
 <div class="nav-actions">
 <button class="btn-save" onclick="saveNav()"><i class="fas fa-save"></i> Save Navigation</button>
-<form method="POST" style="display:inline" onsubmit="return confirm('Reset navigation to defaults?')">
-<input type="hidden" name="action" value="reset">
-<button type="submit" class="btn-reset"><i class="fas fa-undo"></i> Reset to Default</button>
-</form>
+<form method="POST" id="resetNavForm" style="display:none"><input type="hidden" name="action" value="reset"></form>
+<button type="button" class="btn-reset" onclick="confirmReset()"><i class="fas fa-undo"></i> Reset to Default</button>
 </div>
 
 <!-- Live Preview -->
@@ -196,6 +194,12 @@ function initDrag(){
       }
     });
   });
+}
+
+function confirmReset(){
+  if(!confirm('Reset navigation to defaults? All your customizations will be replaced.')) return;
+  if(!confirm('Are you sure? This will rebuild navigation from all active modules.')) return;
+  document.getElementById('resetNavForm').submit();
 }
 
 initDrag();

@@ -1067,10 +1067,13 @@ function showDeleteToast(){
 /* Override all delete form submissions with double confirmation */
 document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('form[onsubmit*="confirm"]').forEach(function(form){
+        var origConfirm = form.getAttribute('onsubmit') || '';
+        var isDelete = /[Dd]elet|[Rr]emov|[Dd]eactivat/.test(origConfirm);
+        if(!isDelete) return;
         form.removeAttribute('onsubmit');
         form.addEventListener('submit', function(e){
             e.preventDefault();
-            const f = this;
+            var f = this;
             dblConfirmDelete('Are you sure you want to delete this item?', function(){ f.submit(); });
         });
     });
