@@ -952,14 +952,7 @@ def inject_globals():
     pac=get_pending_approvals_count() if cu else 0
     assigned=get_user_assigned_dhams(cu['id']) if cu and cu['role']=='editor' else []
     nav_row=db.execute("SELECT value FROM site_settings WHERE key='nav_items'").fetchone()
-    if nav_row:
-        nav_items_raw=json.loads(nav_row['value'])
-    else:
-        nav_items_raw=[]
-        for m in modules:
-            if m['slug']=='holy-dhams': continue
-            nav_items_raw.append({"type":"module","module_id":m['id'],"slug":m['slug'],"label":m['name'],"visible":True})
-        nav_items_raw=[{"type":"home","label":"Home","visible":True},{"type":"dhams","label":"Holy Dhams","visible":True}]+nav_items_raw+[{"type":"page","page":"contact","label":"Contact","visible":True},{"type":"page","page":"about","label":"About","visible":True}]
+    nav_items_raw=json.loads(nav_row['value']) if nav_row else []
     nav_items_resolved=[]
     for ni in nav_items_raw:
         if not ni.get('visible',True): continue
@@ -2871,18 +2864,7 @@ def admin_nav_manager():
             flash('Navigation reset to defaults','success')
         return redirect(url_for('admin_nav_manager'))
     row=db.execute("SELECT value FROM site_settings WHERE key='nav_items'").fetchone()
-    if not row:
-        mods=db.execute("SELECT id,name,slug FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
-        default_nav=[{"type":"home","label":"Home","visible":True},{"type":"dhams","label":"Holy Dhams","visible":True}]
-        for m in mods:
-            if m['slug']!='holy-dhams': default_nav.append({"type":"module","module_id":m['id'],"slug":m['slug'],"label":m['name'],"visible":True})
-        default_nav.append({"type":"page","page":"contact","label":"Contact","visible":True})
-        default_nav.append({"type":"page","page":"about","label":"About","visible":True})
-        db.execute("INSERT INTO site_settings (key,value) VALUES ('nav_items',?)",(json.dumps(default_nav),))
-        db.commit()
-        nav_items=default_nav
-    else:
-        nav_items=json.loads(row['value'])
+    nav_items=json.loads(row['value']) if row else []
     modules=db.execute("SELECT id,name,slug,icon FROM modules WHERE is_active=1 ORDER BY sort_order").fetchall()
     return render_template('admin/nav_manager.html',nav_items=nav_items,modules=modules)
 
