@@ -311,7 +311,7 @@ document.addEventListener('click', function(e){
   if(action==='move-up'){e.stopPropagation();if(i>0){var t=sections[i];sections[i]=sections[i-1];sections[i-1]=t;renderSections()}}
   else if(action==='move-down'){e.stopPropagation();if(i<sections.length-1){var t=sections[i];sections[i]=sections[i+1];sections[i+1]=t;renderSections()}}
   else if(action==='dup'){e.stopPropagation();var c=JSON.parse(JSON.stringify(sections[i]));c.id=uid();sections.splice(i+1,0,c);renderSections()}
-  else if(action==='del'){e.stopPropagation();if(confirm('Delete this section?')){sections.splice(i,1);renderSections()}}
+  else if(action==='del'){e.stopPropagation();var di=i;dblConfirmDelete('Delete this section?',function(){sections.splice(di,1);renderSections()})}
   else if(action==='rm-item'){var si=parseInt(btn.dataset.sec);var ii=parseInt(btn.dataset.ii);sections[si].items.splice(ii,1);renderSections()}
   else if(action==='add-item'){var si=parseInt(btn.dataset.sec);var lt=btn.dataset.list;if(!sections[si].items)sections[si].items=[];if(lt==='stats')sections[si].items.push({number:'',label:''});else sections[si].items.push({icon:'',title:'',desc:''});renderSections()}
 });
@@ -339,9 +339,10 @@ function addSection(){
 }
 
 function resetDefaults(){
-  if(!confirm('Reset all sections to the default template content? Your current edits will be replaced.'))return;
-  sections=JSON.parse(JSON.stringify(defaults));
-  renderSections();
+  dblConfirmDelete('Reset all sections to the default template content? Your current edits will be replaced.', function(){
+    sections=JSON.parse(JSON.stringify(defaults));
+    renderSections();
+  });
 }
 
 document.getElementById('sectionsForm').addEventListener('submit',function(){

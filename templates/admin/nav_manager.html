@@ -33,8 +33,8 @@
 .nav-actions .btn-reset:hover{border-color:var(--rose);color:var(--rose-deep)}
 .nav-add{margin-bottom:24px}
 .nav-add select{padding:8px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:14px;margin-right:8px}
-.nav-add button{padding:8px 18px;border-radius:10px;background:var(--sage);color:white;border:none;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px}
-.nav-add button:hover{background:#5a9e6f}
+.nav-add button{padding:10px 22px;border-radius:10px;background:var(--primary);color:white;border:none;font-weight:600;cursor:pointer;font-family:inherit;font-size:14px;box-shadow:0 2px 8px rgba(199,107,143,.25)}
+.nav-add button:hover{background:var(--rose-deep);box-shadow:0 4px 14px rgba(199,107,143,.35)}
 .nav-remove{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:4px;transition:color .2s}
 .nav-remove:hover{color:#e53935}
 .nav-preview{margin-top:28px;background:var(--text-dark);border-radius:14px;padding:16px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
@@ -126,7 +126,7 @@ function renderList(){
 
 function updateLabel(i,v){navItems[i].label=v;updatePreview()}
 function toggleVis(i,v){navItems[i].visible=v;updatePreview()}
-function removeItem(i){if(confirm('Remove "'+navItems[i].label+'" from navigation?')){navItems.splice(i,1);renderList()}}
+function removeItem(i){dblConfirmDelete('Remove "'+navItems[i].label+'" from navigation?',function(){navItems.splice(i,1);renderList()})}
 
 function addNavItem(){
   var sel=document.getElementById('addItemSelect');

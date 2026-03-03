@@ -816,11 +816,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // ─── Audio/Video Library (JS-based to avoid nested forms) ───
   window.deleteAudioVideo = function(avId, mediaType) {
-    if (!confirm('Delete this ' + mediaType + '?')) return;
-    if (!confirm('Are you sure? This cannot be undone.')) return;
-    fetch('/admin/audio-video/' + avId + '/delete', {method:'POST'})
-      .then(function(r){ location.reload(); })
-      .catch(function(e){ alert('Error deleting: ' + e); });
+    dblConfirmDelete('Delete this ' + mediaType + '?', function(){
+      fetch('/admin/audio-video/' + avId + '/delete', {method:'POST'})
+        .then(function(r){ location.reload(); })
+        .catch(function(e){ alert('Error deleting: ' + e); });
+    });
   };
   window.addAudioVideo = function() {
     var fd = new FormData();

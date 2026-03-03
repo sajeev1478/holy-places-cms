@@ -503,11 +503,12 @@ function addEntryCamGalleryItem(){
     c.appendChild(d); entryGalIdx++;
 }
 function entryGalDelete(btn, img){
-    if(!confirm('Remove this gallery image?')) return;
-    btn.closest('.entry-gal-item').remove();
-    var h = document.querySelector('input[name=gallery_existing]');
-    var imgs = h.value.split(',').filter(function(x){ return x.trim() !== img.trim(); });
-    h.value = imgs.join(',');
+    dblConfirmDelete('Remove this gallery image?', function(){
+        btn.closest('.entry-gal-item').remove();
+        var h = document.querySelector('input[name=gallery_existing]');
+        var imgs = h.value.split(',').filter(function(x){ return x.trim() !== img.trim(); });
+        h.value = imgs.join(',');
+    });
 }
 
 /* ═══ Init ═══ */
