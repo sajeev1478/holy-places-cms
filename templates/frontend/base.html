@@ -41,8 +41,8 @@ header.header-default .nav-search-input{color:var(--text-dark)}
 header.header-default .nav-search-input::placeholder{color:var(--text-light)}
 header.header-default .mobile-toggle{color:var(--text-dark)}
 /* DARK hero → white text on dark glass */
-header.header-on-dark{background:rgba(0,0,0,.3);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.08)}
-header.header-on-dark.scrolled{background:rgba(0,0,0,.65);backdrop-filter:blur(20px);box-shadow:0 2px 40px rgba(0,0,0,.2);border-bottom-color:rgba(255,255,255,.05)}
+header.header-on-dark{background:rgba(0,0,0,.15);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.08)}
+header.header-on-dark.scrolled{background:rgba(0,0,0,.45);backdrop-filter:blur(20px);box-shadow:0 2px 40px rgba(0,0,0,.2);border-bottom-color:rgba(255,255,255,.05)}
 header.header-on-dark .logo-text{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.3)}
 header.header-on-dark .logo-text span{color:#F4D03F}
 header.header-on-dark nav a{color:rgba(255,255,255,.88);text-shadow:0 1px 3px rgba(0,0,0,.3)}
@@ -77,7 +77,7 @@ header.header-on-light .nav-search-icon{color:var(--text-light)}
 header.header-on-light .nav-search-input{color:#2D1F2E}
 header.header-on-light .nav-search-input::placeholder{color:#B5A5B6}
 header.header-on-light .mobile-toggle{color:#2D1F2E}
-.header-inner{max-width:1300px;margin:0 auto;padding:16px 40px;display:flex;align-items:center;justify-content:space-between}
+.header-inner{max-width:1300px;margin:0 auto;padding:13px 40px;display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .logo-flower{font-size:28px}
 .logo-text{font-family:'Josefin Sans',sans-serif;font-size:24px;color:var(--text-dark);font-weight:700}
@@ -100,12 +100,12 @@ nav:not(.breadcrumb-nav) a:hover,nav:not(.breadcrumb-nav) a.active{color:var(--r
 .nav-search-box:focus-within .nav-search-kbd{display:inline}
 .nav-search-results{position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:360px;background:white;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,.15);border:1px solid var(--border);display:none;max-height:420px;overflow-y:auto;z-index:200}
 .nav-search-results.active{display:block}
-.nsr-item{display:flex;gap:12px;padding:12px 16px;align-items:center;cursor:pointer;transition:background .15s;text-decoration:none;color:inherit;border-bottom:1px solid var(--cream-dark)}
+.nsr-item{display:flex;gap:12px;padding:12px 16px;align-items:center;cursor:pointer;transition:background .15s;text-decoration:none;color:var(--text-dark)!important;border-bottom:1px solid var(--cream-dark)}
 .nsr-item:last-child{border-bottom:none}
 .nsr-item:hover{background:var(--cream)}
-.nsr-tier{font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:50px;color:white;flex-shrink:0}
-.nsr-title{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:600}
-.nsr-loc{font-size:11px;color:var(--text-light)}
+.nsr-tier{font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 9px;border-radius:50px;color:white!important;flex-shrink:0;min-width:28px;text-align:center;display:inline-flex;align-items:center;justify-content:center}
+.nsr-title{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text-dark)!important}
+.nsr-loc{font-size:11px;color:var(--text-light)!important}
 .nsr-empty{padding:20px;text-align:center;color:var(--text-light);font-size:13px}
 
 /* ─── Beautiful File Upload ─── */
@@ -224,7 +224,7 @@ footer{padding:30px 0 0;background:var(--text-dark);color:rgba(255,255,255,.6)}
 .footer-inner{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:768px){
-.header-inner{padding:14px 16px}
+.header-inner{padding:11px 16px}
 nav{display:none}
 .mobile-toggle{display:block}
 /* Mobile: transparent header since nav is in hamburger */
@@ -296,8 +296,10 @@ pre,code{overflow-x:auto;max-width:100%;word-break:break-all}
   .explore-title{font-size:22px!important}
 
   /* Breadcrumb nav */
-  .breadcrumb-nav{font-size:11px!important;gap:4px!important}
-  .breadcrumb-nav a,.breadcrumb-nav span{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
+  .breadcrumb-nav{font-size:13px!important;gap:6px!important;flex-wrap:wrap!important}
+  .breadcrumb-nav a{display:inline-flex!important;align-items:center;gap:4px;pointer-events:auto!important;position:relative;z-index:1}
+  .breadcrumb-nav span.bc-sep{opacity:.4;flex-shrink:0}
+  .breadcrumb-nav .bc-tier{font-size:9px!important;padding:2px 6px!important;border-radius:50px;font-weight:700;flex-shrink:0;white-space:nowrap}
 
   /* Report button */
   .report-btn{font-size:12px!important;padding:10px 18px!important}
